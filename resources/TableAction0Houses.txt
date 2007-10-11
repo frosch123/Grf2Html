@@ -1,0 +1,26 @@
+08=1H,Substitute building type
+09=1H,Building flags
+0A=2H,Availability years
+0B=1,Population
+0C=1,Mail generation multiplier
+0D=1,Passenger acceptance
+0E=1,Mail acceptance
+0F=1,Goods, food or fizzy drinks acceptance
+10=2,LA rating decrease on removal
+11=1,Removal cost multiplier
+12=2H,Building name ID
+13=2H,Building availability mask
+14=1H,House callback flags
+15=1H,House override byte
+16=1,Periodic refresh multiplier
+17=4H,Four random colours to use
+18=1,Relative probability of appearing
+19=1H,Extra flags
+1A=1H,Animation frames
+1B=1,Animation speed
+1C=1,Class of the building type
+1D=1H,Callback flags 2
+1E=4H,Accepted cargo types
+1F=1,Minimum life span
+20=*,Cargo acceptance watch list
+

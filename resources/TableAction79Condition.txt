@@ -1,0 +1,13 @@
+00=Bit is set
+01=Bit is clear
+02=Equal
+03=Not equal
+04=Less than
+05=Greater than
+06=GRF ID is active
+07=GRF ID is not active
+08=GRF ID is not active yet but will be activated
+09=GRF ID is or will be active
+0A=GRF ID is not nor will it be active
+0B=Cargo type is not available
+0C=Cargo type is available

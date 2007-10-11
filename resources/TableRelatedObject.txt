@@ -1,0 +1,9 @@
+00=first train of consist
+01=first road vehicle of consist
+02=first ship of consist
+03=first aircraft of consist
+04=town of station
+07=town of house
+09=industry of tile
+0A=town of industry
+

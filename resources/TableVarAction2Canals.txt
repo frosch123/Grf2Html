@@ -1,0 +1,4 @@
+80=Height above ground
+81=Terrain type
+82=reversed for internal usage, dikemap
+83=Random byte for plain canals and river tiles

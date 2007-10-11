@@ -1,0 +1,12 @@
+40=Construction stage and pseudo-random values
+41=Age of the building in years
+42=Town zone where the building is situated.
+43=Terrain type
+44=Building counts
+45=Town expansion bits
+46=Current animation frame
+60=Other building counts
+61=Other building counts
+62=Land info for nearby tiles
+63=Current animation frame of nearby house tiles
+64=Cargo acceptance history of nearby stations

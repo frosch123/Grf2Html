@@ -1,0 +1,22 @@
+81=Current year
+83=Current climate
+84=GRF loading stage
+85=TTDPatch flags
+86=Road traffic side
+88=Checks specified GRFID
+8B=TTDPatch version
+8D=TTD version (Dos/Win)
+8E=Y-Offset for train sprites
+8F=Rail track type cost factors
+92=Game mode
+93=Tile refresh offset to left
+94=Tile refresh offset to right
+95=Tile refresh offset upwards
+96=Tile refresh offset downwards
+97=Snow line height
+99=Global ID offset
+9A=Always -1
+9D=TTD Platform (TTDP/OTTD)
+9E=Misc. GRF Features
+9F=Locale-dependent settings
+

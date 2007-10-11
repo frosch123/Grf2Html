@@ -1,0 +1,20 @@
+00=value := value + ($$$)
+01=value := value - ($$$)
+02=value := min[signed](value, $$$)
+03=value := max[signed](value, $$$)
+04=value := min[unsigned](value, $$$)
+05=value := max[unsigned](value, $$$)
+06=value := value div[signed] ($$$)
+07=value := value mod[signed] ($$$)
+08=value := value div[unsigned] ($$$)
+09=value := value mod[unsigned] ($$$)
+0a=value := value * ($$$)
+0b=value := value and ($$$)
+0c=value := value or ($$$)
+0d=value := value xor ($$$)
+0e=temporalStorage7D[$$$] := value
+0f=value := $$$
+10=persistentStorage7C[$$$] := value
+11=value := value ror[32bit] ($$$)
+12=value := compare[signed](value, $$$)
+13=value := compare[unsigned](value, $$$)

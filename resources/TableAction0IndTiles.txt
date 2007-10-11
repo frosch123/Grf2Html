@@ -1,0 +1,12 @@
+08=1H,Substitute building type
+09=1H,Industry tile override
+0A=2H,Tile acceptance #1
+0B=2H,Tile acceptance #2
+0C=2H,Tile acceptance #3
+0D=1H,Land shape flags
+0E=1H,Callback flags
+0F=2H,Animation information
+10=1,Animation speed.
+11=1H,Triggers for callback 25
+12=1H,Special flags
+

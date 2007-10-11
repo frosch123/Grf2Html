@@ -1,0 +1,4 @@
+00=Notice;
+01=Warning;Warning:
+02=Error;Error:
+03=Fatal error, stop loading;Error:

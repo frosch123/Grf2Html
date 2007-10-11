@@ -1,0 +1,3 @@
+0=normal size
+1=small size
+2=large size

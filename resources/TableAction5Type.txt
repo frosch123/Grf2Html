@@ -1,0 +1,15 @@
+04=Pre-signal/semaphore/PBS graphics
+05=Overhead wires and pylon graphics
+06=Foundations (retaining walls) for BuildOnSlopes
+07=GUI sprites
+08=Canals
+09=One-way road arrows
+0A=Two company color translation maps
+0B=Tram tracks
+0C=Snowy temperate trees
+0D=Coast Tile graphics
+0E=New Signals
+0F=Tracks for Slopes
+10=Additional airport graphics
+11=Road stop graphics
+12=Aqueduct graphics

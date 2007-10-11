@@ -1,0 +1,2 @@
+0=the building tile is processed
+1=the top tile of the building is processed

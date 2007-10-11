@@ -1,0 +1,5 @@
+0=Vehicle gets new load of cargo after it was empty
+1=Vehicle enters a depot and is serviced
+2=The consist has unloaded all cargo
+3=Any vehicle of the consist receives cargo
+4=Callback 32 returned 1

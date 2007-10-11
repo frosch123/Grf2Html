@@ -1,0 +1,4 @@
+08=4S,Class ID
+09=2H,Text ID for class
+0A=2H,Text ID for this object
+

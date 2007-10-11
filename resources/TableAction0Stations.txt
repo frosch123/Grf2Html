@@ -1,0 +1,18 @@
+08=4S,Class ID
+09=*,Sprite layout
+0A=1H,Copy sprite layout
+0B=1H,Callback flags
+0C=1H,Bit mask of disabled numbers of platforms
+0D=1H,Bit mask of disabled platform lengths
+0E=*,Define custom layout
+0F=1H,Copy custom layout from stationid
+10=2,Little/lots threshold
+11=1H,Pylon placement
+12=4H,Bit mask of cargo type triggers for random sprites
+13=1H,General flags
+14=1H,Overhead wire placement
+15=1H,Can train enter tile
+16=2H,Animation information
+17=1,Animation speed
+18=2H,Animation triggers
+

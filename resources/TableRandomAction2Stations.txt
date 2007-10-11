@@ -1,0 +1,6 @@
+0=new cargo waiting
+1=no more cargo
+2=train arrives
+3=train leaves
+4=train loads or unloads cargo
+5=train reserves platform

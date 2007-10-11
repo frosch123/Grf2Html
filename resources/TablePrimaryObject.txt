@@ -1,0 +1,17 @@
+00=current train
+01=current road vehicle
+02=current ship
+03=current aircraft
+04=current station
+05=current canal
+06=current bridge
+07=current house
+08=global variable
+09=current industry tile
+0A=current industry
+0B=current cargo
+0C=current sound effect
+0D=current airport
+0E=current signal
+0F=current newobject
+

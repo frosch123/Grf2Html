@@ -1,0 +1,3 @@
+pal_dos        bcp "resources\pal_dos.bcp"
+pal_win        bcp "resources\pal_win.bcp"
+

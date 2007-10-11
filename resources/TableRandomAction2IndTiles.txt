@@ -1,0 +1,4 @@
+0=the building tile is processed
+1=triggers simultaneously for all tiles
+2=cargo is delivered to the industry
+

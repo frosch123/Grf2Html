@@ -1,0 +1,19 @@
+08=1,Sprite
+09=1H,Is helicopter
+0A=1H,Is large
+0B=1,Cost factor
+0C=1,Speed
+0D=1,Acceleration
+0E=1,Running cost factor
+0F=2,Passenger capacity
+11=1,Mail capacity
+12=1,Sound effect
+13=4H,Bit mask of cargo types available for refitting
+14=1H,Callback flags bit mask
+15=1,Refit cost
+16=1,Retire vehicle early
+17=1H,Miscellaneous vehicle flags
+18=2H,Refittable cargo classes
+19=2H,Non-refittable cargo classes
+1A=4,Long format introduction date
+

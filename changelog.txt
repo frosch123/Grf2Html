@@ -1,0 +1,19 @@
+Version 0.3.1 - 11. Oct. 2007
+ - Fix: The first sprite is never a BinaryIncludeSprite. (boekabart)
+ - Fix: Do not try to save binary included files with invalid filenames.
+ - Fix: Test for end of Station Custom Layout was logically inverted. (boekabart)
+ - Fix: Typos and mistakes in resources (PatchVars 99, 9A; GRM Mark operation).
+
+Version 0.3 - 4. Oct. 2007
+ - Feature: UTF-8 support for texts.
+ - Feature: Most 80+x variables of vehicles, stations, towns and industries are known. (Extracted from TTDP source documentation)
+ - Fix: Text after </body> tag. (gmyx)
+ - Fix: Decompression failed on some .grf. (minime)
+ - Fix: Some spellings. (DaleStan)
+ - Fix: Access violation, if industry layout did not start at (0,0). (belugas)
+ - Fix: ActionB did not knew of "do not ignore during initialization".
+
+Version 0.2 - 2. Oct. 2007
+ - First public release.
+ - Support for Actions 0 to 13 as of current NewGraphicsSpecs.
+ - Actions 12 and 13 untested due to a lack of NewGrfs for testing.

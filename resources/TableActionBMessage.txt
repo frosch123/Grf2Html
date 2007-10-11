@@ -1,0 +1,6 @@
+00=0x80 requires at least TTDPatch version 0x80
+01=0x80 is for the 0x80 version of TTD.
+02=0x80 is designed to be used with 0x80
+03=Invalid parameter for 0x80: parameter 0x80 (0x7B)
+04=0x80 must be loaded before 0x80.
+05=0x80 must be loaded after 0x80.

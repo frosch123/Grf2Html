@@ -1,0 +1,8 @@
+40=Construction state of the tile
+41=Ground type
+42=Current town zone of the tile in the nearest town
+43=Relative position
+44=Animation frame
+60=Land info of nearby tiles
+61=Animation stage of nearby tiles
+62=Get industry tile ID at offset

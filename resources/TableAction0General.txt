@@ -1,0 +1,7 @@
+00=2,Date of introduction
+02=1,reliability decay speed
+03=1,vehicle life in years
+04=1,model life in years
+06=1H,climate availability
+07=1,load amount
+

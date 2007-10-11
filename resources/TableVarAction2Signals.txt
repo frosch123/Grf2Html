@@ -1,0 +1,4 @@
+10=Signal sprite
+18=Track/Land/Signal info
+60=Track/Land/Signal info of nearby tiles
+

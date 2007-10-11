@@ -1,0 +1,8 @@
+00=GRM Reserve: Find $4$ available $3$ IDs, mark as in use, and return first ID in $0$. Deactivate GRF if none found.
+01=GRM Find: Find $4$ available $3$ IDs and return first ID in $0$, but do not mark. Deactivate GRF if none found.
+02=GRM Check: Check whether $4$ $3$ IDs (starting from $0$) are available. Deactivate GRF if not available.
+03=GRM Mark: Check whether $4$ $3$ IDs (starting from $0$) are available, and if so mark as in use. Deactivate GRF if not available.
+04=GRM No-fail Find: Find $4$ available $3$ IDs, mark as in use, and return first ID in $0$ (or -1 if none found).
+05=GRM No-fail Check: Check whether $4$ $3$ IDs (starting from $0$) are available (set $0$ to -1 if not available).
+06=GRM Get Owner: Retrieve GRFID that has reserved the $3$ ID $0$, and store it in $0$ (0 if not reserved).
+
