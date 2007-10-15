@@ -25,12 +25,12 @@ uses sysutils, classes, contnrs, nfobase;
 
 (*
  * Format of tables:
- *    ID=Col1§Col2§Col3
+ *    ID=Col1@Col2@Col3
  *
  *  ID     hexadecimal ID; same width for all items; sorted ascending.
  *  =      Separator between ID and item.
  *  ColX   Data for column X.
- *  §      Separator between columns.
+ *  @      Separator between columns.
  *
  * Note: The IDs are so restrictive to prevent typos in the resources.
  *)
@@ -218,12 +218,12 @@ begin
          while (i <= length(result)) and (column > 0) do
          begin
             inc(i);
-            if result[i] = '§' then dec(column);
+            if result[i] = '@' then dec(column);
          end;
          assert(column = 0);
          system.delete(result, 1, i);
 
-         p := pos('§', result);
+         p := pos('@', result);
          if p <> 0 then system.delete(result, p, length(result));
          exit;
       end;
@@ -244,7 +244,7 @@ begin
    fIDLen := pos('=', s) - 1;
    assert(fIDLen > 0);
    for i := 1 to length(s) do
-      if s[i] = '§' then inc(fColumns);
+      if s[i] = '@' then inc(fColumns);
 
 {$IFDEF testTables}
    lastID := -1;
@@ -256,7 +256,7 @@ begin
       assert(s[fIDLen + 1] = '=');
       cnt := 1;
       for i := 1 to length(s) do
-         if s[i] = '§' then inc(cnt);
+         if s[i] = '@' then inc(cnt);
       assert(cnt = fColumns, 'Invalid column count in row ' + intToStr(j) + ': ' + s);
       curID := strToInt('$' + copy(s, 1, fIDLen));
       assert(curID > lastID, 'Non-ascending IDs in row ' + intToStr(j) + ': ' + s);
