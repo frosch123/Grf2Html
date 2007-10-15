@@ -1,4 +1,4 @@
-08=1,Relative volume
-09=1,Priority
-0A=1,Override old sound
+08=1@Relative volume
+09=1@Priority
+0A=1@Override old sound
 
