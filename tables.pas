@@ -20,213 +20,288 @@ interface
 
 uses sysutils, classes, contnrs, nfobase;
 
+// Uncomment the following line, if the tables should be checked for validity on load.
+{$DEFINE testTables}
+
+(*
+ * Format of tables:
+ *    ID=Col1§Col2§Col3
+ *
+ *  ID     hexadecimal ID; same width for all items; sorted ascending.
+ *  =      Separator between ID and item.
+ *  ColX   Data for column X.
+ *  §      Separator between columns.
+ *
+ * Note: The IDs are so restrictive to prevent typos in the resources.
+ *)
+
 type
    TTable = class(TStringList)
+   private
+      fColumns   : integer;
+      fIDLen     : byte;
    protected
-      function getFromTable(i: integer): string;
+      function getFromTable(id, column: integer): string;
    public
-      property table[i: integer]: string read getFromTable; default;
+      procedure parseTable; virtual;
+      property table[id, column: integer]: string read getFromTable; default;
+      property columns: integer read fColumns;
+   end;
+   TSingleColumnTable = class(TTable)
+   private
+      function getFirstColumn(id: integer): string;
+   public
+      procedure parseTable; override;
+      property firstColumn[id: integer]: string read getFirstColumn; default;
    end;
 
 var
-   TableFeature                         : TTable;
-   TablePrimaryObject                   : TTable;
-   TableRelatedObject                   : TTable;
-   TableLanguage                        : TTable;
+   TableFeature                         : TSingleColumnTable;
+   TablePrimaryObject                   : TSingleColumnTable;
+   TableRelatedObject                   : TSingleColumnTable;
+   TableLanguage                        : TSingleColumnTable;
 
    TableAction0General                  : TTable;
    TableAction0Features                 : array[FTrain..FObject] of TTable;
 
-   TableVarAction2Operator              : TTable;
-   TableVarAction2General               : TTable;
-   TableVarAction2Features              : array[FTrain..FObject] of TTable;
-   TableVarAction2Related               : array[FTrain..FObject] of TTable;
+   TableVarAction2Operator              : TSingleColumnTable;
+   TableVarAction2General               : TSingleColumnTable;
+   TableVarAction2Features              : array[FTrain..FObject] of TSingleColumnTable;
+   TableVarAction2Related               : array[FTrain..FObject] of TSingleColumnTable;
 
-   TableRandomAction2Features           : array[FTrain..FObject] of TTable;
+   TableRandomAction2Features           : array[FTrain..FObject] of TSingleColumnTable;
 
-   TableAction5Type                     : TTable;
+   TableAction5Type                     : TSingleColumnTable;
 
-   TableAction79DVariable               : TTable;
-   TableAction79Condition               : TTable;
+   TableAction79DVariable               : TSingleColumnTable;
+   TableAction79Condition               : TSingleColumnTable;
 
-   TableActionBMessage                  : TTable;
+   TableActionBMessage                  : TSingleColumnTable;
    TableActionBSeverity                 : TTable;
 
-   TableActionDOperation                : TTable;
-   TableActionDPatchVars                : TTable;
-   TableActionDGRMOperation             : TTable;
+   TableActionDOperation                : TSingleColumnTable;
+   TableActionDPatchVars                : TSingleColumnTable;
+   TableActionDGRMOperation             : TSingleColumnTable;
 
-   TableAction12Font                    : TTable;
+   TableAction12Font                    : TSingleColumnTable;
 
 implementation
 
 {$R tables.res}
 
-function TTable.getFromTable(i: integer): string;
+type
+   TTableClass = class of TTable;
+   TTableList = record
+      name : string;
+      typ  : TTableClass;
+      table: ^TTable;
+   end;
+
+const
+   TableList : array[0..(16 + 4 * 16) - 1] of TTableList = (
+      (name:'TableFeature'                ; typ:TSingleColumnTable; table:@TableFeature),
+      (name:'TablePrimaryObject'          ; typ:TSingleColumnTable; table:@TablePrimaryObject),
+      (name:'TableRelatedObject'          ; typ:TSingleColumnTable; table:@TableRelatedObject),
+      (name:'TableLanguage'               ; typ:TSingleColumnTable; table:@TableLanguage),
+
+      (name:'TableAction0General'         ; typ:TTable            ; table:@TableAction0General),
+      (name:'TableAction0Trains'          ; typ:TTable            ; table:@TableAction0Features[FTrain]),
+      (name:'TableAction0RoadVehs'        ; typ:TTable            ; table:@TableAction0Features[FRoadVeh]),
+      (name:'TableAction0Ships'           ; typ:TTable            ; table:@TableAction0Features[FShip]),
+      (name:'TableAction0Aircraft'        ; typ:TTable            ; table:@TableAction0Features[FAircraft]),
+      (name:'TableAction0Stations'        ; typ:TTable            ; table:@TableAction0Features[FStation]),
+      (name:'TableAction0Canals'          ; typ:TTable            ; table:@TableAction0Features[FCanal]),
+      (name:'TableAction0Bridges'         ; typ:TTable            ; table:@TableAction0Features[FBridge]),
+      (name:'TableAction0Houses'          ; typ:TTable            ; table:@TableAction0Features[FHouse]),
+      (name:'TableAction0Global'          ; typ:TTable            ; table:@TableAction0Features[FGlobal]),
+      (name:'TableAction0IndTiles'        ; typ:TTable            ; table:@TableAction0Features[FIndTile]),
+      (name:'TableAction0Industries'      ; typ:TTable            ; table:@TableAction0Features[FIndustry]),
+      (name:'TableAction0Cargos'          ; typ:TTable            ; table:@TableAction0Features[FCargo]),
+      (name:'TableAction0Sounds'          ; typ:TTable            ; table:@TableAction0Features[FSound]),
+      (name:''                            ; typ:TTable            ; table:@TableAction0Features[FAirport]),
+      (name:''                            ; typ:TTable            ; table:@TableAction0Features[FSignal]),
+      (name:'TableAction0Objects'         ; typ:TTable            ; table:@TableAction0Features[FObject]),
+
+      (name:'TableVarAction2Operator'     ; typ:TSingleColumnTable; table:@TableVarAction2Operator),
+      (name:'TableVarAction2General'      ; typ:TSingleColumnTable; table:@TableVarAction2General),
+
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FTrain]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Related[FTrain]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FRoadVeh]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Related[FRoadVeh]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FShip]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Related[FShip]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FAircraft]),
+      (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Related[FAircraft]),
+
+      (name:'TableVarAction2Stations'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FStation]),
+      (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FStation]),
+
+      (name:'TableVarAction2Canals'       ; typ:TSingleColumnTable; table:@TableVarAction2Features[FCanal]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FCanal]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FBridge]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FBridge]),
+
+      (name:'TableVarAction2Houses'       ; typ:TSingleColumnTable; table:@TableVarAction2Features[FHouse]),
+      (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FHouse]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FGlobal]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FGlobal]),
+
+      (name:'TableVarAction2IndTiles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FIndTile]),
+      (name:'TableVarAction2Industries'   ; typ:TSingleColumnTable; table:@TableVarAction2Related[FIndTile]),
+
+      (name:'TableVarAction2Industries'   ; typ:TSingleColumnTable; table:@TableVarAction2Features[FIndustry]),
+      (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FIndustry]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FCargo]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FCargo]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FSound]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FSound]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FAirport]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FAirport]),
+
+      (name:'TableVarAction2Signals'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FSignal]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FSignal]),
+
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FObject]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FObject]),
+
+      (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FTrain]),
+      (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FRoadVeh]),
+      (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FShip]),
+      (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FAircraft]),
+      (name:'TableRandomAction2Stations'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FStation]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FCanal]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FBridge]),
+      (name:'TableRandomAction2Houses'    ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FHouse]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FGlobal]),
+      (name:'TableRandomAction2IndTiles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FIndTile]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FIndustry]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FCargo]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FSound]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FAirport]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FSignal]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FObject]),
+
+      (name:'TableAction5Type'            ; typ:TSingleColumnTable; table:@TableAction5Type),
+
+      (name:'TableAction79DVariable'      ; typ:TSingleColumnTable; table:@TableAction79DVariable),
+      (name:'TableAction79Condition'      ; typ:TSingleColumnTable; table:@TableAction79Condition),
+
+      (name:'TableActionBMessage'         ; typ:TSingleColumnTable; table:@TableActionBMessage),
+      (name:'TableActionBSeverity'        ; typ:TTable            ; table:@TableActionBSeverity),
+
+      (name:'TableActionDOperation'       ; typ:TSingleColumnTable; table:@TableActionDOperation),
+      (name:'TableActionDPatchVars'       ; typ:TSingleColumnTable; table:@TableActionDPatchVars),
+      (name:'TableActionDGRMOperation'    ; typ:TSingleColumnTable; table:@TableActionDGRMOperation),
+
+      (name:'TableAction12Font'           ; typ:TSingleColumnTable; table:@TableAction12Font)
+   );
+
+function TTable.getFromTable(id, column: integer): string;
 var
    s                                    : string;
-   j                                    : integer;
+   i, j, p                              : integer;
 begin
-   s := intToHex(i, pos('=', strings[0]) - 1) + '=';
+   assert(column < fColumns);
+   s := intToHex(id, fIDLen) + '=';
    for j := 0 to count - 1 do
       if compareText(copy(strings[j], 1, length(s)), s) = 0 then
       begin
          result := strings[j];
-         system.delete(result, 1, length(s));
+
+         i := fIDLen + 1;
+         while (i <= length(result)) and (column > 0) do
+         begin
+            inc(i);
+            if result[i] = '§' then dec(column);
+         end;
+         assert(column = 0);
+         system.delete(result, 1, i);
+
+         p := pos('§', result);
+         if p <> 0 then system.delete(result, p, length(result));
          exit;
       end;
    result := 'unknown';
 end;
 
-function loadTable(name: string): TTable;
+procedure TTable.parseTable;
+var
+   i                                    : integer;
+   s                                    : string;
+{$IFDEF testTables}
+   j, cnt, lastID, curID                : integer;
+{$ENDIF}
+begin
+   fColumns := 1;
+   if count = 0 then exit;
+   s := strings[0];
+   fIDLen := pos('=', s) - 1;
+   assert(fIDLen > 0);
+   for i := 1 to length(s) do
+      if s[i] = '§' then inc(fColumns);
+
+{$IFDEF testTables}
+   lastID := -1;
+   for j := 0 to count - 1 do
+   begin
+      s := strings[j];
+      if s = '' then continue;
+      assert(length(s) > fIDLen + 1);
+      assert(s[fIDLen + 1] = '=');
+      cnt := 1;
+      for i := 1 to length(s) do
+         if s[i] = '§' then inc(cnt);
+      assert(cnt = fColumns, 'Invalid column count in row ' + intToStr(j) + ': ' + s);
+      curID := strToInt('$' + copy(s, 1, fIDLen));
+      assert(curID > lastID, 'Non-ascending IDs in row ' + intToStr(j) + ': ' + s);
+      lastID := curID;
+   end;
+{$ENDIF}
+end;
+
+function TSingleColumnTable.getFirstColumn(id: integer): string;
+begin
+   result := getFromTable(id, 0);
+end;
+
+procedure TSingleColumnTable.parseTable;
+begin
+   inherited parseTable;
+   assert(columns = 1);
+end;
+
+procedure loadTable(list: TTableList);
 var
    rs                                   : TResourceStream;
 begin
-   result := TTable.create;
-   rs := TResourceStream.create(hInstance, name, 'txt');
-   result.loadFromStream(rs);
-   rs.free;
+   if list.name = '' then list.table^ := nil else
+   begin
+      list.table^ := list.typ.create;
+      rs := TResourceStream.create(hInstance, list.name, 'txt');
+      list.table^.loadFromStream(rs);
+      rs.free;
+      list.table^.parseTable;
+   end;
 end;
 
 procedure loadAllTables;
+var
+   i                                    : integer;
 begin
-   TableFeature                          := loadTable('TableFeature');
-   TablePrimaryObject                    := loadTable('TablePrimaryObject');
-   TableRelatedObject                    := loadTable('TableRelatedObject');
-   TableLanguage                         := loadTable('TableLanguage');
-
-   TableAction0General                   := loadTable('TableAction0General');
-   TableAction0Features[FTrain]          := loadTable('TableAction0Trains');
-   TableAction0Features[FRoadVeh]        := loadTable('TableAction0RoadVehs');
-   TableAction0Features[FShip]           := loadTable('TableAction0Ships');
-   TableAction0Features[FAircraft]       := loadTable('TableAction0Aircraft');
-   TableAction0Features[FStation]        := loadTable('TableAction0Stations');
-   TableAction0Features[FCanal]          := loadTable('TableAction0Canals');
-   TableAction0Features[FBridge]         := loadTable('TableAction0Bridges');
-   TableAction0Features[FHouse]          := loadTable('TableAction0Houses');
-   TableAction0Features[FGlobal]         := loadTable('TableAction0Global');
-   TableAction0Features[FIndTile]        := loadTable('TableAction0IndTiles');
-   TableAction0Features[FIndustry]       := loadTable('TableAction0Industries');
-   TableAction0Features[FCargo]          := loadTable('TableAction0Cargos');
-   TableAction0Features[FSound]          := loadTable('TableAction0Sounds');
-   TableAction0Features[FAirport]        := nil;
-   TableAction0Features[FSignal]         := nil;
-   TableAction0Features[FObject]         := loadTable('TableAction0Objects');
-
-   TableVarAction2Operator               := loadTable('TableVarAction2Operator');
-   TableVarAction2General                := loadTable('TableVarAction2General');
-
-   TableVarAction2Features[FTrain]       := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Related[FTrain]        := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Features[FRoadVeh]     := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Related[FRoadVeh]      := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Features[FShip]        := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Related[FShip]         := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Features[FAircraft]    := loadTable('TableVarAction2Vehicles');
-   TableVarAction2Related[FAircraft]     := loadTable('TableVarAction2Vehicles');
-
-   TableVarAction2Features[FStation]     := loadTable('TableVarAction2Stations');
-   TableVarAction2Related[FStation]      := loadTable('TableVarAction2Towns');
-
-   TableVarAction2Features[FCanal]       := loadTable('TableVarAction2Canals');
-   TableVarAction2Related[FCanal]        := nil;
-
-   TableVarAction2Features[FBridge]      := nil;
-   TableVarAction2Related[FBridge]       := nil;
-
-   TableVarAction2Features[FHouse]       := loadTable('TableVarAction2Houses');
-   TableVarAction2Related[FHouse]        := loadTable('TableVarAction2Towns');
-
-   TableVarAction2Features[FGlobal]      := nil;
-   TableVarAction2Related[FGlobal]       := nil;
-
-   TableVarAction2Features[FIndTile]     := loadTable('TableVarAction2IndTiles');
-   TableVarAction2Related[FIndTile]      := loadTable('TableVarAction2Industries');
-
-   TableVarAction2Features[FIndustry]    := loadTable('TableVarAction2Industries');
-   TableVarAction2Related[FIndustry]     := loadTable('TableVarAction2Towns');
-
-   TableVarAction2Features[FCargo]       := nil;
-   TableVarAction2Related[FCargo]        := nil;
-
-   TableVarAction2Features[FSound]       := nil;
-   TableVarAction2Related[FSound]        := nil;
-
-   TableVarAction2Features[FAirport]     := nil;
-   TableVarAction2Related[FAirport]      := nil;
-
-   TableVarAction2Features[FSignal]      := loadTable('TableVarAction2Signals');
-   TableVarAction2Related[FSignal]       := nil;
-
-   TableVarAction2Features[FObject]      := nil;
-   TableVarAction2Related[FObject]       := nil;
-
-   TableRandomAction2Features[FTrain]    := loadTable('TableRandomAction2Vehicles');
-   TableRandomAction2Features[FRoadVeh]  := loadTable('TableRandomAction2Vehicles');
-   TableRandomAction2Features[FShip]     := loadTable('TableRandomAction2Vehicles');
-   TableRandomAction2Features[FAircraft] := loadTable('TableRandomAction2Vehicles');
-   TableRandomAction2Features[FStation]  := loadTable('TableRandomAction2Stations');
-   TableRandomAction2Features[FCanal]    := nil;
-   TableRandomAction2Features[FBridge]   := nil;
-   TableRandomAction2Features[FHouse]    := loadTable('TableRandomAction2Houses');
-   TableRandomAction2Features[FGlobal]   := nil;
-   TableRandomAction2Features[FIndTile]  := loadTable('TableRandomAction2IndTiles');
-   TableRandomAction2Features[FIndustry] := nil;
-   TableRandomAction2Features[FCargo]    := nil;
-   TableRandomAction2Features[FSound]    := nil;
-   TableRandomAction2Features[FAirport]  := nil;
-   TableRandomAction2Features[FSignal]   := nil;
-   TableRandomAction2Features[FObject]   := nil;
-
-   TableAction5Type                      := loadTable('TableAction5Type');
-
-   TableAction79DVariable                := loadTable('TableAction79DVariable');
-   TableAction79Condition                := loadTable('TableAction79Condition');
-
-   TableActionBMessage                   := loadTable('TableActionBMessage');
-   TableActionBSeverity                  := loadTable('TableActionBSeverity');
-
-   TableActionDOperation                 := loadTable('TableActionDOperation');
-   TableActionDPatchVars                 := loadTable('TableActionDPatchVars');
-   TableActionDGRMOperation              := loadTable('TableActionDGRMOperation');
-
-   TableAction12Font                     := loadTable('TableAction12Font');
+   for i := 0 to length(TableList) - 1 do loadTable(TableList[i]);
 end;
 
 procedure freeAllTables;
 var
    i                                    : integer;
 begin
-   TableFeature.free;
-   TablePrimaryObject.free;
-   TableRelatedObject.free;
-   TableLanguage.free;
-
-   TableAction0General.free;
-   for i := low(TableAction0Features) to high(TableAction0Features) do TableAction0Features[i].free;
-
-   TableVarAction2Operator.free;
-   TableVarAction2General.free;
-   for i := low(TableVarAction2Features) to high(TableVarAction2Features) do
-   begin
-      TableVarAction2Features[i].free;
-      TableVarAction2Related[i].free;
-      TableRandomAction2Features[i].free;
-   end;
-
-   TableAction5Type.free;
-
-   TableAction79DVariable.free;
-   TableAction79Condition.free;
-
-   TableActionBMessage.free;
-   TableActionBSeverity.free;
-
-   TableActionDOperation.free;
-   TableActionDPatchVars.free;
-   TableActionDGRMOperation.free;
-
-   TableAction12Font.free;
+   for i := 0 to length(TableList) - 1 do TableList[i].table^.free;
 end;
 
 initialization

@@ -167,7 +167,7 @@ type
       function getFeatID(i: integer): integer;
       function getData(propNr, IDNr: integer): TAction0Data;
    protected
-      function getPropFromTable(p: byte): string;
+      function getPropFromTable(p: byte; out format: string): string;
    public
       constructor create(ps: TPseudoSpriteReader);
       destructor destroy; override;
@@ -642,10 +642,8 @@ begin
       prop := ps.getByte;
       fProps[i] := prop;
 
-      s := getPropFromTable(prop);
-      s := copy(s, 1, pos(',', s) - 1);
-
-      if s = '' then
+      getPropFromTable(prop, s);
+      if s = 'unknown' then
       begin
          error('Unknown Property 0x' + intToHex(prop, 2) + ' for Feature 0x' + intToHex(fFeature, 2) + ' "' + TableFeature[fFeature] + '". Action0 processing stopped.');
          exit;
@@ -728,12 +726,19 @@ begin
    inherited destroy;
 end;
 
-function TAction0.getPropFromTable(p: byte): string;
+function TAction0.getPropFromTable(p: byte; out format: string): string;
 begin
-   result := TableAction0General[p];
-   if (pos(',', result) = 0) and
-      (fFeature >= low(TableAction0Features)) and (fFeature <= high(TableAction0Features)) and
-      (TableAction0Features[fFeature] <> nil) then result := TableAction0Features[fFeature][p];
+   format := TableAction0General[p, 0];
+   result := TableAction0General[p, 1];
+   if format = 'unknown' then
+   begin
+      if (fFeature >= low(TableAction0Features)) and (fFeature <= high(TableAction0Features)) and
+         (TableAction0Features[fFeature] <> nil) then
+      begin
+         format := TableAction0Features[fFeature][p, 0];
+         result := TableAction0Features[fFeature][p, 1];
+      end;
+   end;
 end;
 
 function TAction0.getNumProps: integer;
@@ -796,8 +801,7 @@ begin
          for j := 0 to length(fProps) - 1 do
             if fData[j, 0].size in [0..4] then
             begin
-               s := getPropFromTable(fProps[j]);
-               delete(s, 1, pos(',', s));
+               s := getPropFromTable(fProps[j], s2);
                writeln(t, '<tr valign="top"><th align="left">0x', intToHex(fProps[j], 2), ' "', s, '"</th>');
                for i := colNr to min(colNr + aimedCols, fNumIDs) - 1 do
                begin
@@ -825,8 +829,7 @@ begin
       begin
          if fData[j, 0].typ = a0special then
          begin
-            s := getPropFromTable(fProps[j]);
-            delete(s, 1, pos(',', s));
+            s := getPropFromTable(fProps[j], s2);
             for i := 0 to fNumIDs - 1 do
             begin
                writeln(t, '<br><b>', s, ' - ID 0x', intToHex(fFirstID + i, len), ' (', fFirstID + i, ')</b><br>');

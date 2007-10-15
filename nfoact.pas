@@ -587,12 +587,8 @@ begin
    writeln(t, '<table summary="Properties">');
    if fDuringInit then s := 'yes' else s := 'no';
    writeln(t, '<tr><th align="left">Process during initialization</th><td>', s, '</td></tr>');
-   s := TableActionBSeverity[fSeverity];
-   if pos(';', s) = 0 then s2 := s else
-   begin
-      s2 := copy(s, pos(';', s) + 1, length(s));
-      delete(s, pos(';', s), length(s));
-   end;
+   s := TableActionBSeverity[fSeverity, 0];
+   s2 := TableActionBSeverity[fSeverity, 1];
    writeln(t, '<tr><th align="left">Severity</th><td>0x', intToHex(fSeverity, 2), ' "', s, '"</td></tr>');
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(fAction8, fLangID), '</td></tr>');
    if fMsgID = $FF then s := ' "custom message"' else s := ' "built-in message"';
