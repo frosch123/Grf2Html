@@ -18,7 +18,7 @@ unit nfoact0;
 
 interface
 
-uses sysutils, nfobase, tables, math, spritelayout;
+uses sysutils, nfobase, tables, math, spritelayout, outputsettings;
 
 type
    TAction0 = class;
@@ -28,7 +28,7 @@ type
       fAction0             : TAction0;
    public
       constructor create(action0: TAction0);
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); virtual; abstract;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual; abstract;
    end;
 
    TAction0SpecialPropertyArrayItem = class(TAction0SpecialProperty)
@@ -47,7 +47,7 @@ type
       function getItem(i: integer): TAction0SpecialPropertyArrayItem;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID: integer; typ: TAction0SpecialPropertyArrayItemClass);
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property count: integer read getCount;
       property item[i: integer]: TAction0SpecialPropertyArrayItem read getItem;
    end;
@@ -58,7 +58,7 @@ type
       function getSnowline(month, day: integer): byte;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property snowline[month, day: integer]: byte read getSnowline; // month and day start with 0
    end;
 
@@ -70,7 +70,7 @@ type
       function getData(i: integer): byte;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property count: integer read getCount;
       property data[i: integer]: byte read getData;
    end;
@@ -85,7 +85,7 @@ type
       destructor destroy; override;
       class function itemCount(ps: TPseudoSpriteReader): integer; override;
       class function moreItems(ps: TPseudoSpriteReader): boolean; override;
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useTTDSpriteLayout: boolean read fTTDLayout;
       property groundSprite: longword read fGroundSprite;
       property spritelayout: TSpriteLayout read fSpriteLayout;
@@ -101,7 +101,7 @@ type
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
       class function itemCount(ps: TPseudoSpriteReader): integer; override;
       class function moreItems(ps: TPseudoSpriteReader): boolean; override;
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property platformCount: integer read getPlatformCount;
       property platformLength: integer read getPlatformLength;
       property tileLayout[platform, tile: integer]: byte read getTileLayout;
@@ -120,7 +120,7 @@ type
       function getTableData(i: integer): TBridgeLayoutTable;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property tableCount: integer read getTableCount;
       property tableNr[i: integer]: byte read getTableNr;
       property tableData[i: integer]: TBridgeLayoutTable read getTableData;
@@ -141,7 +141,7 @@ type
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
       class function itemCount(ps: TPseudoSpriteReader): integer; override;
       class function moreItems(ps: TPseudoSpriteReader): boolean; override;
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property tileCount: integer read getTileCount;
       property tile[i: integer]: TIndustryLayoutTile read getTile;
    end;
@@ -171,7 +171,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       destructor destroy; override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property numProps: integer read getNumProps;
       property prop[i: integer]: byte read getProp;
@@ -227,7 +227,7 @@ begin
    result := fItems[i];
 end;
 
-procedure TAction0SpecialPropertyArray.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0SpecialPropertyArray.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
@@ -235,7 +235,7 @@ begin
    for i := 0 to length(fItems) - 1 do
    begin
       writeln(t, '<tr valign="top"><th align="left" width="30">', i, '</th><td>');
-      fItems[i].printHtml(t, path, suppressData);
+      fItems[i].printHtml(t, path, settings);
       writeln(t, '</td></tr>');
    end;
    writeln(t, '</table>');
@@ -256,7 +256,7 @@ begin
    result := fSnowline[month, day];
 end;
 
-procedure TAction0SnowlineHeight.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0SnowlineHeight.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 const
    months                               : array[0..11] of string = ('January', 'February', 'March',
                                                                     'April', 'May', 'June',
@@ -302,7 +302,7 @@ begin
    result := fData[i];
 end;
 
-procedure TAction0ByteArray.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0ByteArray.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
@@ -373,12 +373,12 @@ begin
    result := false; // use ItemCount
 end;
 
-procedure TAction0StationSpriteLayout.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0StationSpriteLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
    if fTTDLayout then writeln(t, '<b>TTD Sprite Layout</b>') else
    begin
       writeln(t, '<b>Custom Sprite Layout</b><br><b>Ground sprite:</b> 0x', intToHex(fGroundSprite, 8), getSpriteDescriptionStation(fGroundSprite, false));
-      fSpriteLayout.printHtml(t, path, suppressData);
+      fSpriteLayout.printHtml(t, path, settings);
    end;
 end;
 
@@ -421,7 +421,7 @@ begin
    result := fCustomLayout[platform][tile];
 end;
 
-procedure TAction0StationCustomLayout.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0StationCustomLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i, j                                 : integer;
 begin
@@ -466,7 +466,7 @@ begin
    result := fTables[i];
 end;
 
-procedure TAction0BridgeLayout.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0BridgeLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 const
    tableNames                           : array[0..6] of string = (
       'Table 0: Middle tile, First from North',
@@ -563,7 +563,7 @@ begin
    result := fTiles[i];
 end;
 
-procedure TAction0IndustryLayout.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TAction0IndustryLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    xMin, yMin, xMax, yMax, x, y, i      : integer;
    layout                               : array of array of integer;
@@ -761,7 +761,7 @@ begin
    result := fData[propNr, IDNr];
 end;
 
-procedure TAction0.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction0.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i, j, k                              : integer;
    len                                  : integer;
@@ -770,12 +770,12 @@ var
    colNr                                : integer;
    hasPlain                             : boolean;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action0</b> - Define Properties<br><b>Feature</b> 0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"');
 
    if fFirstID + fNumIDs - 1 > $FF then len := 4 else len := 2;
 
-   aimedCols := max(2, (aimedWidth - 300) div 100); // only a guess
+   aimedCols := max(2, (settings.aimedWidth - 300) div 100); // only a guess
    hasPlain := false;
    if fNumIDs > 0 then
    begin
@@ -833,7 +833,7 @@ begin
             for i := 0 to fNumIDs - 1 do
             begin
                writeln(t, '<br><b>', s, ' - ID 0x', intToHex(fFirstID + i, len), ' (', fFirstID + i, ')</b><br>');
-               fData[j, i].special.printHtml(t, path, suppressData);
+               fData[j, i].special.printHtml(t, path, settings);
             end;
          end;
       end;

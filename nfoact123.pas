@@ -18,7 +18,7 @@ unit nfoact123;
 
 interface
 
-uses sysutils, grfbase, nfobase, tables, spritelayout, math;
+uses sysutils, grfbase, nfobase, tables, spritelayout, math, outputsettings;
 
 type
    TAction1 = class(TMultiSpriteAction)
@@ -32,7 +32,7 @@ type
       constructor create(ps: TPseudoSpriteReader);
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       function printHtmlLinkToSet(setNr: integer): string;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property numSets: integer read fNumSets;
       property spritesPerSet: integer read fSpritesPerSet;
@@ -65,7 +65,7 @@ type
       function getEntry(typ, nr: integer): word;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property numEntries[typ: integer]: integer read getNumEntries; // typ=0 moving etc..., typ=1 loading etc...
       property entry[typ, nr: integer]: word read getEntry;
       property action1: TAction1 read fAction1;
@@ -79,7 +79,7 @@ type
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
       destructor destroy; override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property groundSprite: longword read fGroundSprite;
       property spritelayout: TSpriteLayout read fSpriteLayout;
    end;
@@ -94,7 +94,7 @@ type
       function getOutputAmount(i: integer): word;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRegisters: boolean read fUseRegisters;
       property inputAmount[i: integer]: word read getInputAmount;
       property outputAmount[i: integer]: word read getOutputAmount;
@@ -130,7 +130,7 @@ type
       function getCase(i: integer): TVarAction2Case;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRelated: boolean read fRelated;
       property varSize: integer read fSize;
       property termCount: integer read getTermCount;
@@ -152,7 +152,7 @@ type
       function getCase(i: integer): TAction2Dest;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRelated: boolean read fRelated;
       property allTriggersNeeded: boolean read fAllTriggers;
       property firstRandomBit: integer read fRandBit;
@@ -176,7 +176,7 @@ type
       function getDest(i: integer): TAction2Dest;
    public
       constructor create(ps: TPseudoSpriteReader; const action2Table: TAction2Table);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property liveryOverride: boolean read fLivery;
       property genericCallback: boolean read getGenericCallback;
@@ -251,7 +251,7 @@ begin
    result := '<a href="#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr) + '">Action1 Set ' + intToStr(setNr) + '</a>';
 end;
 
-procedure TAction1.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction1.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i, j                                 : integer;
    s                                    : TSprite;
@@ -259,14 +259,14 @@ var
    maxW                                 : integer;
    nr                                   : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action1</b> - Define set of real sprites<br>');
    writeln(t, '<b>Feature</b> 0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"');
 
    maxW := 100;
    for i := 0 to subSpriteCount - 1 do
       if subSprite[i] is TRealSprite then maxW := max(maxW, (subSprite[i] as TRealSprite).width);
-   aimedCols := max(1, aimedWidth div maxW);
+   aimedCols := max(1, settings.aimedWidth div maxW);
 
    if fSpritesPerSet > 1 then
    begin
@@ -282,7 +282,7 @@ begin
             if s = nil then writeln(t, '<td>', i, '<br>Missing sprite') else
             begin
                write(t, '<td>', s.printHtmlSpriteAnchor, i, ' - ', s.printHtmlSpriteNr, '<br>');
-               if s is TRealSprite then s.printHtml(t, path, aimedWidth, suppressData) else
+               if s is TRealSprite then s.printHtml(t, path, settings) else
                                         write(t, 'RealSprite expected');
             end;
             writeln(t, '</td>');
@@ -307,7 +307,7 @@ begin
                if s = nil then writeln(t, '<td>', i, '<br>Missing sprite') else
                begin
                   writeln(t, '<td>', s.printHtmlSpriteAnchor, '<a name="sprite', spriteNr, 'set', nr, '"><b>Set ', nr, '</b></a> - ', s.printHtmlSpriteNr, '<br>');
-                  if s is TRealSprite then s.printHtml(t, path, aimedWidth, suppressData) else
+                  if s is TRealSprite then s.printHtml(t, path, settings) else
                                            write(t, 'RealSprite expected');
                end;
                writeln(t, '</td>');
@@ -371,12 +371,12 @@ begin
    result := fEntries[typ][nr];
 end;
 
-procedure TBasicAction2.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TBasicAction2.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    val                                  : word;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>BasicAction2</b> - Define sprite groups');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
@@ -483,11 +483,11 @@ begin
    inherited destroy;
 end;
 
-procedure THouseIndTileAction2.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure THouseIndTileAction2.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    desc                                 : string;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action2 for houses and industry tiles</b> - Define sprite layout');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
@@ -495,7 +495,7 @@ begin
                              desc := getSpriteDescriptionIndTile(fGroundSprite, fAction1);
    writeln(t, '<tr><th align="left">Ground sprite</th><td>0x', intToHex(fGroundSprite, 8), desc, '</td></tr>');
    writeln(t, '<tr valign="top"><th align="left">Sprite layout</th><td>');
-   fSpriteLayout.printHtml(t, path, suppressData);
+   fSpriteLayout.printHtml(t, path, settings);
    writeln(t, '</td></tr></table>');
 end;
 
@@ -538,11 +538,11 @@ begin
    result := fOutput[i];
 end;
 
-procedure TIndustryProductionCallback.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TIndustryProductionCallback.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>IndustryProcutionCallback</b> - Define industry production');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
@@ -655,13 +655,13 @@ begin
    result := fCases[i];
 end;
 
-procedure TVarAction2.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TVarAction2.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    s, s2                                : string;
    dest                                 : TAction2Dest;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>VarAction2</b> - Choose between Action2 chains');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
@@ -756,12 +756,12 @@ begin
    result := fCases[i];
 end;
 
-procedure TRandomAction2.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TRandomAction2.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>RandomAction2</b> - Randomized choice between Action2s');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
@@ -852,12 +852,12 @@ begin
    result := fDest[i];
 end;
 
-procedure TAction3.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction3.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action3</b> - Install graphic sets');
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>"', TableFeature[fFeature], '"</td></tr>');
    if genericCallback then s := 'generic feature callback' else

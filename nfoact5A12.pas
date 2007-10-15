@@ -18,7 +18,7 @@ unit nfoact5A12;
 
 interface
 
-uses sysutils, grfbase, nfobase, tables, math;
+uses sysutils, grfbase, nfobase, tables, math, outputsettings;
 
 type
    TSpriteReplacementAction = class(TMultiSpriteAction)
@@ -32,25 +32,25 @@ type
    protected
       function getSubSpriteCount: integer; override;
       procedure addSet(spriteCount: integer);
-      procedure printActionHeader(var t: textFile; path: string; aimedWidth: integer); virtual; abstract;
-      procedure printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer); virtual; abstract;
-      procedure printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer); virtual; abstract;
+      procedure printActionHeader(var t: textFile; path: string); virtual; abstract;
+      procedure printSetHeader(var t: textFile; path: string; setNr: integer); virtual; abstract;
+      procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); virtual; abstract;
       property numSets: integer read getNumSets;
       property numSpritesInSet[setNr: integer]: integer read getNumSpritesInSet;
       property sprites[setNr, sprNr: integer]: TSprite read getSprite;
    public
       constructor create(spriteNr: integer; allowRealSprites, allowRecolorSprites: boolean);
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
 
    TAction5 = class(TSpriteReplacementAction)
    private
       fType : byte;
    protected
-      procedure printActionHeader(var t: textFile; path: string; aimedWidth: integer); override;
-      procedure printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer); override;
-      procedure printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer); override;
+      procedure printActionHeader(var t: textFile; path: string); override;
+      procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
+      procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
       constructor create(ps: TPseudoSpriteReader);
       property spriteType: byte read fType;
@@ -61,9 +61,9 @@ type
       fFirstSprite  : array of word;
       function getSpriteID(setNr, sprNr: integer): word;
    protected
-      procedure printActionHeader(var t: textFile; path: string; aimedWidth: integer); override;
-      procedure printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer); override;
-      procedure printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer); override;
+      procedure printActionHeader(var t: textFile; path: string); override;
+      procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
+      procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
       constructor create(ps: TPseudoSpriteReader);
       property numSets;
@@ -79,9 +79,9 @@ type
       function getSetFont(setNr: integer): byte;
       function getCharID(setNr, charNr: integer): word;
    protected
-      procedure printActionHeader(var t: textFile; path: string; aimedWidth: integer); override;
-      procedure printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer); override;
-      procedure printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer); override;
+      procedure printActionHeader(var t: textFile; path: string); override;
+      procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
+      procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
       constructor create(ps: TPseudoSpriteReader);
       property numSets;
@@ -163,7 +163,7 @@ begin
    fTotalSprites := fTotalSprites + spriteCount;
 end;
 
-procedure TSpriteReplacementAction.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TSpriteReplacementAction.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    setNr                                : integer;
    subNr                                : integer;
@@ -172,12 +172,12 @@ var
    colCount                             : integer;
    s                                    : TSprite;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
-   printActionHeader(t, path, aimedWidth);
+   inherited printHtml(t, path, settings);
+   printActionHeader(t, path);
    subNr := 0;
    for setNr := 0 to length(fNumSprites) - 1 do
    begin
-      printSetHeader(t, path, aimedWidth, setNr);
+      printSetHeader(t, path, setNr);
       maxWidth := 100;
       for i := 0 to fNumSprites[setNr] - 1 do
       begin
@@ -188,7 +188,7 @@ begin
             if fRecolor and (s is TRecolorSprite) then maxWidth := max(maxWidth, 500);
          end;
       end;
-      colCount := max(1, aimedWidth div maxWidth);
+      colCount := max(1, settings.aimedWidth div maxWidth);
       if colCount > fNumSprites[setNr] then colCount := fNumSprites[setNr];
       writeln(t, '<table summary="Subsprites" border="1" rules="all"><tr valign="top">');
       for i := 0 to fNumSprites[setNr] - 1 do
@@ -201,9 +201,9 @@ begin
             write(t, s.printHtmlSpriteAnchor);
             if (fReal and (s is TRealSprite)) or (fRecolor and (s is TRecolorSprite)) then
             begin
-               printSpriteHeader(t, path, aimedWidth, setNr, i);
+               printSpriteHeader(t, path, setNr, i);
                writeln(t, ' - ', s.printHtmlSpriteNr, '<br>');
-               s.printHtml(t, path, aimedWidth, suppressData);
+               s.printHtml(t, path, settings);
             end else
             begin
                write(t, s.printHtmlSpriteNr);
@@ -230,7 +230,7 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TAction5.printActionHeader(var t: textFile; path: string; aimedWidth: integer);
+procedure TAction5.printActionHeader(var t: textFile; path: string);
 begin
    writeln(t, '<b>Action5</b> - Define TTDPatch specific graphics sets<table summary="Properties">');
    writeln(t, '<tr><th align="left">Type:</th><td>0x', intToHex(fType, 2), ' "', TableAction5Type[fType], '"</td></tr>');
@@ -238,12 +238,12 @@ begin
    writeln(t, '</table>');
 end;
 
-procedure TAction5.printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer);
+procedure TAction5.printSetHeader(var t: textFile; path: string; setNr: integer);
 begin
    // nothing to do
 end;
 
-procedure TAction5.printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer);
+procedure TAction5.printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer);
 begin
    write(t, 'Nr. ', sprNr);
 end;
@@ -270,17 +270,17 @@ begin
    result := fFirstSprite[setNr] + sprNr;
 end;
 
-procedure TActionA.printActionHeader(var t: textFile; path: string; aimedWidth: integer);
+procedure TActionA.printActionHeader(var t: textFile; path: string);
 begin
    writeln(t, '<b>ActionA</b> - Modify TTD''s sprites');
 end;
 
-procedure TActionA.printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer);
+procedure TActionA.printSetHeader(var t: textFile; path: string; setNr: integer);
 begin
    writeln(t, '<br><b>Set ', setNr, ':</b> Sprites ', fFirstSprite[setNr], ' to ', fFirstSprite[setNr] + numSpritesInSet[setNr] - 1, ' (', numSpritesInSet[setNr], ' sprites)');
 end;
 
-procedure TActionA.printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer);
+procedure TActionA.printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer);
 begin
    write(t, spriteID[setNr, sprNr]);
 end;
@@ -314,18 +314,18 @@ begin
    result := fFirstChar[setNr] + charNr;
 end;
 
-procedure TAction12.printActionHeader(var t: textFile; path: string; aimedWidth: integer);
+procedure TAction12.printActionHeader(var t: textFile; path: string);
 begin
    writeln(t, '<b>Action12</b> - Load font glyphs');
 end;
 
-procedure TAction12.printSetHeader(var t: textFile; path: string; aimedWidth: integer; setNr: integer);
+procedure TAction12.printSetHeader(var t: textFile; path: string; setNr: integer);
 begin
    writeln(t, '<br><b>Set ', setNr, ':</b> Characters 0x', intToHex(fFirstChar[setNr], 4), ' to 0x', intToHex(fFirstChar[setNr] + numSpritesInSet[setNr] - 1, 4), ' (', numSpritesInSet[setNr], ' characters)',
               ' for font 0x', intToHex(fFont[setNr], 2), ' "', TableAction12Font[fFont[setNr]], '"');
 end;
 
-procedure TAction12.printSpriteHeader(var t: textFile; path: string; aimedWidth: integer; setNr, sprNr: integer);
+procedure TAction12.printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer);
 begin
    writeln(t, '0x', intToHex(characterID[setNr, sprNr], 4));
 end;

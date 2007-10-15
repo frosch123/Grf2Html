@@ -18,7 +18,7 @@ unit grfbase;
 
 interface
 
-uses sysutils, windows, classes, graphics, contnrs, pngimage, math;
+uses sysutils, windows, classes, graphics, contnrs, pngimage, math, outputsettings;
 
 const
    {TSpriteCompression}
@@ -40,7 +40,7 @@ type
       function printHtmlSpriteAnchor: string;
       function printHtmlSpriteNr: string;
       function printHtmlSpriteLink: string;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); virtual;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual;
       function getShortDesc: string; virtual; abstract;
       property spriteNr: integer read fSpriteNr;
    end;
@@ -57,7 +57,7 @@ type
       constructor create(spriteNr: integer; w, h: integer; var data; aCompression: TSpriteCompression; relX, relY: integer; useWinPalette: boolean);
       function createBitmap: TBitmap;
       function createPng: TPngObject;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property width: integer read fwidth;
       property height: integer read fheight;
@@ -72,7 +72,7 @@ type
       function getData(i: integer): byte;
    public
       constructor create(spriteNr: integer; aSize: integer; var data);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property size: integer read getSize;
       property data[i: integer]: byte read getData;
@@ -85,7 +85,7 @@ type
       function getData: pointer;
    public
       constructor create(spriteNr: integer; aName: string; aSize: integer; var data);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property name: string read fName write fName;
       property size: integer read getSize;
@@ -143,7 +143,7 @@ begin
    result := '<a href="#sprite' + intToStr(spriteNr) + '">' + printHtmlSpriteNr + ' ' + getShortDesc + '</a>';
 end;
 
-procedure TSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
    // nothing to do
 end;
@@ -193,15 +193,15 @@ begin
    bmp.free;
 end;
 
-procedure TRealSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TRealSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    fn                                   : string;
    png                                  : TPNGObject;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    fn := 'sprite' + intToStr(spriteNr) + '.png';
    writeln(t, '<img alt="', spriteNr, '" src="data/', fn, '"><br>Rel: &lt;', fRelPos.x, ',', fRelPos.y, '&gt;<br>Compr: 0x', intToHex(fCompression, 2));
-   if not suppressData then
+   if not settings.suppressData then
    begin
       png := createPng;
       png.saveToFile(path + 'data\' + fn);
@@ -232,11 +232,11 @@ begin
    result := fData[i];
 end;
 
-procedure TPseudoSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TPseudoSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, 'Unknown Pseudo Sprite, NFO hex stream:');
    for i := 0 to size - 1 do
    begin
@@ -270,13 +270,13 @@ begin
    result := addr(fData[0]);
 end;
 
-procedure TBinaryIncludeSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TBinaryIncludeSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    f                                    : file;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, 'Binary Include Sprite: <a href="data/', fName, '">', fName, '</a>');
-   if (not suppressData) and (fName <> '') then
+   if (not settings.suppressData) and (fName <> '') then
    begin
       try
          assignFile(f, path + 'data\' + fName);

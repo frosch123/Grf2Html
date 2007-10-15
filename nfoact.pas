@@ -18,7 +18,7 @@ unit nfoact;
 
 interface
 
-uses sysutils, grfbase, nfobase, nfoact123, tables, math;
+uses sysutils, grfbase, nfobase, nfoact123, tables, math, outputsettings;
 
 type
    TAction4 = class(TNewGrfSprite)
@@ -34,7 +34,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property langID: byte read fLangID;
       property genericStrings: boolean read fGenericStrings;
@@ -56,7 +56,7 @@ type
       function getOffset(i: integer): integer;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property count: integer read getCount;
       property param[i: integer]: byte read getParam;
       property paramSize[i: integer]: byte read getParamSize;
@@ -74,7 +74,7 @@ type
       fDestination : TSprite;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property variable: byte read fVariable;
       property varSize: byte read fVarSize;
       property condition: byte read fCondition;
@@ -103,7 +103,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property severity: byte read fSeverity;
       property duringInit: boolean read fDuringInit;
       property langID: byte read fLangID;
@@ -119,7 +119,7 @@ type
       fComment: string;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property comment: string read fComment;
    end;
 
@@ -135,7 +135,7 @@ type
       fType: TActionDType;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       // TODO props
    end;
 
@@ -148,7 +148,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property forceActivated: boolean read fForce;
       property disableCount: integer read getDisableCount;
       property disableGrf[i: integer]: longword read getDisableGrf; // grfs to disable or force-activate
@@ -184,7 +184,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
       procedure useAction8(act8: TAction8); override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property ID: byte read fID;
       property finalDefinition: boolean read fFinal;
       property finalNameCount: integer read getFinalNameCount;
@@ -200,7 +200,7 @@ type
       fComment: string;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property labelNr: byte read fLabelNr;
       property comment: string read fComment;
    end;
@@ -222,7 +222,7 @@ type
       function getSoundData: pointer;
    public
       constructor create(bin: TBinaryIncludeSprite);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property name: string read fName write fName;
 
       property size: integer read getSize; {raw file data}
@@ -241,7 +241,7 @@ type
       fSoundNr  : word;
    public
       constructor create(ps: TPseudoSpriteReader; parent: TAction11);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property action11: TAction11 read fParent;
       property grfID: longword read fGrfID;
       property soundNr: word read fSoundNr;
@@ -255,7 +255,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
 
    TAction13 = class(TNewGrfSprite)
@@ -269,7 +269,7 @@ type
       function getText(i: integer): string;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property grfID: longword read fGrfID;
       property feature: TFeature read fFeature;
       property numTexts: integer read getNumTexts;
@@ -341,12 +341,12 @@ begin
    if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
 end;
 
-procedure TAction4.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction4.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action4</b> - Define custom texts');
    writeln(t, '<table summary="Properties">');
    if fFeature = $48 then s := 'generic string' else s := TableFeature[fFeature];
@@ -416,12 +416,12 @@ begin
    result := fOffsets[i];
 end;
 
-procedure TAction6.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction6.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    s                                    : string;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action6</b> - Override bytes in following sprite with parameter, if parameter is defined');
    writeln(t, '<table summary="Properties" border="1" rules="all"><tr><th>Parameter</th><th>Operation</th><th>Number of Bytes</th><th>Offset</th></tr>');
    for i := 0 to length(fParams) - 1 do
@@ -450,12 +450,12 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TAction79.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction79.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
    g                                    : string[4];
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>', getShortDesc, '</b> - Skip sprites conditionally');
    writeln(t, '<table summary="Properties">');
    if fCondition in [$0B, $0C] then s := '0x' + intToHex(fVariable, 2) + ' (ignored)' else
@@ -577,12 +577,12 @@ begin
    if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
 end;
 
-procedure TActionB.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TActionB.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s, s2                                : string;
    i, j                                 : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionB</b> - Generate error message');
    writeln(t, '<table summary="Properties">');
    if fDuringInit then s := 'yes' else s := 'no';
@@ -637,9 +637,9 @@ begin
    for i := 1 to length(fComment) do fComment[i] := char(ps.getByte);
 end;
 
-procedure TActionC.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TActionC.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    // TODO: what about UTF-8 here?
    writeln(t, '<b>ActionC</b> - Do nothing<br><b>Comment:</b> ', formatTextPrintable(fComment, false));
 end;
@@ -665,12 +665,12 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TActionD.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TActionD.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s, p1, p2, d                         : string;
    f, c                                 : string;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionD</b> - Assign parameters and calculate results<br>');
    if fSource1 = $FF then p1 := '0x' + intToHex(fData, 8) else p1 := 'var[' + getAction79DVariable(fSource1) + ']';
    if fSource2 = $FF then p2 := '0x' + intToHex(fData, 8) else p2 := 'var[' + getAction79DVariable(fSource2) + ']';
@@ -735,12 +735,12 @@ begin
       end;
 end;
 
-procedure TActionE.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TActionE.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    thisGrf                              : longword;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    if fAction8 = nil then thisGrf := $FFFFFFFF else thisGrf := fAction8.grfID;
    writeln(t, '<b>ActionE</b> - Deactivate other graphics files or force activation of current file');
    write(t, '<table summary="Properties"><tr><th align="left">Force activation</th><td>');
@@ -847,7 +847,7 @@ begin
    if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
 end;
 
-procedure TActionF.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TActionF.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i, j                                 : integer;
    realProb                             : integer;
@@ -856,7 +856,7 @@ var
    offset                               : int64;
    nextThres                            : int64;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionF</b> - Define new town name styles');
    writeln(t, '<table summary="Properties"><tr><th align="left">ID</th><td>0x', intToHex(fID, 2), '</td></tr>');
    write(t, '<tr><th align="left">Type</th><td>');
@@ -910,9 +910,9 @@ begin
    for i := 1 to length(fComment) do fComment[i] := char(ps.getByte);
 end;
 
-procedure TAction10.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction10.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action10</b> - Define GOTO label for action 7/9');
    writeln(t, '<table summary="Properties"><tr><th align="left">Label ID</th><td>0x', intToHex(fLabelNr, 2), '</td></tr>');
    // TODO: UTF-8 in comment?
@@ -1012,11 +1012,11 @@ begin
    result := addr(fData[fSoundStart]);
 end;
 
-procedure TWaveFile.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TWaveFile.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    f                                    : file;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Wave data</b><table summary="Properties"><tr><th align="left">File</th><td><a href="data/', fName, '">', fName, '</a></td></tr>');
    assignFile(f, path + 'data\' + fName);
    rewrite(f, 1);
@@ -1044,11 +1044,11 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TSoundImport.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TSoundImport.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : TSprite;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Import sound</b><table summary="Properties"><tr><th align="left">GrfID</th><td>', grfID2Str(fGrfID), '</td></tr');
    writeln(t, '<tr><th align="left">Sound</th><td>Nr 0x', intToHex(fSoundNr, 4), ' (', fSoundNr, '), ID 0x', intToHex(fSoundNr + 73, 4), ' (', fSoundNr + 73, ')');
    if (fAction8 <> nil) and (fAction8.grfID = fGrfID) then
@@ -1091,12 +1091,12 @@ begin
    result := inherited processSubSprite(i, s);
 end;
 
-procedure TAction11.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction11.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    s                                    : TSprite;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action11</b> - Define new sound data');
    writeln(t, '<table summary="Properties" border="1" rules="all"><tr><th>Nr</th><th>Sound ID</th><th>Data</th></tr>');
    for i := 0 to fSubSpriteCount - 1 do
@@ -1104,7 +1104,7 @@ begin
       s := subSprite[i];
       writeln(t, '<tr valign="top"><th align="left">0x', intToHex(i, 4), ' (', i, ')</th><th align="left">ID 0x', intToHex(i + 73, 4), ' (', i + 73, ')</th><td>');
       write(t, s.printHtmlSpriteAnchor, s.printHtmlSpriteNr, ' - ');
-      if (s is TWaveFile) or (s is TSoundImport) then s.printHtml(t, path, aimedWidth, suppressData) else
+      if (s is TWaveFile) or (s is TSoundImport) then s.printHtml(t, path, settings) else
                                                       writeln(t, 'Invalid sprite type');
       writeln(t, '</td></tr>');
    end;
@@ -1141,11 +1141,11 @@ begin
    result := fTexts[i];
 end;
 
-procedure TAction13.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction13.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action13</b> - Translate GRF-specific strings');
    writeln(t, '<table summary="Properties"><tr><th align="left">GrfID</th><td>', grfID2Str(fGrfID), '</td></tr>');
    writeln(t, '<tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');

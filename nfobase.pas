@@ -18,7 +18,7 @@ unit nfobase;
 
 interface
 
-uses sysutils, classes, grfbase;
+uses sysutils, classes, grfbase, outputsettings;
 
 const
    FTrain                               = $00;
@@ -85,7 +85,7 @@ type
       destructor destroy; override;
       procedure error(msg: string);
       procedure useAction8(act8: TAction8); virtual;
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property errors: TStrings read getErrors;
    end;
@@ -95,7 +95,7 @@ type
       fSpriteCount: integer;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property spriteCount: integer read fSpriteCount;
    end;
@@ -107,7 +107,7 @@ type
       fRecolorTable: TRecolorTable;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property recolorTable: TRecolorTable read fRecolorTable;
    end;
 
@@ -133,7 +133,7 @@ type
       fDesc       : string;
    public
       constructor create(ps: TPseudoSpriteReader);
-      procedure printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property grfVersion: integer read fGrfVersion;
       property grfID: longword read fGrfID;
       property name: string read fName;
@@ -290,11 +290,11 @@ begin
    if i > 0 then error('Sprite too long: ' + intToStr(i) + ' bytes left.');
 end;
 
-procedure TNewGrfSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TNewGrfSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    if fErrors.count > 0 then
    begin
       writeln(t, '<p><b>Errors:</b><br>');
@@ -316,9 +316,9 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TSpriteCountSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TSpriteCountSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>First Sprite</b><br><b>Spritecount</b> ', spriteCount);
 end;
 
@@ -337,12 +337,12 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TRecolorSprite.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TRecolorSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    y, x                                 : integer;
    v                                    : byte;
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>RecolorSprite</b>');
    write(t, '<table summary="RecolorSprite"><tr><th>0x</th>');
    for x := 0 to 15 do write(t, '<th>_', intToHex(x, 1), '</th>');
@@ -396,9 +396,9 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TAction8.printHtml(var t: textFile; path: string; aimedWidth: integer; suppressData: boolean);
+procedure TAction8.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
-   inherited printHtml(t, path, aimedWidth, suppressData);
+   inherited printHtml(t, path, settings);
    writeln(t, '<b>Action8</b> - Register NewGrf<table summary="Properties">');
    writeln(t, '<tr><th align="left">GrfVersion</th><td>', grfVersion, '</td></tr>');
    writeln(t, '<tr><th align="left">GrfID</th><td>', grfID2Str(fGrfID), '</td></tr>');

@@ -18,7 +18,7 @@ unit spritelayout;
 
 interface
 
-uses sysutils, math, windows, classes, graphics, pngimage, grfbase;
+uses sysutils, math, windows, classes, graphics, pngimage, grfbase, outputsettings;
 
 type
    TChildSprite = record
@@ -45,7 +45,7 @@ type
       constructor create(name: string); // name used for preview image
       procedure addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: longword; description: string);
       function addChildSprite(x, y: integer; aSprite: longword; description: string): boolean; // false if no parentsprite present
-      procedure printHtml(var t: textFile; path: string; suppressData: boolean);
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       property parentSpriteCount: integer read getParentSpriteCount;
       property parentSprites[i: integer]: TParentSprite read getParentSprite;
    end;
@@ -153,7 +153,7 @@ begin
    end;
 end;
 
-procedure TSpriteLayout.printHtml(var t: textFile; path: string; suppressData: boolean);
+procedure TSpriteLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
    procedure worldToScreen(x, y, z: integer; out sx, sy: integer);
    begin
       sx := (y - x) * 2;
@@ -171,7 +171,7 @@ begin
    if length(fParentSprites) > 0 then
    begin
       fn := fName + '.png';
-      if not suppressData then
+      if not settings.suppressData then
       begin
          worldToScreen(16, 0, 0, bbExt[0], y);
          worldToScreen(0, 16, 0, bbExt[1], y);

@@ -18,14 +18,14 @@ unit newgrf;
 
 interface
 
-uses sysutils, classes, contnrs, grfbase, nfobase, nfoact0, nfoact123, nfoact5A12, nfoact;
+uses sysutils, classes, contnrs, grfbase, nfobase, nfoact0, nfoact123, nfoact5A12, nfoact, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.3.1';
    dataVersion                          : string = '27th September 2007';
 
 function parseNewgrf(grfFile: TObjectList): TObjectList;
-procedure printHtml(path, grfName: string; newgrf: TObjectList; aimedWidth: integer; suppressData: boolean);
+procedure printHtml(path, grfName: string; newgrf: TObjectList; const settings: TGrf2HtmlSettings);
 
 procedure printAbout;
 
@@ -194,7 +194,7 @@ end;
  * @param aimedWidth   Approximated width for output in pixels. Used to guess number of columns in some tables.
  * @param suppressData If true, do not generate any files except the actual html files.
  *)
-procedure printHtml(path, grfName: string; newgrf: TObjectList; aimedWidth: integer; suppressData: boolean);
+procedure printHtml(path, grfName: string; newgrf: TObjectList; const settings: TGrf2HtmlSettings);
 var
    t, t2                                : textFile;
    b, b2                                : array[word] of byte; // text file buffers
@@ -242,7 +242,7 @@ begin
       if ssCnt > 0 then dec(ssCnt) else
       begin
          writeln(t2, '<tr valign="top"><td align=right>', s.printHtmlSpriteAnchor, s.printHtmlSpriteNr, '</td><td>');
-         s.printHtml(t2, path, aimedWidth, suppressData);
+         s.printHtml(t2, path, settings);
          writeln(t2, '</td></tr>');
       end;
       if s is TMultiSpriteAction then ssCnt := (s as TMultiSpriteAction).subSpriteCount;

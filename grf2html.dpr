@@ -17,7 +17,7 @@
 program grf2html;
 {$APPTYPE CONSOLE}
 
-uses sysutils, classes, contnrs, inifiles, grfbase, newgrf, filectrl;
+uses sysutils, classes, contnrs, inifiles, grfbase, newgrf, filectrl, outputsettings;
 
 var
    grf                                  : TObjectList;
@@ -38,6 +38,7 @@ var
    printUsage                           : boolean;
    verbose                              : boolean;
    printIni                             : boolean;
+   settings                             : TGrf2HtmlSettings;
 
    i                                    : integer;
 
@@ -194,6 +195,8 @@ begin
 
    outPath := expandFilename(changeFileExt(fn, '') + '\');
    forceDirectories(outPath + 'data');
-   printHtml(outPath, fn, nfo, aimedWidth, suppressData);
+   settings.aimedWidth := aimedWidth;
+   settings.suppressData := suppressData;
+   printHtml(outPath, fn, nfo, settings);
    nfo.free;
 end.
