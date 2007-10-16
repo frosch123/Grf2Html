@@ -60,6 +60,7 @@ var
    TablePrimaryObject                   : TSingleColumnTable;
    TableRelatedObject                   : TSingleColumnTable;
    TableLanguage                        : TSingleColumnTable;
+   TableStringCode                      : TSingleColumnTable;
 
    TableAction0General                  : TTable;
    TableAction0Features                 : array[FTrain..FObject] of TTable;
@@ -98,11 +99,12 @@ type
    end;
 
 const
-   TableList : array[0..(16 + 4 * 16) - 1] of TTableList = (
+   TableList : array[0..(17 + 4 * 16) - 1] of TTableList = (
       (name:'TableFeature'                ; typ:TSingleColumnTable; table:@TableFeature),
       (name:'TablePrimaryObject'          ; typ:TSingleColumnTable; table:@TablePrimaryObject),
       (name:'TableRelatedObject'          ; typ:TSingleColumnTable; table:@TableRelatedObject),
       (name:'TableLanguage'               ; typ:TSingleColumnTable; table:@TableLanguage),
+      (name:'TableStringCode'             ; typ:TSingleColumnTable; table:@TableStringCode),
 
       (name:'TableAction0General'         ; typ:TTable            ; table:@TableAction0General),
       (name:'TableAction0Trains'          ; typ:TTable            ; table:@TableAction0Features[FTrain]),

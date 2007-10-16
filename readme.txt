@@ -96,7 +96,7 @@ Contents:
 6) Limitations:
     - BasicAction2s create hyperlinks to Action1 sets. They always refer to the last Action1.
       This might be wrong, if Action1s are skipped conditionally.
-    - ActionB always uses the english built-in-messages. That implies that your inserted texts will not show UTF-8 encodings.
+    - ActionB always uses the english built-in-messages.
 
    
 7) Notes:

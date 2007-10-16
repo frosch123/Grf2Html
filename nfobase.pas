@@ -140,10 +140,12 @@ type
       property description: string read fDesc;
    end;
 
-function formatTextPrintable(s: string; allowUnicode: boolean): string;
+function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 function grfID2Str(grfID: longword): string;
 
 implementation
+
+uses tables;
 
 constructor TPseudoSpriteReader.create(ps: TPseudoSprite);
 begin
@@ -407,7 +409,7 @@ begin
    writeln(t, '</table>');
 end;
 
-function formatTextPrintable(s: string; allowUnicode: boolean): string;
+function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 var
    i,j                                  : integer;
    quoted                               : boolean;
@@ -415,12 +417,14 @@ var
    charvalue                            : longword;
    charlen                              : byte;
    validchar                            : boolean;
+   tmp, tmp2                            : integer;
+   s2                                   : string;
 begin
    if s = '' then result := '""' else
    begin
       result := '';
       i := 1;
-      unicode := allowUnicode and (length(s) >= 2) and (s[1] = #$C3) and (s[2] = #$9E);
+      unicode := parseStringCodes and (length(s) >= 2) and (s[1] = #$C3) and (s[2] = #$9E);
       if unicode then
       begin
          result := result + '&lt;UTF-8&gt;';
@@ -458,7 +462,7 @@ begin
                1: charvalue :=  ord(s[i    ]); // also allow $80 to $FF of invalid encodings.
                2: charvalue := (ord(s[i    ]) and $1F  shl  6) or ( ord(s[i + 1]) and $3F);
                3: charvalue := (ord(s[i    ]) and $0F  shl 12) or ((ord(s[i + 1]) and $3F) shl  6) or (ord(s[i + 2]) and $3F);
-               4: charvalue := (ord(s[i    ]) and $07  shl 18) or ((ord(s[i + 1]) and $3F) shl 12) or
+             else charvalue := (ord(s[i    ]) and $07  shl 18) or ((ord(s[i + 1]) and $3F) shl 12) or
                               ((ord(s[i + 2]) and $3F) shl 12) or ( ord(s[i + 3]) and $3F);
             end;
 
@@ -475,7 +479,39 @@ begin
          end else
          begin
             charlen := 1;
-            validchar := ord(s[i]) in [$20..$7A]; // TODO: encode the latin1 chars, that are not used as control chars. (see Wiki->StringCodes)
+            if parseStringCodes then
+            begin
+               case ord(s[i]) of
+                  $20..$7A: validchar := true;
+                  $9E     : begin // Euro character -> $20AC -> $E2 $82 $AC
+                               validchar := true;
+                               charlen := 3;
+                               s[i] := #$AC;
+                               insert(#$E2#$82, s, i);
+                            end;
+                  $9F     : begin // Y umlaut  -> $178 -> $C5 $B8
+                               validchar := true;
+                               charlen := 2;
+                               s[i] := #$B8;
+                               insert(#$C5, s, i);
+                            end;
+                  $B9     : begin // superscript "-1"
+                               validchar := true;
+                               charlen := 13;
+                               s[i] := '>';
+                               insert('<sup>-1</sup', s, i);
+                            end;
+                  $A1..$A9, $AB, $AE, $B0..$B3, $BA..$BB, $BE..$FF:
+                            begin // latin1 chars
+                               validchar := true;
+                               charlen := 2;
+                               charvalue := ord(s[i]);
+                               s[i] := char($80 or (charvalue and $3F));
+                               insert(char($C0 or (charvalue shr 6)), s, i);
+                            end;
+                   else     validchar := false;
+               end;
+            end else validchar := (s[i] in [#$20..#$7E]);
          end;
          if validchar then
          begin
@@ -496,8 +532,49 @@ begin
             if quoted then result := result + '" ' else
                if result <> '' then result := result + ' ';
             quoted := false;
-            // TODO: TTDP string codes
-            result := result + '0x' + intToHex(ord(s[i]), 2);
+            if parseStringCodes then
+            begin
+               case ord(s[i]) of
+                  $81: begin
+                          charlen := 3;
+                          tmp := 0;
+                          if i + 1 <= length(s) then tmp := tmp or ord(s[i + 1]);
+                          if i + 2 <= length(s) then tmp := tmp or (ord(s[i + 2]) shl 8);
+                          result := result + '&lt;0x81 string 0x' + intToHex(tmp,4) + '&gt;';
+                       end;
+                  $99: begin
+                          charlen := 2;
+                          if i + 1 <= length(s) then tmp := ord(s[i + 1]) else tmp := 0;
+                          result := result + '&lt;0x99 switch to company color 0x' + intToHex(tmp, 2) + '&gt;';
+                       end;
+                  $9A: begin
+                          charlen := 2;
+                          if i + 1 <= length(s) then tmp := ord(s[i + 1]) else tmp := 0;
+                          result := result + '&lt;0x9A 0x' + intToHex(tmp, 2);
+                          case tmp of
+                             $00, $01: result := result + ' qword [currency]&gt;';
+                                  $03: begin
+                                          charlen := 4;
+                                          tmp2 := 0;
+                                          if i + 2 <= length(s) then tmp2 := tmp2 or ord(s[i + 2]);
+                                          if i + 3 <= length(s) then tmp2 := tmp2 or (ord(s[i + 3]) shl 8);
+                                          result := result + ' push 0x' + intToHex(tmp2, 4) + '&gt;';
+                                       end;
+                                  $04: begin
+                                          charlen := 3;
+                                          if i + 2 <= length(s) then tmp2 := ord(s[i + 2]) else tmp2 := 0;
+                                          result := result + ' unprint ' + intToStr(tmp2) + ' characters&gt;';
+                                       end;
+                             else      result := result + ' unknown&gt;';
+                          end;
+                       end;
+                  else begin
+                          s2 := TableStringCode[ord(s[i])];
+                          if s2 = 'unknown' then result := result + '0x' + intToHex(ord(s[i]), 2) else
+                                                 result := result + '&lt;0x' + intToHex(ord(s[i]), 2) + ' ' + s2 + '&gt;';
+                       end;
+               end;
+            end else result := result + '0x' + intToHex(ord(s[i]), 2);
          end;
          inc(i, charlen);
       end;

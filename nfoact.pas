@@ -579,8 +579,8 @@ end;
 
 procedure TActionB.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
-   s, s2                                : string;
-   i, j                                 : integer;
+   s, s2, s3                            : string;
+   i                                    : integer;
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionB</b> - Generate error message');
@@ -594,34 +594,36 @@ begin
    if fMsgID = $FF then s := ' "custom message"' else s := ' "built-in message"';
    writeln(t, '<tr><th align="left">MessageID</th><td>0x', intToHex(fMsgID, 2), s, '</td></tr>');
    s2 := s2 + ' ' + fMsg;
-   i := pos(#$80, s2);
-   j := pos(#$80, copy(s2, i + 1, length(s2)));
-   if j <> 0 then
-   begin
-      i := i + j;
-      delete(s2, i, 1);
-      insert(fData, s2, i);
-   end;
    s2 := formatTextPrintable(s2, true);
 
-   i := pos('0x80', s2);
+   // Insert <filename> field
+   s2 := stringReplace(s2, '&lt;0x80 ' + TableStringCode[$80] + '&gt;', '&lt;filename&gt;', []);
+
+   // Insert <data> field
+   s3 := '&lt;0x80 ' + TableStringCode[$80] + '&gt;';
+   i := pos(s3, s2);
    if i <> 0 then
    begin
-      delete(s2, i, 4);
-      insert('&lt;filename&gt;', s2, i);
+      s := trim(copy(s2, 1, i - 1));
+      delete(s2, 1, i + length(s3) - 1);
+      s2 := trim(s2);
+      s3 := formatTextPrintable(fData, true);
+
+      // TODO: s3 may start with "<UTF-8>".
+      //       Though unicode is applied correctly to the single string parts,
+      //       the unicode control code looks a bit missplaced in the output.
+      //       What to do with it?
+
+      // concatenate strings s + s3 + s2, but do not double "
+      if (length(s) > 0) and (s[length(s)] = '"') and (s3[1] = '"') then s := copy(s, 1, length(s) - 1) + copy(s3, 2, length(s3)) else
+                                                                         s := s + ' ' + s3;
+      if (length(s2) > 0) and (s2[1] = '"') and (s[length(s)] = '"') then s2 := copy(s, 1, length(s) - 1) + copy(s2, 2, length(s2)) else
+                                                                          s2 := s + ' ' + s2;
    end;
-   i := pos('0x7B', s2);
-   if i <> 0 then
-   begin
-      delete(s2, i, 4);
-      insert('&lt;param 0x' + intToHex(param0, 2) + '&gt;', s2, i);
-   end;
-   i := pos('0x7B', s2);
-   if i <> 0 then
-   begin
-      delete(s2, i, 4);
-      insert('&lt;param 0x' + intToHex(param1, 2) + '&gt;', s2, i);
-   end;
+
+   // Insert params
+   s2 := stringReplace(s2, '&lt;0x7B ' + TableStringCode[$7B] + '&gt;', '&lt;param 0x' + intToHex(param0, 2) + '&gt;', []);
+   s2 := stringReplace(s2, '&lt;0x7B ' + TableStringCode[$7B] + '&gt;', '&lt;param 0x' + intToHex(param1, 2) + '&gt;', []);
 
    writeln(t, '<tr><th align="left">Message</th><td>', s2, '</td></tr></table>');
 end;
@@ -640,7 +642,6 @@ end;
 procedure TActionC.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
    inherited printHtml(t, path, settings);
-   // TODO: what about UTF-8 here?
    writeln(t, '<b>ActionC</b> - Do nothing<br><b>Comment:</b> ', formatTextPrintable(fComment, false));
 end;
 
@@ -915,7 +916,6 @@ begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Action10</b> - Define GOTO label for action 7/9');
    writeln(t, '<table summary="Properties"><tr><th align="left">Label ID</th><td>0x', intToHex(fLabelNr, 2), '</td></tr>');
-   // TODO: UTF-8 in comment?
    writeln(t, '<tr><th align="left">Comment</th><td>', formatTextPrintable(fComment, false), '</td></tr></table>');
 end;
 
