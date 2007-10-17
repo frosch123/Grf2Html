@@ -56,17 +56,16 @@ Contents:
 
 4) Usage:
    Run Grf2Html from a console using:
-      grf2html [options] <inputfile>
-   <inputfile>    Grf to decode. Important: Specify an encoded .grf (not a .nfo) file.
+      grf2html [options] <inputfiles ...>
+   <inputfile ...>   Grfs to decode. Important: Specify an encoded .grf (not a .nfo).
    Options:
-    -h            Prints this message and exits.
-    --ini <file>  Reads default values from <inifile>. Default "grf2html.ini".
-    --nodata      Skip generation of non-html data files (images, binary included data, ...).
-    -p <pal>      Specifies the palette to use in decoding: "win" or "dos"
-    -v            Prints used options
-    -w <width>    Aimed width for content frame in pixels.
-                  Used to determine number of columns in output.
-    --writeini    Prints current options to the file specified by "-ini".
+    -h               Prints this message and exits.
+    --ini <file>     Reads default values from <file>. Default "grf2html.ini".
+    --nodata         Skip generation of non-html data files (images, binary included data, ...).
+    -p <pal>         Specifies the palette to use in decoding: "win" or "dos".
+    -v               Prints used options
+    -w <width>       Aimed width for content frame in pixels. Used to determine number of columns in output.
+    --writeini       Prints current options to the file specified by "-ini".
 
    However you can as well add Grf2Html to the explorer (or similiar program of your OS) context menu for files with .grf extention.
    In that case you want probably put your default options into "grf2html.ini", though they perhaps already suit your needs.
