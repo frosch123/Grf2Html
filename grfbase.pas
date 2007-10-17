@@ -93,6 +93,7 @@ type
    end;
 
 function loadGrf(stream: TStream; useWinPalette: boolean): TObjectList;
+procedure savePng(png: TPngObject; fn: string);
 
 implementation
 
@@ -204,7 +205,7 @@ begin
    if not settings.suppressData then
    begin
       png := createPng;
-      png.saveToFile(path + 'data\' + fn);
+      savePng(png, path + 'data\' + fn);
       png.free;
    end;
 end;
@@ -456,6 +457,33 @@ begin
       result := nil;
       exit;
    end;
+end;
+
+
+procedure savePng(png: TPngObject; fn: string);
+var
+   stream                               : TMemoryStream;
+begin
+   (* Encode and save a png image.
+    * We first encode the png into a MemoryStream, and write it then into the file in one block.
+    * Perhaps this increases speed on some filesystems, though I could not measure a difference on any I tried.
+    *)
+   stream := TMemoryStream.create;
+   png.saveToStream(stream);
+
+   stream.saveToFile(fn); // You laugh, but this line takes 50-90% of the execution time. (depends on OS/FileSystem/Grf)
+   (* Some numbers:
+    *  Test case: Canadian Station Set, Output: 18929 files, 39 MB
+    *
+    *  OS         | FileSystem           | DiskUsage | Total time | stream.saveToFile | Rest
+    * ------------+----------------------+-----------+------------+-------------------+--------
+    *  WinXP      | Fat16 (16K clusters) | 314 MB    | 169.7 s    | 153.4 s  90%      |  16.3 s
+    *  WinXP      | NTFS                 |  92 MB    |  50.0 s    |  44.5 s  89%      |   5.5 s
+    *  Linux/wine | Ext3                 |  92 MB    |  96.9 s    |  52.7 s  54%      |  44.2 s
+    *
+    *)
+
+   stream.free;
 end;
 
 

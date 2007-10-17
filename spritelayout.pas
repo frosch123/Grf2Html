@@ -248,7 +248,7 @@ begin
 
          png := TPNGObject.create;
          png.assign(bb);
-         png.saveToFile(path + 'data\' + fn);
+         savePng(png, path + 'data\' + fn);
          png.free;
          bb.free;
       end;
