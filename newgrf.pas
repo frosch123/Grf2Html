@@ -142,6 +142,7 @@ begin
                else dst := src;
             end;
          end;
+         psr.free;
       end else dst := src;
 
       result.add(dst);

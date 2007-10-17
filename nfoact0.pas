@@ -47,6 +47,7 @@ type
       function getItem(i: integer): TAction0SpecialPropertyArrayItem;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID: integer; typ: TAction0SpecialPropertyArrayItemClass);
+      destructor destroy; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property count: integer read getCount;
       property item[i: integer]: TAction0SpecialPropertyArrayItem read getItem;
@@ -215,6 +216,15 @@ begin
       setLength(fItems, c);
       for i := 0 to c - 1 do fItems[i] := typ.create(action0, ps, ID, i);
    end;
+end;
+
+destructor TAction0SpecialPropertyArray.destroy;
+var
+   i                                    : integer;
+begin
+   for i := 0 to length(fItems) - 1 do fItems[i].free;
+   setlength(fItems, 0);
+   inherited destroy;
 end;
 
 function TAction0SpecialPropertyArray.getCount: integer;
