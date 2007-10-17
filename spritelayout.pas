@@ -251,7 +251,7 @@ begin
          png.saveToFile(path + 'data\' + fn);
          png.free;
          bb.free;
-      end;   
+      end;
       writeln(t, '<img align="top" alt="Bounding Box Preview" src="data/', fn, '">');
    end;
 

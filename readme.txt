@@ -73,7 +73,7 @@ Contents:
 
    The '-nodata' switch speeds the output up a lot. It will skip the generation of any files in the "data\" directory of the output.
    The html output will still link to those files though. This is useful, if you have to decode your grf multiple times with altered
-   NFO code, but unchanged images. Note that the bounding box previews of sprite layouts won't be generated either. 
+   NFO code, but unchanged images. Note that the bounding box previews of sprite layouts won't be generated either.
 
 
 5) Errors: What to do, if Grf2Html prints error messages into the output?
@@ -98,7 +98,7 @@ Contents:
       This might be wrong, if Action1s are skipped conditionally.
     - ActionB always uses the english built-in-messages.
 
-   
+
 7) Notes:
    [1] see http://www.ttdpatch.net
    [2] see http://wiki.ttdpatch.net/tiki-index.php?page=NewGraphicsSpecs
