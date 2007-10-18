@@ -45,7 +45,7 @@ begin
             fn := extractFileDir(pattern) + '\' + search.name;
             write('Load "', fn, '"... ');
             try
-               stream := TFileStream.create(fn, fmOpenRead);
+               stream := TFileStream.create(fn, fmOpenRead or fmShareDenyWrite);
             except
                writeln('error while reading file.');
                halt;
