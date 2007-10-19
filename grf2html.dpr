@@ -17,7 +17,22 @@
 program grf2html;
 {$APPTYPE CONSOLE}
 
-uses sysutils, classes, contnrs, inifiles, grfbase, newgrf, filectrl, outputsettings;
+uses
+  sysutils,
+  classes,
+  filectrl,
+  contnrs,
+  inifiles,
+  tables in 'tables.pas',
+  grfbase in 'grfbase.pas',
+  newgrf in 'newgrf.pas',
+  nfoact0 in 'nfoact0.pas',
+  nfoact5A12 in 'nfoact5A12.pas',
+  nfoact123 in 'nfoact123.pas',
+  nfoact in 'nfoact.pas',
+  nfobase in 'nfobase.pas',
+  outputsettings in 'outputsettings.pas',
+  spritelayout in 'spritelayout.pas';
 
 var
    grf                                  : TObjectList;
