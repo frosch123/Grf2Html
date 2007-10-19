@@ -22,7 +22,7 @@ uses sysutils, classes, contnrs, grfbase, nfobase, nfoact0, nfoact123, nfoact5A1
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.3.1';
-   dataVersion                          : string = '27th September 2007';
+   dataVersion                          : string = '16th October 2007';
 
 function parseNewgrf(grfFile: TObjectList): TObjectList;
 procedure printHtml(path, grfName: string; newgrf: TObjectList; const settings: TGrf2HtmlSettings);

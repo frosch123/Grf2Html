@@ -553,6 +553,7 @@ begin
                           result := result + '&lt;0x9A 0x' + intToHex(tmp, 2);
                           case tmp of
                              $00, $01: result := result + ' qword [currency]&gt;';
+                                  $02: result := result + ' ignore next color code&gt;';
                                   $03: begin
                                           charlen := 4;
                                           tmp2 := 0;
