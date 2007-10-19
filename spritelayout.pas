@@ -22,14 +22,14 @@ uses sysutils, math, windows, classes, graphics, pngimage, grfbase, outputsettin
 
 type
    TChildSprite = record
-      position  : array[0..1] of byte;
+      position  : array[0..1] of integer;
       sprite    : longword;
       desc      : string;
    end;
 
    TParentSprite = record
-      position   : array[0..2] of byte;
-      extent     : array[0..2] of byte;
+      position   : array[0..2] of integer;
+      extent     : array[0..2] of integer;
       sprite     : longword;
       childs     : array of TChildSprite;
       desc       : string;
