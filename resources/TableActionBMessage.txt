@@ -4,3 +4,4 @@
 03=Invalid parameter for 0x80: parameter 0x80 (0x7B)
 04=0x80 must be loaded before 0x80.
 05=0x80 must be loaded after 0x80.
+06=0x80 requires OpenTTD version 0x80 or better.
