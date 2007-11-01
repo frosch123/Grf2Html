@@ -20,7 +20,6 @@ program grf2html;
 uses
   sysutils,
   classes,
-  filectrl,
   contnrs,
   inifiles,
   tables in 'tables.pas',
