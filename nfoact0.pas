@@ -641,7 +641,8 @@ var
    s                                    : string;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $00);
+   assert(ps.peekByte = $00);
+   ps.getByte;
    fFeature := ps.getByte;
    setLength(fProps, ps.getByte);
    fNumIDs := ps.getByte;

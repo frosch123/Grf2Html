@@ -228,7 +228,8 @@ end;
 constructor TAction1.create(ps: TPseudoSpriteReader);
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $01);
+   assert(ps.peekByte = $01);
+   ps.getByte;
    fFeature := ps.getByte;
    fNumSets := ps.getByte;
    fSpritesPerSet := ps.getExtByte;
@@ -331,7 +332,8 @@ var
    feature                              : TFeature;
    ID                                   : integer;
 begin
-   assert(ps.getByte = $02);
+   assert(ps.peekByte = $02);
+   ps.getByte;
    feature := ps.getByte;
    ID := ps.getByte;
    case ps.peekByte of
@@ -804,7 +806,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $03);
+   assert(ps.peekByte = $03);
+   ps.getByte;
    fFeature := ps.getByte;
    tmp := ps.getByte;
    fLivery := (tmp and $80) <> 0;

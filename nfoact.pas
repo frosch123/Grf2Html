@@ -309,7 +309,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $04);
+   assert(ps.peekByte = $04);
+   ps.getByte;
    fFeature := ps.getByte;
    fLangID := ps.getByte;
    fGenericStrings := (fLangID and $80) <> 0;
@@ -367,7 +368,8 @@ var
    tmp                                  : byte;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $06);
+   assert(ps.peekByte = $06);
+   ps.getByte;
    setLength(fParams, 0);
    setLength(fAdd, 0);
    setLength(fSizes, 0);
@@ -508,14 +510,16 @@ end;
 
 constructor TAction7.create(ps: TPseudoSpriteReader);
 begin
-   assert(ps.getByte = $07);
+   assert(ps.peekByte = $07);
+   ps.getByte;
    inherited create(ps);
 end;
 
 
 constructor TAction9.create(ps: TPseudoSpriteReader);
 begin
-   assert(ps.getByte = $09);
+   assert(ps.peekByte = $09);
+   ps.getByte;
    inherited create(ps);
 end;
 
@@ -527,7 +531,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $0B);
+   assert(ps.peekByte = $0B);
+   ps.getByte;
    fDuringInit := (ps.peekByte and $80) <> 0;
    fSeverity := ps.getByte and $7F;
    fLangID := ps.getByte;
@@ -634,7 +639,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $0C);
+   assert(ps.peekByte = $0C);
+   ps.getByte;
    setLength(fComment, ps.bytesLeft);
    for i := 1 to length(fComment) do fComment[i] := char(ps.getByte);
 end;
@@ -649,7 +655,8 @@ end;
 constructor TActionD.create(ps: TPseudoSpriteReader);
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $0D);
+   assert(ps.peekByte = $0D);
+   ps.getByte;
    fTarget := ps.getByte;
    fDefined := (ps.peekByte and $80) <> 0;
    fOperator := ps.getByte and $7F;
@@ -705,7 +712,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $0E);
+   assert(ps.peekByte = $0E);
+   ps.getByte;
    setLength(fGrfIDs, ps.getByte);
    fForce := false;
    for i := 0 to length(fGrfIDs) - 1 do fGrfIDs[i] := ps.getDWord;
@@ -762,7 +770,8 @@ var
    tmp                                  : byte;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $0F);
+   assert(ps.peekByte = $0F);
+   ps.getByte;
    fFinal := (ps.peekByte and $80) <> 0;
    fID := ps.getByte and $7F;
    actionFTable[fID] := self; // IDs can be reused, and they can link to themself (though this causes a infinite loop).
@@ -905,7 +914,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $10);
+   assert(ps.peekByte = $10);
+   ps.getByte;
    fLabelNr := ps.getByte;
    setLength(fComment, ps.bytesLeft);
    for i := 1 to length(fComment) do fComment[i] := char(ps.getByte);
@@ -1037,7 +1047,8 @@ end;
 constructor TSoundImport.create(ps: TPseudoSpriteReader; parent: TAction11);
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getWord = $00FE);
+   assert(ps.peekWord = $00FE);
+   ps.getWord;
    fParent := parent;
    fGrfID := ps.getDWord;
    fSoundNr := ps.getWord;
@@ -1064,7 +1075,8 @@ end;
 constructor TAction11.create(ps: TPseudoSpriteReader);
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $11);
+   assert(ps.peekByte = $11);
+   ps.getByte;
    fSubSpriteCount := ps.getWord;
    testSpriteEnd(ps);
 end;
@@ -1117,7 +1129,8 @@ var
    i                                    : integer;
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $13);
+   assert(ps.peekByte = $13);
+   ps.getByte;
    fFeature := ps.getByte;
    fGrfID := ps.getDWord;
    setLength(fTexts, ps.getByte);

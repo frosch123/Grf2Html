@@ -390,7 +390,8 @@ end;
 constructor TAction8.create(ps: TPseudoSpriteReader);
 begin
    inherited create(ps.spriteNr);
-   assert(ps.getByte = $08);
+   assert(ps.peekByte = $08);
+   ps.getByte;
    fGrfVersion := ps.getByte;
    fGrfID := ps.getDWord;
    fName := ps.getString;

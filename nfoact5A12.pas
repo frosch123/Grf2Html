@@ -224,7 +224,8 @@ end;
 constructor TAction5.create(ps: TPseudoSpriteReader);
 begin
    inherited create(ps.spriteNr, true, true);
-   assert(ps.getByte = $05);
+   assert(ps.peekByte = $05);
+   ps.getByte;
    fType := ps.getByte;
    addSet(ps.getExtByte);
    testSpriteEnd(ps);
@@ -254,7 +255,8 @@ var
    sets, i                              : integer;
 begin
    inherited create(ps.spriteNr, true, true);
-   assert(ps.getByte = $0A);
+   assert(ps.peekByte = $0A);
+   ps.getByte;
    sets := ps.getByte;
    setLength(fFirstSprite, sets);
    for i := 0 to sets - 1 do
@@ -291,7 +293,8 @@ var
    sets, i                              : integer;
 begin
    inherited create(ps.spriteNr, true, false);
-   assert(ps.getByte = $12);
+   assert(ps.peekByte = $12);
+   ps.getByte;
    sets := ps.getByte;
    setLength(fFont, sets);
    setLength(fFirstChar, sets);
