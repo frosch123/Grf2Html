@@ -18,7 +18,7 @@ unit spritelayout;
 
 interface
 
-uses sysutils, math, windows, classes, graphics, pngimage, grfbase, outputsettings;
+uses sysutils, classes, math, osspecific, grfbase, outputsettings;
 
 type
    TChildSprite = record
@@ -57,7 +57,11 @@ function getSpriteDescriptionIndTile(spr: longword; action1: TSprite): string;
 
 implementation
 
-uses nfoact123;
+{$IFDEF FPC}
+   uses nfoact123, fpimage, fpcanvas;
+{$ELSE}
+   uses nfoact123, graphics;
+{$ENDIF}
 
 function getSpriteDescription(spr: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TAction1): string;
 var
@@ -161,8 +165,7 @@ procedure TSpriteLayout.printHtml(var t: textFile; path: string; const settings:
    end;
 var
    i, j                                 : integer;
-   bb                                   : TBitmap;
-   png                                  : TPNGObject;
+   bb                                   : TOSIndependentImage;
    bbExt                                : array[0..3] of integer;
    x, y                                 : integer;
    coords                               : array[0..2, 0..1] of integer;
@@ -197,18 +200,25 @@ begin
                if bbExt[3] < y then bbExt[3] := y;
             end;
 
-         bb := TBitmap.create;
-         bb.pixelFormat := pf8Bit;
-         bb.width := bbExt[1] - bbExt[0] + 1;
-         bb.height := bbExt[3] - bbExt[2] + 1;
+         bb := TOSIndependentImage.create(bbExt[1] - bbExt[0] + 1, bbExt[3] - bbExt[2] + 1);
          with bb.canvas do
          begin
-            brush.color := $FFFFFF;
+            {$IFDEF FPC}
+               pen.FPColor := FPColor($FFFF, $FFFF, $FFFF);
+               brush.FPColor := FPColor($FFFF, $FFFF, $FFFF);
+            {$ELSE}
+               pen.color := $FFFFFF;
+               brush.color := $FFFFFF;
+            {$ENDIF}
             brush.style := bssolid;
-            fillRect(rect(0, 0, bb.width, bb.height));
+            rectangle(0, 0, bb.width, bb.height);
 
             // ground tile
-            pen.color := $FF0000;
+            {$IFDEF FPC}
+               pen.FPColor := FPColor(0, 0, $FFFF);
+            {$ELSE}
+               pen.color := $FF0000;
+            {$ENDIF}
             worldToScreen( 0,  0,  0, x, y);   moveTo(x - bbExt[0], y - bbExt[2]);
             worldToScreen(16,  0,  0, x, y);   lineTo(x - bbExt[0], y - bbExt[2]);
             worldToScreen(16, 16,  0, x, y);   lineTo(x - bbExt[0], y - bbExt[2]);
@@ -216,7 +226,11 @@ begin
             worldToScreen( 0,  0,  0, x, y);   lineTo(x - bbExt[0], y - bbExt[2]);
 
             // bounding boxes
-            pen.color := $000000;
+            {$IFDEF FPC}
+               pen.FPColor := FPColor(0, 0, 0);
+            {$ELSE}
+               pen.color := $000000;
+            {$ENDIF}
             for i := 0 to length(fParentSprites) - 1 do
                with fParentSprites[i] do
                begin
@@ -246,10 +260,7 @@ begin
                end;
          end;
 
-         png := TPNGObject.create;
-         png.assign(bb);
-         savePng(png, path + 'data\' + fn);
-         png.free;
+         bb.savePng(path + 'data' + pathSeparator + fn);
          bb.free;
       end;
       writeln(t, '<img align="top" alt="Bounding Box Preview" src="data/', fn, '">');

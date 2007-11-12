@@ -18,7 +18,7 @@ unit grfbase;
 
 interface
 
-uses sysutils, windows, classes, graphics, contnrs, pngimage, math, outputsettings;
+uses sysutils, {$IFNDEF FPC} windows, {$ENDIF} classes, osspecific, contnrs, math, outputsettings;
 
 const
    {TSpriteCompression}
@@ -29,7 +29,6 @@ const
    scPseudoSprite                       = $FF;
 
 type
-   TByteArray = array[0..high(longint) - 1] of byte;
    TSpriteCompression = byte;
 
    TSprite = class
@@ -52,11 +51,10 @@ type
       fWinPalette   : boolean;
       fWidth        : integer;
       fHeight       : integer;
-      fPixelData    : array of array of byte;
+      fPixelData    : array of byte;
    public
       constructor create(spriteNr: integer; w, h: integer; var data; aCompression: TSpriteCompression; relX, relY: integer; useWinPalette: boolean);
-      function createBitmap: TBitmap;
-      function createPng: TPngObject;
+      procedure savePng(fileName: string);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property width: integer read fwidth;
@@ -93,34 +91,13 @@ type
    end;
 
 function loadGrf(stream: TStream; useWinPalette: boolean): TObjectList;
-procedure savePng(png: TPngObject; fn: string);
 
 implementation
 
 {$R grfbase.res}
 
-type
-   TPalette = array[byte] of TRGBQuad;
-
 var
    winPal, dosPal                       : TPalette;
-
-procedure forcePalette(const bmp: HBitmap; pal: TPalette);
-var
-   screenDC, dc                         : HDC;
-   oldBM                                : HBitmap;
-begin
-   screenDC := getDC(0);
-   dc := createCompatibleDC(screenDC);
-   oldBM := selectObject(dc, bmp);
-   try
-      setDIBColorTable(dc, 0, 256, pal);
-   finally
-      selectObject(dc, oldBM);
-      deleteDC(dc);
-      releaseDC(0, screenDC);
-   end;
-end;
 
 
 constructor TSprite.create(spriteNr: integer);
@@ -151,8 +128,6 @@ end;
 
 
 constructor TRealSprite.create(spriteNr: integer; w, h: integer; var data; aCompression: TSpriteCompression; relX, relY: integer; useWinPalette: boolean);
-var
-   y                                    : integer;
 begin
    inherited create(spriteNr);
    fCompression := aCompression;
@@ -160,54 +135,26 @@ begin
    fWinPalette := useWinPalette;
    fWidth := max(0, w);
    fHeight := max(0, h);
-   setlength(fPixelData,h,w);
-   if w > 0 then
-   begin
-      for y := 0 to h-1 do move(TByteArray(data)[y * w], fPixelData[y][0], w);
-   end;
+   setlength(fPixelData, fWidth * fHeight);
+   if length(fPixelData) > 0 then move(data, fPixelData[0], length(fPixelData));
 end;
 
-function TRealSprite.createBitmap: TBitmap;
+procedure TRealSprite.savePng(fileName: string);
 var
-   y                                    : integer;
+   pal                                  : ^TPalette;
 begin
-   result := TBitmap.create;
-   result.pixelFormat := pf8Bit;
-   result.width := fWidth;
-   result.height := fHeight;
-   // set palette
-   if fWinPalette then forcePalette(result.handle, winPal) else forcePalette(result.handle, dosPal);
-   // set bitmap data
-   if fWidth > 0 then
-   begin
-      for y := 0 to fHeight - 1 do move(fPixelData[y][0], result.scanLine[y]^, fWidth);
-   end;
-end;
-
-function TRealSprite.createPng: TPngObject;
-var
-   bmp                                  : TBitmap;
-begin
-   bmp := createBitmap;
-   result := TPNGObject.create;
-   result.assign(bmp);
-   bmp.free;
+   if fWinPalette then pal := @winPal else pal := @dosPal;
+   osspecific.savePng(fileName, pal^, fWidth, fHeight, @(fPixelData[0]));
 end;
 
 procedure TRealSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    fn                                   : string;
-   png                                  : TPNGObject;
 begin
    inherited printHtml(t, path, settings);
    fn := 'sprite' + intToStr(spriteNr) + '.png';
    writeln(t, '<img alt="', spriteNr, '" src="data/', fn, '"><br>Rel: &lt;', fRelPos.x, ',', fRelPos.y, '&gt;<br>Compr: 0x', intToHex(fCompression, 2));
-   if not settings.suppressData then
-   begin
-      png := createPng;
-      savePng(png, path + 'data\' + fn);
-      png.free;
-   end;
+   if not settings.suppressData then savePng(path + 'data' + pathSeparator + fn);
 end;
 
 function TRealSprite.getShortDesc: string;
@@ -280,7 +227,7 @@ begin
    if (not settings.suppressData) and (fName <> '') then
    begin
       try
-         assignFile(f, path + 'data\' + fName);
+         assignFile(f, path + 'data' + pathSeparator + fName);
          rewrite(f, 1);
       except
          writeln(t,' Error: Could not create file');
@@ -460,47 +407,10 @@ begin
 end;
 
 
-procedure savePng(png: TPngObject; fn: string);
-var
-   stream                               : TMemoryStream;
-begin
-   (* Encode and save a png image.
-    * We first encode the png into a MemoryStream, and write it then into the file in one block.
-    * Perhaps this increases speed on some filesystems, though I could not measure a difference on any I tried.
-    *)
-   stream := TMemoryStream.create;
-   png.saveToStream(stream);
-
-   stream.saveToFile(fn); // You laugh, but this line takes 50-90% of the execution time. (depends on OS/FileSystem/Grf)
-   (* Some numbers:
-    *  Test case: Canadian Station Set, Output: 18929 files, 39 MB
-    *
-    *  OS         | FileSystem           | DiskUsage | Total time | stream.saveToFile | Rest
-    * ------------+----------------------+-----------+------------+-------------------+--------
-    *  WinXP      | Fat16 (16K clusters) | 314 MB    | 169.7 s    | 153.4 s  90%      |  16.3 s
-    *  WinXP      | NTFS                 |  92 MB    |  50.0 s    |  44.5 s  89%      |   5.5 s
-    *  Linux/wine | Ext3                 |  92 MB    |  96.9 s    |  52.7 s  54%      |  44.2 s
-    *
-    *)
-
-   stream.free;
-end;
-
-
 procedure readPalette(s: TStream; var pal: TPalette);
-var
-   buf                                  : array[0..255, 0..2] of byte;
-   i                                    : integer;
 begin
-   assert(s.size = sizeof(buf));
-   s.readBuffer(buf, sizeof(buf));
-   for i := 0 to 255 do
-   begin
-      pal[i].rgbRed := buf[i, 0];
-      pal[i].rgbGreen := buf[i, 1];
-      pal[i].rgbBlue := buf[i, 2];
-      pal[i].rgbReserved := 0;
-   end;
+   assert(s.size = sizeof(pal));
+   s.readBuffer(pal, sizeof(pal));
    s.free;
 end;
 

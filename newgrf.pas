@@ -43,9 +43,11 @@ begin
    writeln('Based on TTDPatch documentation and NewGraphicsSpecs from ', dataVersion); // they have written all the texts :)
    writeln('Visit http://wiki.ttdpatch.net/tiki-index.php?page=NewGraphicsSpecs');
    writeln;
-   writeln('This tool makes use of PNG Delphi by Gustavo Daud'); // the author wants to get mentioned
-   writeln('Visit http://pngdelphi.sourceforge.net');
-   writeln;
+   {$IFNDEF FPC}
+      writeln('This tool makes use of PNG Delphi by Gustavo Daud'); // the author wants to get mentioned
+      writeln('Visit http://pngdelphi.sourceforge.net');
+      writeln;
+   {$ENDIF}
 end;
 
 (*

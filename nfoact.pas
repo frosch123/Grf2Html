@@ -18,7 +18,7 @@ unit nfoact;
 
 interface
 
-uses sysutils, grfbase, nfobase, nfoact123, tables, math, outputsettings;
+uses sysutils, math, osspecific, grfbase, nfobase, nfoact123, tables, outputsettings;
 
 type
    TAction4 = class(TNewGrfSprite)
@@ -1028,7 +1028,7 @@ var
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Wave data</b><table summary="Properties"><tr><th align="left">File</th><td><a href="data/', fName, '">', fName, '</a></td></tr>');
-   assignFile(f, path + 'data\' + fName);
+   assignFile(f, path + 'data' + pathSeparator + fName);
    rewrite(f, 1);
    blockWrite(f, data^, size);
    closeFile(f);

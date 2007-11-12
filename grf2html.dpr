@@ -15,13 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 program grf2html;
-{$APPTYPE CONSOLE}
+
+{$IFNDEF FPC}
+   {$APPTYPE CONSOLE}
+{$ENDIF}
 
 uses
   sysutils,
   classes,
   contnrs,
-  inifiles,
+{$IFNDEF FPC}
+  filectrl,
+{$ENDIF}
   tables in 'tables.pas',
   grfbase in 'grfbase.pas',
   newgrf in 'newgrf.pas',
@@ -31,7 +36,8 @@ uses
   nfoact in 'nfoact.pas',
   nfobase in 'nfobase.pas',
   outputsettings in 'outputsettings.pas',
-  spritelayout in 'spritelayout.pas';
+  spritelayout in 'spritelayout.pas',
+  osspecific in 'osspecific.pas';
 
 var
    grf                                  : TObjectList;
@@ -56,7 +62,7 @@ begin
       if findFirst(pattern, faReadOnly or faArchive, search) = 0 then
       begin
          repeat
-            fn := extractFileDir(pattern) + '\' + search.name;
+            fn := extractFileDir(pattern) + pathSeparator + search.name;
             write('Load "', fn, '"... ');
             try
                stream := TFileStream.create(fn, fmOpenRead or fmShareDenyWrite);
@@ -72,7 +78,7 @@ begin
                write('Parse newgrf... ');
                nfo := parseNewgrf(grf);
                writeln('done');
-               outPath := expandFilename(changeFileExt(fn, '') + '\');
+               outPath := expandFilename(changeFileExt(fn, '') + pathSeparator);
                forceDirectories(outPath + 'data');
                printHtml(outPath, fn, nfo, settings);
                nfo.free;
