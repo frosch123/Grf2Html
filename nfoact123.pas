@@ -359,7 +359,13 @@ begin
    setLength(fEntries[1], ps.getByte);
    for i := 0 to length(fEntries[0]) - 1 do fEntries[0][i] := ps.getWord;
    for i := 0 to length(fEntries[1]) - 1 do fEntries[1][i] := ps.getWord;
-   if (fFeature = FCargo) and ((length(fEntries[0]) <> 1) or (length(fEntries[1]) <> 0)) then error('Cargo Action2 must have num-ent1=1, num-ent2=0');
+   if (length(fEntries[0]) <> 1) or (length(fEntries[1]) <> 0) then
+   begin
+      case fFeature of
+         FCargo: error('Cargo Action2 must have num-ent1=1, num-ent2=0');
+         FCanal: error('Canal Action2 must have num-ent1=1, num-ent2=0');
+      end;
+   end;
    testSpriteEnd(ps);
 end;
 
@@ -385,6 +391,7 @@ begin
    write(t, '<tr><th align="left">');
    case fFeature of
       FCargo  : write(t, 'Cargo symbol');
+      FCanal  : write(t, 'Canal graphics');
       FStation: write(t, 'Little cargo');
       else      write(t, 'Moving');
    end;
@@ -404,7 +411,7 @@ begin
       end;
    end;
    write(t, '</td></tr>');
-   if fFeature <> FCargo then
+   if (fFeature <> FCargo) and (fFeature <> FCanal) then
    begin
       if fFeature = FStation then write(t, '<tr><th align="left">Lots of cargo') else
                                   write(t, '<tr><th align="left">Loading/Unloading');
