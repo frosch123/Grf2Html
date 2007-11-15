@@ -25,4 +25,5 @@
 20=4@Prospecting success chance
 21=1H@Callback flags #1
 22=1H@Callback flags #2
-
+23=4@Destruction cost multiplier
+24=2H@Default text for nearby station

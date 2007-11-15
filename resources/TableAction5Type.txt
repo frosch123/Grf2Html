@@ -1,7 +1,7 @@
 04=Pre-signal/semaphore/PBS graphics
 05=Overhead wires and pylon graphics
 06=Foundations (retaining walls) for BuildOnSlopes
-07=GUI sprites
+07=TTDPatch GUI sprites
 08=Canals
 09=One-way road arrows
 0A=Two company color translation maps
@@ -13,3 +13,6 @@
 10=Additional airport graphics
 11=Road stop graphics
 12=Aqueduct graphics
+13=Autorail sprites
+14=Flag sprites
+15=OpenTTD GUI sprites

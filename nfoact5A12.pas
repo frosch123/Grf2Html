@@ -46,7 +46,8 @@ type
 
    TAction5 = class(TSpriteReplacementAction)
    private
-      fType : byte;
+      fType    : byte;
+      fOffset  : integer;
    protected
       procedure printActionHeader(var t: textFile; path: string); override;
       procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
@@ -54,6 +55,7 @@ type
    public
       constructor create(ps: TPseudoSpriteReader);
       property spriteType: byte read fType;
+      property spriteOffset: integer read fOffset;
    end;
 
    TActionA = class(TSpriteReplacementAction)
@@ -228,12 +230,16 @@ end;
 
 
 constructor TAction5.create(ps: TPseudoSpriteReader);
+var
+   hasOffset                            : boolean;
 begin
    inherited create(ps.spriteNr, true, true);
    assert(ps.peekByte = $05);
    ps.getByte;
-   fType := ps.getByte;
+   hasOffset := (ps.peekByte and $80) <> 0;
+   fType := ps.getByte and $7F;
    addSet(ps.getExtByte);
+   if hasOffset then fOffset := ps.getExtByte else fOffset := 0;
    testSpriteEnd(ps);
 end;
 
@@ -241,18 +247,17 @@ procedure TAction5.printActionHeader(var t: textFile; path: string);
 begin
    writeln(t, '<b>Action5</b> - Define TTDPatch specific graphics sets<table summary="Properties">');
    writeln(t, '<tr><th align="left">Type:</th><td>0x', intToHex(fType, 2), ' "', TableAction5Type[fType], '"</td></tr>');
-   writeln(t, '<tr><th align="left">Spritecount:</th><td>', subSpriteCount, '</td></tr>');
    writeln(t, '</table>');
 end;
 
 procedure TAction5.printSetHeader(var t: textFile; path: string; setNr: integer);
 begin
-   // nothing to do
+   writeln(t, 'Sprites ', fOffset, ' to ', fOffset + subSpriteCount - 1, ' (', subSpriteCount, ' sprites)');
 end;
 
 procedure TAction5.printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer);
 begin
-   write(t, 'Nr. ', sprNr);
+   write(t, 'Nr. ', sprNr + fOffset);
 end;
 
 
