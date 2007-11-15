@@ -245,7 +245,19 @@ begin
       if ssCnt > 0 then dec(ssCnt) else
       begin
          writeln(t2, '<tr valign="top"><td align=right>', s.printHtmlSpriteAnchor, s.printHtmlSpriteNr, '</td><td>');
-         s.printHtml(t2, path, settings);
+         try
+            s.printHtml(t2, path, settings);
+         except
+            on E: Exception do
+               begin
+                  writeln('Exception: ', E.message);
+                  writeln(t, '<tr><td colspan="2">Exception: ', E.message, '</td></tr>');
+                  writeln(t2, '<br><br>Exception: ', E.message);
+                  closeFile(t);
+                  closeFile(t2);
+                  halt;
+               end;
+         end;
          writeln(t2, '</td></tr>');
       end;
       if s is TMultiSpriteAction then ssCnt := (s as TMultiSpriteAction).subSpriteCount;
