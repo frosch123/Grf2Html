@@ -84,7 +84,7 @@ begin
                nfo.free;
             end;
          until findNext(search) <> 0;
-      end else writeln('File not found: ', fn);
+      end else writeln('File not found: ', pattern);
       findClose(search);
    end;
 end.
