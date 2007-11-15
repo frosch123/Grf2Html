@@ -14,13 +14,13 @@ grf2html: grfbase.or tables.or $(PAS) grf2html.dpr
 	$(FPC) $(FPCFLAGS) grf2html.dpr
 
 grfbase.or: grfbase.res
-	rm -f grfbase.ppu grfbase.o
+	rm -f grfbase.ppu grfbase.o grfbase.or
 
 grfbase.res: resources/pal_dos.bcp resources/pal_win.bcp grfbase.rc
 	cat grfbase.rc | sed 's#\\#/#g' | $(WINDRES) -o grfbase.res
 
 tables.or: tables.res
-	rm -f tables.ppu tables.o
+	rm -f tables.ppu tables.o tables.or
 
 tables.res: $(TXT) tables.rc
 	cat tables.rc | sed 's#\\#/#g' | $(WINDRES) -o tables.res
