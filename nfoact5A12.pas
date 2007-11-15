@@ -178,6 +178,12 @@ begin
    for setNr := 0 to length(fNumSprites) - 1 do
    begin
       printSetHeader(t, path, setNr);
+      if fNumSprites[setNr] = 0 then
+      begin
+         writeln(t, '<br>');
+         continue;
+      end;
+
       maxWidth := 100;
       for i := 0 to fNumSprites[setNr] - 1 do
       begin

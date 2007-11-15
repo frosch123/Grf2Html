@@ -263,6 +263,9 @@ begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Action1</b> - Define set of real sprites<br>');
    writeln(t, '<b>Feature</b> 0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"');
+   writeln(t, '<br>', fNumSets, ' sets of ', fSpritesPerSet, ' sprites:');
+
+   if fSpritesPerSet * fNumSets = 0 then exit;
 
    maxW := 100;
    for i := 0 to subSpriteCount - 1 do

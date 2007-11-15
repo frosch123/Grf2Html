@@ -316,7 +316,7 @@ procedure TAction0ByteArray.printHtml(var t: textFile; path: string; const setti
 var
    i                                    : integer;
 begin
-   write(t, '&nbsp;&nbsp;');
+   write(t, length(fData), ' entries: ');
    for i := 0 to length(fData) - 1 do
    begin
       if i = 0 then write(t, '0x', intToHex(fData[i], 2)) else
