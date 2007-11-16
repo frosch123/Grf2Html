@@ -363,10 +363,10 @@ var
    nr, i, cnt                           : integer;
 begin
    result := TStringList.create;
-   s := changeFileExt(extractFilename(paramStr(0)), '.ini');
+   s := changeFileExt(paramStr(0), '.ini');
    options := TObjectList.create(true);
    options.add(TGrf2HtmlOptionSetOnly.create(printUsage           , '-h'        , ''        , ''          , ''                                    , ''       , 'Prints this message and exits.'));
-   options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + s + '".'));
+   options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + extractFileName(s) + '".'));
    options.add(TGrf2HtmlOptionSetOnly.create(settings.suppressData, '--nodata'  , ''        , ''          , 'Skip data'                           , ''       , 'Skip generation of non-html data files'#13#10'(images, binary included data, ...).'));
    options.add(TGrf2HtmlOptionPalette.create(settings.winPalette  , '-p'        , 'Grf2Html', 'WinPalette', 'Palette'    , true                   , '<pal>'  , 'Specifies the palette to use in decoding: "win" or "dos".'));
    options.add(TGrf2HtmlOptionSetOnly.create(verbose              , '-v'        , 'Grf2Html', 'Verbose'   , ''                                    , ''       , 'Prints used options'));
