@@ -1,3 +1,23 @@
+Version 0.4 - 16. Nov. 2007
+ - Port to Free Pascal to enable compiling for Linux. (Thanks TrueLight for helping)
+ - Update to current NewGrfSpecs:
+     Action0 IndustryProperties 23 and 24.
+     Action5 Types 13, 14 and 15.
+     Action5 with offset.
+     Action7/9/D variable A1.
+     ActionB message 06.
+ - Feature: Allow passing of multiple files and wildcards by the command line.
+ - Feature: Add support for TTDP string codes.
+ - Feature: Handle characters in the range #$9E..#$FF correctly.
+ - Feature: Print exceptions into the output and properly flush the files. (Belugas)
+ - Feature: Allow to run the program even if (O)TTD(P) is running with the given grf file loaded (Belugas)
+ - Change: Nicer output for BasicAction2 of Canals
+ - Change: Make the operations in AdvancedVarAction2 and ActionD more readable by putting the "[signed]" etc. in a subscript.
+ - Change: Nicer output for empty Action1/5/A/12 and empty Action0ByteArray (like HouseCargoAcceptanceWatchList or IndustryRandomSoundEffects)
+ - Fix: Positions of bounding boxes in sprite layouts are signed. (George)
+ - Fix: ActionB <data> field now handles UTF-8 correctly. (Though the <UTF-8> control code looks a bit missplaced in the output).
+ - Fix: Creation of images crashed on older windows versions.
+
 Version 0.3.1 - 11. Oct. 2007
  - Fix: The first sprite is never a BinaryIncludeSprite. (boekabart)
  - Fix: Do not try to save binary included files with invalid filenames.

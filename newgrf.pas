@@ -21,7 +21,7 @@ interface
 uses sysutils, classes, contnrs, grfbase, nfobase, nfoact0, nfoact123, nfoact5A12, nfoact, outputsettings;
 
 const
-   grf2HtmlVersion                      : string = 'Grf2Html 0.3.1';
+   grf2HtmlVersion                      : string = 'Grf2Html 0.4';
    dataVersion                          : string = '15th November 2007';
 
 function parseNewgrf(grfFile: TObjectList): TObjectList;
