@@ -46,18 +46,21 @@ Contents:
      3) A SubVersion (svn) client to get the source.
      4) PngDelphi by Gustavo Daud. Either from sourceforge [5] or from
            svn://dumbledore.zernebok.com/projects/3rdparty/pngdelphi
-     5) Grf2Html source from
+     5) If your binary should work on older windows versions (like 98) you need the fix for PngDelphi from
+           http://sourceforge.net/tracker/index.php?func=detail&aid=1559286&group_id=16012&atid=116012
+     6) Grf2Html source from
            svn://dumbledore.zernebok.com/projects/grf2html
    To build Grf2Html proceed in these steps:
-     1) Compile the resource files in the Grf2Html source directory. I.e. run from console:
+     1) Apply the fix for PngDelphi if needed.
+     2) Compile the resource files in the Grf2Html source directory. I.e. run from console:
            brcc32.exe grfbase.rc
            brcc32.exe tables.rc
         Typically the .rc extention is associated to brcc32 in explorer.
-     2) Open "grf2html.dpr" with Delphi.
-     3) Specify the location of PngDelphi. Depending on your Delphi version/language somewhere like
+     3) Open "grf2html.dpr" with Delphi.
+     4) Specify the location of PngDelphi. Depending on your Delphi version/language somewhere like
            Menu->Project->Options->Directories->SearchPath
-     4) Press compile.
-     5) Optionally run "grf2html --writeini" to create the default ini-file, that is bundled with the normal win32 build.
+     5) Press compile.
+     6) Optionally run "grf2html --writeini" to create the default ini-file, that is bundled with the normal win32 build.
 
 3.2) Compiling on linux with Free Pascal:
    You need:
