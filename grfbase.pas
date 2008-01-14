@@ -113,7 +113,7 @@ end;
 
 function TSprite.printHtmlSpriteNr: string;
 begin
-   result := '#' + intToStr(spriteNr);
+   result := '#&nbsp;' + intToStr(spriteNr);
 end;
 
 function TSprite.printHtmlSpriteLink: string;
