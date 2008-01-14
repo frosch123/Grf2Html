@@ -140,6 +140,17 @@ type
       property description: string read fDesc;
    end;
 
+   TSpriteSet = class
+   private
+      fSprites    : TList;
+      function findPosition(nr: integer): integer;
+   public
+      constructor create;
+      destructor destroy; override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+      procedure add(s: TSprite);
+   end;
+
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 function grfID2Str(grfID: longword): string;
 
@@ -408,6 +419,59 @@ begin
    writeln(t, '<tr><th align="left">Name</th><td>', formatTextPrintable(name, true), '</td></tr>');
    writeln(t, '<tr><th align="left">Description</th><td>', formatTextPrintable(description, true), '</td></tr>');
    writeln(t, '</table>');
+end;
+
+constructor TSpriteSet.create;
+begin
+   inherited create;
+   fSprites := TList.create;
+end;
+
+destructor TSpriteSet.destroy;
+begin
+   fSprites.free;
+   inherited destroy;
+end;
+
+function TSpriteSet.findPosition(nr: integer): integer;
+var
+   first, last                          : integer;
+   spr                                  : integer;
+begin
+   first := 0;
+   last := fSprites.count;
+   while first < last do
+   begin
+      result := (first + last) div 2;
+      spr := TSprite(fSprites[result]).spriteNr;
+      if spr = nr then exit;
+      if spr > nr then first := result + 1 else last := result;
+   end;
+   result := first;
+end;
+
+procedure TSpriteSet.add(s: TSprite);
+var
+   p                                    : integer;
+begin
+   p := findPosition(s.spriteNr);
+   if p >= fSprites.count then fSprites.add(s) else
+      if fSprites[p] <> s then fSprites.insert(p,s);
+end;
+
+procedure TSpriteSet.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i                                    : integer;
+begin
+   if fSprites.count = 0 then writeln(t, '-') else
+   begin
+      for i := 0 to fSprites.count - 1 do
+      begin
+         if i <> 0 then write(t, ', ');
+         write(t, TSprite(fSprites[i]).printHtmlSpriteLink);
+      end;
+      writeln(t);
+   end;
 end;
 
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;

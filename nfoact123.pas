@@ -26,11 +26,14 @@ type
       fFeature       : TFeature;
       fNumSets       : integer;
       fSpritesPerSet : integer;
+      fLinkedFrom    : array of TSpriteSet;
    protected
       function getSubSpriteCount: integer; override;
    public
       constructor create(ps: TPseudoSpriteReader);
+      destructor destroy; override;
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
+      procedure registerLink(setNr: integer; from: TNewGrfSprite);
       function printHtmlLinkToSet(setNr: integer): string;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
@@ -48,11 +51,15 @@ type
    TAction2Table = array[byte] of TAction2;
    TAction2 = class(TNewGrfSprite)
    private
-      fFeature: TFeature;
-      fCargoID: integer;
+      fFeature    : TFeature;
+      fCargoID    : integer;
+      fLinkedFrom : TSpriteSet;
    public
       constructor create(spriteNr: integer; feature: TFeature; cargoID: integer);
+      destructor destroy; override;
       class function readAction2(ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
+      procedure registerLink(from: TNewGrfSprite);
+      procedure printLinkedFrom(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       property feature: TFeature read fFeature;
       property cargoID: integer read fCargoID;
    end;
@@ -73,9 +80,10 @@ type
 
    THouseIndTileAction2 = class(TAction2)
    private
-      fGroundSprite     : longword;
-      fAction1          : TAction1;
-      fSpriteLayout     : TSpriteLayout;
+      fAction1                 : TAction1;
+      fGroundSprite            : longword;
+      fGroundSpriteDescription : string;
+      fSpriteLayout            : TSpriteLayout;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
       destructor destroy; override;
@@ -204,7 +212,10 @@ begin
       // normal chain
       if result.value < $100 then result.dest := action2Table[result.value] else
                                   result.dest := nil;
-      if result.dest = nil then parent.error('Undefined Action2 CargoID 0x' + intToHex(result.value, 4));
+      if result.dest <> nil then
+      begin
+         result.dest.registerLink(parent);
+      end else parent.error('Undefined Action2 CargoID 0x' + intToHex(result.value, 4));
    end;
 end;
 
@@ -226,14 +237,26 @@ begin
 end;
 
 constructor TAction1.create(ps: TPseudoSpriteReader);
+var
+   i                                    : integer;
 begin
    inherited create(ps.spriteNr);
    assert(ps.peekByte = $01);
    ps.getByte;
    fFeature := ps.getByte;
    fNumSets := ps.getByte;
+   setLength(fLinkedFrom, fNumSets);
+   for i := 0 to fNumSets - 1 do fLinkedFrom[i] := TSpriteSet.create;
    fSpritesPerSet := ps.getExtByte;
    testSpriteEnd(ps);
+end;
+
+destructor TAction1.destroy;
+var
+   i                                    : integer;
+begin
+   for i := 0 to fNumSets - 1 do fLinkedFrom[i].free;
+   setLength(fLinkedFrom, 0);
 end;
 
 function TAction1.getSubSpriteCount: integer;
@@ -250,6 +273,12 @@ end;
 function TAction1.printHtmlLinkToSet(setNr: integer): string;
 begin
    result := '<a href="#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr) + '">Action1 Set ' + intToStr(setNr) + '</a>';
+end;
+
+procedure TAction1.registerLink(setNr: integer; from: TNewGrfSprite);
+begin
+   if (setNr >= 0) and (setNr < fNumSets) then fLinkedFrom[setNr].add(from) else
+                                               from.error('Action1 Set Nr. ' + intToStr(setNr) + ' out of range. (' + intToStr(fNumSets) + ' sets defined)');
 end;
 
 procedure TAction1.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -278,7 +307,9 @@ begin
       write(t, '<table summary="Subsprites" border="1" rules="all">');
       for j := 0 to fNumSets - 1 do
       begin
-         writeln(t, '<tr valign="top"><th align="left" rowspan="', (fSpritesPerSet + aimedCols - 1) div aimedCols, '"><a name="sprite', spriteNr, 'set', j, '">Set ', j, '</a></th>');
+         writeln(t, '<tr valign="top"><th align="left" rowspan="', (fSpritesPerSet + aimedCols - 1) div aimedCols, '"><a name="sprite', spriteNr, 'set', j, '">Set ', j, '</a><br><font size="-2">Linked from: ');
+         fLinkedFrom[j].printHtml(t, path, settings);
+         writeln(t, '</font></th>');
          for i := 0 to fSpritesPerSet - 1 do
          begin
             if (i <> 0) and (i mod aimedCols = 0) then writeln(t, '</tr><tr valign="top">');
@@ -310,7 +341,9 @@ begin
                s := subSprite[nr];
                if s = nil then writeln(t, '<td>', i, '<br>Missing sprite') else
                begin
-                  writeln(t, '<td>', s.printHtmlSpriteAnchor, '<a name="sprite', spriteNr, 'set', nr, '"><b>Set ', nr, '</b></a> - ', s.printHtmlSpriteNr, '<br>');
+                  writeln(t, '<td>', s.printHtmlSpriteAnchor, '<a name="sprite', spriteNr, 'set', nr, '"><b>Set ', nr, '</b></a> - ', s.printHtmlSpriteNr, '<br><font size="-2">Linked from: ');
+                  fLinkedFrom[nr].printHtml(t, path, settings);
+                  write(t, '</font><br>');
                   if s is TRealSprite then s.printHtml(t, path, settings) else
                                            write(t, 'RealSprite expected');
                end;
@@ -328,6 +361,13 @@ begin
    inherited create(spriteNr);
    fFeature := feature;
    fCargoID := cargoID;
+   fLinkedFrom := TSpriteSet.create;
+end;
+
+destructor TAction2.destroy;
+begin
+   fLinkedFrom.free;
+   inherited destroy;
 end;
 
 class function TAction2.readAction2(ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
@@ -351,6 +391,18 @@ begin
    action2Table[ID] := result;
 end;
 
+procedure TAction2.registerLink(from: TNewGrfSprite);
+begin
+   fLinkedFrom.add(from);
+end;
+
+procedure TAction2.printLinkedFrom(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   write(t, '<font size="-2">Linked from: ');
+   fLinkedFrom.printHtml(t, path, settings);
+   writeln(t, '</font>');
+end;
+
 constructor TBasicAction2.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
 var
    i                                    : integer;
@@ -360,8 +412,16 @@ begin
    if fAction1 = nil then error('Missing Action1');
    setLength(fEntries[0], ps.getByte);
    setLength(fEntries[1], ps.getByte);
-   for i := 0 to length(fEntries[0]) - 1 do fEntries[0][i] := ps.getWord;
-   for i := 0 to length(fEntries[1]) - 1 do fEntries[1][i] := ps.getWord;
+   for i := 0 to length(fEntries[0]) - 1 do
+   begin
+      fEntries[0][i] := ps.getWord;
+      if fAction1 <> nil then fAction1.registerLink(fEntries[0][i], self);
+   end;
+   for i := 0 to length(fEntries[1]) - 1 do
+   begin
+      fEntries[1][i] := ps.getWord;
+      if fAction1 <> nil then fAction1.registerLink(fEntries[1][i], self);
+   end;
    if (length(fEntries[0]) <> 1) or (length(fEntries[1]) <> 0) then
    begin
       case fFeature of
@@ -388,7 +448,8 @@ var
    val                                  : word;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>BasicAction2</b> - Define sprite groups');
+   writeln(t, '<b>BasicAction2</b> - Define sprite groups<br>');
+   printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
    write(t, '<tr><th align="left">');
@@ -452,11 +513,13 @@ begin
    num := ps.getByte;
    fAction1 := action1;
    fGroundSprite := ps.getDWord;
+   if fFeature = FHouse then fGroundSpriteDescription := getSpriteDescriptionHouse(fGroundSprite, fAction1, self) else
+                             fGroundSpriteDescription := getSpriteDescriptionIndTile(fGroundSprite, fAction1, self);
    if num = 0 then
    begin
       spr := ps.getDWord;
-      if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1) else
-                                desc := getSpriteDescriptionIndTile(spr, fAction1);
+      if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1, self) else
+                                desc := getSpriteDescriptionIndTile(spr, fAction1, self);
       x := ps.getByte;
       y := ps.getByte;
       w := ps.getByte;
@@ -468,8 +531,8 @@ begin
       for i := 0 to num - 1 do
       begin
          spr := ps.getDWord;
-         if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1) else
-                                   desc := getSpriteDescriptionIndTile(spr, fAction1);
+         if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1, self) else
+                                   desc := getSpriteDescriptionIndTile(spr, fAction1, self);
          x := ps.getByte;
          y := ps.getByte;
          if ps.peekByte = $80 then
@@ -496,16 +559,13 @@ begin
 end;
 
 procedure THouseIndTileAction2.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
-var
-   desc                                 : string;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>Action2 for houses and industry tiles</b> - Define sprite layout');
+   writeln(t, '<b>Action2 for houses and industry tiles</b> - Define sprite layout<br>');
+   printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
-   if fFeature = FHouse then desc := getSpriteDescriptionHouse(fGroundSprite, fAction1) else
-                             desc := getSpriteDescriptionIndTile(fGroundSprite, fAction1);
-   writeln(t, '<tr><th align="left">Ground sprite</th><td>0x', intToHex(fGroundSprite, 8), desc, '</td></tr>');
+   writeln(t, '<tr><th align="left">Ground sprite</th><td>0x', intToHex(fGroundSprite, 8), fGroundSpriteDescription, '</td></tr>');
    writeln(t, '<tr valign="top"><th align="left">Sprite layout</th><td>');
    fSpriteLayout.printHtml(t, path, settings);
    writeln(t, '</td></tr></table>');
@@ -555,7 +615,8 @@ var
    s                                    : string;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>IndustryProcutionCallback</b> - Define industry production');
+   writeln(t, '<b>IndustryProcutionCallback</b> - Define industry production<br>');
+   printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
    if fUseRegisters then
@@ -676,7 +737,8 @@ var
    bracketsNeeded                       : boolean;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>VarAction2</b> - Choose between Action2 chains');
+   writeln(t, '<b>VarAction2</b> - Choose between Action2 chains<br>');
+   printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
    case fSize of
@@ -804,7 +866,8 @@ var
    i                                    : integer;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>RandomAction2</b> - Randomized choice between Action2s');
+   writeln(t, '<b>RandomAction2</b> - Randomized choice between Action2s<br>');
+   printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
    if (fFeature >= low(TableAction0Features)) and (fFeature <= high(TableAction0Features)) then

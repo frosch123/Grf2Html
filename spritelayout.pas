@@ -52,18 +52,18 @@ type
 
 
 function getSpriteDescriptionStation(spr: longword; flipBit31: boolean): string;
-function getSpriteDescriptionHouse(spr: longword; action1: TSprite): string;
-function getSpriteDescriptionIndTile(spr: longword; action1: TSprite): string;
+function getSpriteDescriptionHouse(spr: longword; action1: TSprite; parent: TSprite): string;
+function getSpriteDescriptionIndTile(spr: longword; action1: TSprite; parent: TSprite): string;
 
 implementation
 
 {$IFDEF FPC}
-   uses nfoact123, fpimage, fpcanvas;
+   uses nfobase, nfoact123, fpimage, fpcanvas;
 {$ELSE}
-   uses nfoact123, graphics;
+   uses nfobase, nfoact123, graphics;
 {$ENDIF}
 
-function getSpriteDescription(spr: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TAction1): string;
+function getSpriteDescription(spr: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TAction1; parent: TNewGrfSprite): string;
 var
    nr                                   : longword;
 begin
@@ -75,6 +75,7 @@ begin
       begin
          if action1 <> nil then
          begin
+            if parent <> nil then action1.registerLink(nr, parent);
             result := result + action1.printHtmlLinkToSet(nr);
          end else
          begin
@@ -96,17 +97,17 @@ end;
 
 function getSpriteDescriptionStation(spr: longword; flipBit31: boolean): string;
 begin
-   result := getSpriteDescription(spr, flipBit31, $42D, ' with company colors', false, nil);
+   result := getSpriteDescription(spr, flipBit31, $42D, ' with company colors', false, nil, nil);
 end;
 
-function getSpriteDescriptionHouse(spr: longword; action1: TSprite): string;
+function getSpriteDescriptionHouse(spr: longword; action1: TSprite; parent: TSprite): string;
 begin
-   result := getSpriteDescription(spr, false, 0, ' recolored by property 17 or callback 1E', true, action1 as TAction1);
+   result := getSpriteDescription(spr, false, 0, ' recolored by property 17 or callback 1E', true, action1 as TAction1, parent as TNewGrfSprite);
 end;
 
-function getSpriteDescriptionIndTile(spr: longword; action1: TSprite): string;
+function getSpriteDescriptionIndTile(spr: longword; action1: TSprite; parent: TSprite): string;
 begin
-   result := getSpriteDescription(spr, false, 0, ' with industry colors', true, action1 as TAction1);
+   result := getSpriteDescription(spr, false, 0, ' with industry colors', true, action1 as TAction1, parent as TNewGrfSprite);
 end;
 
 
