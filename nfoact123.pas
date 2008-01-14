@@ -109,8 +109,8 @@ type
       shift        : byte;
       divMod       : (none, division, modulo);
       andMask      : longword;
-      addValue     : longword;
-      divModValue  : longword;
+      addValue     : longint;
+      divModValue  : longint;
    end;
    TVarAction2Case = record
       min, max     : longword;
@@ -672,6 +672,8 @@ var
    i                                    : integer;
    s, s2                                : string;
    dest                                 : TAction2Dest;
+   v                                    : longint;
+   bracketsNeeded                       : boolean;
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>VarAction2</b> - Choose between Action2 chains');
@@ -697,35 +699,63 @@ begin
       with fFormula[i] do
       begin
          if i <> 0 then write(t, '<br>');
-         if variable = $7E then
+         bracketsNeeded := false;
+         if variable = $1A then
          begin
-            dest.value := parameter;
-            dest.dest := proc;
-            s := 'ResultOf[' + printAction2Dest(dest) + ']';
+            v := (($FFFFFFFF shr (8 * (4 - fSize))) shr shift) and andMask;
+            if divMod <> none then
+            begin
+               v := v + addValue;
+               if divMod = division then v := v div divModValue else v := v mod divModValue;
+            end;
+            s := '0x' + intToHex(v, 2 * fSize);
          end else
          begin
-            s := TableVarAction2General[variable];
-            if s = 'unknown' then
+            if variable = $7E then
             begin
-               if fRelated then s := TableVarAction2Related[fFeature][variable] else
-                                s := TableVarAction2Features[fFeature][variable];
+               dest.value := parameter;
+               dest.dest := proc;
+               s := 'ResultOf[' + printAction2Dest(dest) + ']';
+            end else
+            begin
+               s := TableVarAction2General[variable];
+               if s = 'unknown' then
+               begin
+                  if fRelated then s := TableVarAction2Related[fFeature][variable] else
+                                   s := TableVarAction2Features[fFeature][variable];
+               end;
+               s := 'Var' + intToHex(variable, 2) + '"' + s + '"';
+               if variable in [$60..$7F] then s := s + '[0x' + intToHex(parameter, 2) + ']';
+               bracketsNeeded := true;
             end;
-            s := '(Var' + intToHex(variable, 2) + '"' + s + '"';
-            if variable in [$60..$7F] then s := s + '[0x' + intToHex(parameter, 2) + ']';
-            s := s + ')';
-         end;
-         if shift <> 0 then s := '(' + s + ' shr ' + intToStr(shift) + ')';
-         if andMask <> ($FFFFFFFF shr (8 * (4 - fSize))) then s := s + ' and 0x' + intToHex(andMask, 2 * fSize);
-         if divMod <> none then
-         begin
-            s := '((' + s + ') + 0x' + intToHex(addValue, 2 * fSize);
-            if divMod = division then s := s + ') div[signed] 0x' else
-                                      s := s + ') mod[signed] 0x';
-            s := s + intToHex(divModValue, 2 * fSize);
+            if shift <> 0 then
+            begin
+               if bracketsNeeded then s := '(' + s + ')';
+               s := s + ' shr ' + intToStr(shift);
+               bracketsNeeded := true;
+            end;
+            v := ($FFFFFFFF shr (8 * (4 - fSize))) shr shift; // Bits that are not already masked out by fSize or shift
+            if andMask and v <> v then
+            begin
+               if bracketsNeeded then s := '(' + s + ')';
+               s := s + ' and 0x' + intToHex(andMask, 2 * fSize);
+               bracketsNeeded := true;
+            end;
+            if divMod <> none then
+            begin
+               if bracketsNeeded then s := '(' + s + ')';
+               s := '(' + s + ' + 0x' + intToHex(addValue, 2 * fSize);
+               if divMod = division then s := s + ') div<sub>[signed]</sub> 0x' else
+                                         s := s + ') mod<sub>[signed]</sub> 0x';
+               s := s + intToHex(divModValue, 2 * fSize);
+               bracketsNeeded := true;
+            end;
          end;
 
          s2 := TableVarAction2Operator[operator];
          if s2 = 'unknown' then s2 := 'value := unknownOperator[0x' + intToHex(operator, 2) + '](value, $$$)';
+
+         if not bracketsNeeded then s2 := stringReplace(s2, '($$$)', '$$$', [rfReplaceAll]);
          s2 := stringReplace(s2, '$$$', s, [rfReplaceAll]);
          writeln(t, s2);
       end;

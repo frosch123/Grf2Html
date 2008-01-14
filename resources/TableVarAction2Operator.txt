@@ -1,5 +1,5 @@
-00=value := value + ($$$)
-01=value := value - ($$$)
+00=value := value + $$$
+01=value := value - $$$
 02=value := min<sub>[signed]</sub>(value, $$$)
 03=value := max<sub>[signed]</sub>(value, $$$)
 04=value := min<sub>[unsigned]</sub>(value, $$$)
