@@ -18,107 +18,160 @@ unit spritelayout;
 
 interface
 
-uses sysutils, classes, math, osspecific, grfbase, outputsettings;
+uses sysutils, classes, math, osspecific, grfbase, nfobase, outputsettings;
 
 type
+   TTTDPSprite = class
+   protected
+      fParent   : TNewGrfSprite;
+      fSprite   : longword;
+      fFlipBit31: boolean;
+      fAct1Offs : longword;
+      fRecolor  : string;
+      fA1Sets   : boolean;
+      fAction1  : TSprite;
+   public
+      constructor create(parent: TNewGrfSprite; sprite: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TSprite);
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+   end;
+
+   TTTDPStationSprite = class(TTTDPSprite)
+      constructor create(parent: TNewGrfSprite; sprite: longword; groundSprite: boolean);
+   end;
+
+   TTTDPHouseSprite = class(TTTDPSprite)
+      constructor create(parent: TNewGrfSprite; sprite: longword; action1: TSprite);
+   end;
+
+   TTTDPIndustryTileSprite = class(TTTDPSprite)
+      constructor create(parent: TNewGrfSprite; sprite: longword; action1: TSprite);
+   end;
+
    TChildSprite = record
       position  : array[0..1] of integer;
-      sprite    : longword;
-      desc      : string;
+      sprite    : TTTDPSprite;
    end;
 
    TParentSprite = record
       position   : array[0..2] of integer;
       extent     : array[0..2] of integer;
-      sprite     : longword;
+      sprite     : TTTDPSprite;
       childs     : array of TChildSprite;
-      desc       : string;
    end;
 
    TSpriteLayout = class
    private
+      fParent       : TNewGrfSprite;
       fName         : string;
       fParentSprites: array of TParentSprite;
       function getParentSpriteCount: integer;
       function getParentSprite(i: integer): TParentSprite;
    public
-      constructor create(name: string); // name used for preview image
-      procedure addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: longword; description: string);
-      function addChildSprite(x, y: integer; aSprite: longword; description: string): boolean; // false if no parentsprite present
+      constructor create(parent:TNewGrfSprite; name: string); // name used for preview image
+      destructor destroy; override;
+      procedure addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: TTTDPSprite);
+      function addChildSprite(x, y: integer; aSprite: TTTDPSprite): boolean; // false if no parentsprite present
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       property parentSpriteCount: integer read getParentSpriteCount;
       property parentSprites[i: integer]: TParentSprite read getParentSprite;
    end;
 
 
-function getSpriteDescriptionStation(spr: longword; flipBit31: boolean): string;
-function getSpriteDescriptionHouse(spr: longword; action1: TSprite; parent: TSprite): string;
-function getSpriteDescriptionIndTile(spr: longword; action1: TSprite; parent: TSprite): string;
-
 implementation
 
 {$IFDEF FPC}
-   uses nfobase, nfoact123, fpimage, fpcanvas;
+   uses nfoact123, fpimage, fpcanvas;
 {$ELSE}
-   uses nfobase, nfoact123, graphics;
+   uses nfoact123, graphics;
 {$ENDIF}
 
-function getSpriteDescription(spr: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TAction1; parent: TNewGrfSprite): string;
+constructor TTTDPSprite.create(parent: TNewGrfSprite; sprite: longword; flipBit31: boolean; action1Offset: longword; specialRecolor: string; a1Sets: boolean; action1: TSprite);
+begin
+   inherited create;
+   fParent := parent;
+   fSprite := sprite;
+   fFlipBit31 := flipBit31;
+   fAct1Offs := action1offset;
+   fRecolor := specialRecolor;
+   fA1Sets := a1Sets;
+   fAction1 := action1;
+   if (fAction1 <> nil) and (fParent <> nil) then
+   begin
+      if (fSprite and $80000000 <> 0) xor fFlipBit31 then (fAction1 as TAction1).registerLink((fSprite and $3FFF) - fAct1Offs, fParent);
+   end;
+end;
+
+procedure TTTDPSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    nr                                   : longword;
+   result                               : string;
 begin
-   result := ' (';
-   if (spr and $80000000 = 0) xor flipBit31 then result := result + 'TTD sprite ' + intToStr(spr and $3FFF) else
+   result := '0x' + intToHex(fSprite, 8) + ' (';
+   if (fSprite and $80000000 = 0) xor fFlipBit31 then result := result + 'TTD sprite ' + intToStr(fSprite and $3FFF) else
    begin
-      nr := (spr and $3FFF) - action1Offset;
-      if a1Sets then
+      nr := (fSprite and $3FFF) - fAct1Offs;
+      if fA1Sets then
       begin
-         if action1 <> nil then
+         if fAction1 <> nil then
          begin
-            if parent <> nil then action1.registerLink(nr, parent);
-            result := result + action1.printHtmlLinkToSet(nr);
+            result := result + (fAction1 as TAction1).printHtmlLinkToSet(nr);
          end else
          begin
             result := result + 'Action1 Set ' + intToStr(nr);
          end;
       end else result := result + 'Action1 Sprite ' + intToStr(nr);
    end;
-   case spr and $C000 of
-      $4000: result := result + ' recolors background using ' + intToStr((spr shr 16) and $3FFF);
+   case fSprite and $C000 of
+      $4000: result := result + ' recolors background using ' + intToStr((fSprite shr 16) and $3FFF);
       $8000: begin
-                if spr and $3FFF0000 = 0 then result := result + specialRecolor else
-                                              result := result + ' recolored using ' + intToStr((spr shr 16) and $3FFF);
+                if fSprite and $3FFF0000 = 0 then result := result + fRecolor else
+                                                  result := result + ' recolored using ' + intToStr((fSprite shr 16) and $3FFF);
              end;
       $C000: result := result + 'invalid flags 0x0000C000';
    end;
-   if spr and $40000000 <> 0 then result := result + ' [sprite not affected by transparency]';
+   if fSprite and $40000000 <> 0 then result := result + ' [sprite not affected by transparency]';
    result := result + ')';
+   writeln(t, result);
 end;
 
-function getSpriteDescriptionStation(spr: longword; flipBit31: boolean): string;
+constructor TTTDPStationSprite.create(parent: TNewGrfSprite; sprite: longword; groundSprite: boolean);
 begin
-   result := getSpriteDescription(spr, flipBit31, $42D, ' with company colors', false, nil, nil);
+   inherited create(parent, sprite, not groundSprite, $42D, ' with company colors', false, nil);
 end;
 
-function getSpriteDescriptionHouse(spr: longword; action1: TSprite; parent: TSprite): string;
+constructor TTTDPHouseSprite.create(parent: TNewGrfSprite; sprite: longword; action1: TSprite);
 begin
-   result := getSpriteDescription(spr, false, 0, ' recolored by property 17 or callback 1E', true, action1 as TAction1, parent as TNewGrfSprite);
+   inherited create(parent, sprite, false, 0, ' recolored by property 17 or callback 1E', true, action1);
 end;
 
-function getSpriteDescriptionIndTile(spr: longword; action1: TSprite; parent: TSprite): string;
+constructor TTTDPIndustryTileSprite.create(parent: TNewGrfSprite; sprite: longword; action1: TSprite);
 begin
-   result := getSpriteDescription(spr, false, 0, ' with industry colors', true, action1 as TAction1, parent as TNewGrfSprite);
+   inherited create(parent, sprite, false, 0, ' with industry colors', true, action1);
 end;
 
-
-constructor TSpriteLayout.create(name: string);
+constructor TSpriteLayout.create(parent: TNewGrfSprite; name: string);
 begin
    inherited create;
+   fParent := parent;
    setLength(fParentSprites, 0);
    fName := name;
 end;
 
-procedure TSpriteLayout.addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: longword; description: string);
+destructor TSpriteLayout.destroy;
+var
+   i, j                                 : integer;
+begin
+   for i := 0 to length(fParentSprites) - 1 do
+   begin
+      fParentSprites[i].sprite.free;
+      for j := 0 to length(fParentSprites[i].childs) - 1 do fParentSprites[i].childs[j].sprite.free;
+      setlength(fParentSprites[i].childs, 0);
+   end;
+   setlength(fParentSprites, 0);
+   inherited destroy;
+end;
+
+procedure TSpriteLayout.addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: TTTDPSprite);
 var
    nr                                   : integer;
 begin
@@ -133,12 +186,11 @@ begin
       extent[1] := h;
       extent[2] := dz;
       sprite := aSprite;
-      desc := description;
       setLength(childs, 0);
    end;
 end;
 
-function TSpriteLayout.addChildSprite(x, y: integer; aSprite: longword; description: string): boolean;
+function TSpriteLayout.addChildSprite(x, y: integer; aSprite: TTTDPSprite): boolean;
 var
    p, c                                 : integer;
 begin
@@ -153,7 +205,6 @@ begin
          position[0] := x;
          position[1] := y;
          sprite := aSprite;
-         desc := description;
       end;
    end;
 end;
@@ -271,7 +322,9 @@ begin
    for i := 0 to length(fParentSprites) - 1 do
       with fParentSprites[i] do
       begin
-         writeln(t, '<tr valign="top"><td rowspan="', max(1, length(childs)), '">0x', intToHex(sprite, 8), desc, '</td>');
+         writeln(t, '<tr valign="top"><td rowspan="', max(1, length(childs)), '">');
+         sprite.printHtml(t, path, settings);
+         writeln(t, '</td>');
          writeln(t, '<td rowspan="', max(1, length(childs)), '"> &lt; ', position[0], ',', position[1], ',', position[2], ' &gt;</td>');
          writeln(t, '<td rowspan="', max(1, length(childs)), '"> &lt; ', extent[0]  , ',', extent[1]  , ',', extent[2]  , ' &gt;</td>');
          if length(childs) = 0 then writeln(t, '<td></td><td></td></tr>') else
@@ -280,7 +333,9 @@ begin
                with childs[j] do
                begin
                   if j <> 0 then write(t, '<tr>');
-                  writeln(t, '<td>0x', intToHex(sprite, 8), desc, '</td><td> &lt; ', position[0], ',', position[1], ' &gt;</td></tr>');
+                  writeln(t, '<td>');
+                  sprite.printHtml(t, path, settings);
+                  writeln(t, '</td><td> &lt; ', position[0], ',', position[1], ' &gt;</td></tr>');
                end;
          end;
       end;

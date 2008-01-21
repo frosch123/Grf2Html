@@ -81,14 +81,13 @@ type
    THouseIndTileAction2 = class(TAction2)
    private
       fAction1                 : TAction1;
-      fGroundSprite            : longword;
-      fGroundSpriteDescription : string;
+      fGroundSprite            : TTTDPSprite;
       fSpriteLayout            : TSpriteLayout;
    public
       constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
       destructor destroy; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
-      property groundSprite: longword read fGroundSprite;
+      property groundSprite: TTTDPSprite read fGroundSprite;
       property spritelayout: TSpriteLayout read fSpriteLayout;
    end;
 
@@ -506,46 +505,45 @@ var
    x, y                                 : shortint;
    z, w, h, dz                          : byte;
    i                                    : integer;
-   desc                                 : string;
+   desc                                 : TTTDPSprite;
 begin
    inherited create(ps.spriteNr, feature, cargoID);
-   fSpriteLayout := TSpriteLayout.create('sprite' + intToStr(spriteNr));
+   fSpriteLayout := TSpriteLayout.create(self, 'sprite' + intToStr(spriteNr));
    num := ps.getByte;
    fAction1 := action1;
-   fGroundSprite := ps.getDWord;
-   if fFeature = FHouse then fGroundSpriteDescription := getSpriteDescriptionHouse(fGroundSprite, fAction1, self) else
-                             fGroundSpriteDescription := getSpriteDescriptionIndTile(fGroundSprite, fAction1, self);
+   if fFeature = FHouse then fGroundSprite := TTTDPHouseSprite.create(self, ps.getDWord, fAction1) else
+                             fGroundSprite := TTTDPIndustryTileSprite.create(self, ps.getDWord, fAction1);
    if num = 0 then
    begin
       spr := ps.getDWord;
-      if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1, self) else
-                                desc := getSpriteDescriptionIndTile(spr, fAction1, self);
+      if fFeature = FHouse then desc := TTTDPHouseSprite.create(self, spr, fAction1) else
+                                desc := TTTDPIndustryTileSprite.create(self, spr, fAction1);
       x := ps.getByte;
       y := ps.getByte;
       w := ps.getByte;
       h := ps.getByte;
       dz := ps.getByte;
-      fSpriteLayout.addParentSprite(x, y, 0, w, h, dz, spr, desc);
+      fSpriteLayout.addParentSprite(x, y, 0, w, h, dz, desc);
    end else
    begin
       for i := 0 to num - 1 do
       begin
          spr := ps.getDWord;
-         if fFeature = FHouse then desc := getSpriteDescriptionHouse(spr, fAction1, self) else
-                                   desc := getSpriteDescriptionIndTile(spr, fAction1, self);
+         if fFeature = FHouse then desc := TTTDPHouseSprite.create(self, spr, fAction1) else
+                                   desc := TTTDPIndustryTileSprite.create(self, spr, fAction1);
          x := ps.getByte;
          y := ps.getByte;
          if ps.peekByte = $80 then
          begin
             ps.getByte;
-            if not fSpriteLayout.addChildSprite(x, y, spr, desc) then error('HouseIndustrySpriteLayout: First Sprite in a layout must not be a ChildSprite.');
+            if not fSpriteLayout.addChildSprite(x, y, desc) then error('HouseIndustrySpriteLayout: First Sprite in a layout must not be a ChildSprite.');
          end else
          begin
             z := ps.getByte;
             w := ps.getByte;
             h := ps.getByte;
             dz := ps.getByte;
-            fSpriteLayout.addParentSprite(x, y, z, w, h, dz, spr, desc);
+            fSpriteLayout.addParentSprite(x, y, z, w, h, dz, desc);
          end;
       end;
    end;
@@ -555,6 +553,7 @@ end;
 destructor THouseIndTileAction2.destroy;
 begin
    fSpriteLayout.free;
+   fGroundSprite.free;
    inherited destroy;
 end;
 
@@ -565,7 +564,9 @@ begin
    printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
-   writeln(t, '<tr><th align="left">Ground sprite</th><td>0x', intToHex(fGroundSprite, 8), fGroundSpriteDescription, '</td></tr>');
+   writeln(t, '<tr><th align="left">Ground sprite</th><td>');
+   fGroundSprite.printHtml(t, path, settings);
+   writeln(t, '</td></tr>');
    writeln(t, '<tr valign="top"><th align="left">Sprite layout</th><td>');
    fSpriteLayout.printHtml(t, path, settings);
    writeln(t, '</td></tr></table>');
@@ -965,7 +966,7 @@ var
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Action3</b> - Install graphic sets');
-   writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>"', TableFeature[fFeature], '"</td></tr>');
+   writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x',intToHex(fFeature,2),' "', TableFeature[fFeature], '"</td></tr>');
    if genericCallback then s := 'generic feature callback' else
    if liveryOverride  then s := 'livery override' else
                            s := 'normal action3';

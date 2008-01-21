@@ -79,7 +79,7 @@ type
    TAction0StationSpriteLayout = class(TAction0SpecialPropertyArrayItem)
    private
       fTTDLayout               : boolean;
-      fGroundSprite            : longword;
+      fGroundSprite            : TTTDPStationSprite;
       fSpriteLayout            : TSpriteLayout;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
@@ -88,7 +88,7 @@ type
       class function moreItems(ps: TPseudoSpriteReader): boolean; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useTTDSpriteLayout: boolean read fTTDLayout;
-      property groundSprite: longword read fGroundSprite;
+      property groundSprite: TTTDPStationSprite read fGroundSprite;
       property spritelayout: TSpriteLayout read fSpriteLayout;
    end;
 
@@ -333,12 +333,13 @@ var
    spr                                  : longword;
 begin
    inherited create(action0, ps, ID, nr);
-   fSpriteLayout := TSpriteLayout.create('sprite' + intToStr(action0.spriteNr) + 'id' + intToStr(ID) + 'nr' + intToStr(nr));
+   fGroundSprite := nil;
+   fSpriteLayout := TSpriteLayout.create(action0, 'sprite' + intToStr(action0.spriteNr) + 'id' + intToStr(ID) + 'nr' + intToStr(nr));
    tmp := ps.getDWord;
    fTTDLayout := tmp = 0;
    if not fTTDLayout then
    begin
-      fGroundSprite := tmp;
+      fGroundSprite := TTTDPStationSprite.create(action0, tmp, true);
       repeat
          tmp := ps.getByte;
          if tmp <> $80 then
@@ -352,7 +353,7 @@ begin
                h := ps.getByte;
                dz := ps.getByte;
                spr := ps.getDWord;
-               fSpriteLayout.addParentSprite(x, y, z, w, h, dz, spr, getSpriteDescriptionStation(spr, true));
+               fSpriteLayout.addParentSprite(x, y, z, w, h, dz, TTTDPStationSprite.create(action0, spr, false));
             end else
             begin
                ps.getByte; // z pos
@@ -360,7 +361,7 @@ begin
                ps.getByte; // y ext
                ps.getByte; // z ext
                spr := ps.getDWord;
-               if not fSpriteLayout.addChildSprite(x, y, spr, getSpriteDescriptionStation(spr, true)) then fAction0.error('StationSpriteLayout: First Sprite in a layout must not be a ChildSprite.');
+               if not fSpriteLayout.addChildSprite(x, y, TTTDPStationSprite.create(action0, spr, false)) then fAction0.error('StationSpriteLayout: First Sprite in a layout must not be a ChildSprite.');
             end;
          end;
       until (tmp = $80) or (ps.bytesLeft < 0);
@@ -387,7 +388,8 @@ procedure TAction0StationSpriteLayout.printHtml(var t: textFile; path: string; c
 begin
    if fTTDLayout then writeln(t, '<b>TTD Sprite Layout</b>') else
    begin
-      writeln(t, '<b>Custom Sprite Layout</b><br><b>Ground sprite:</b> 0x', intToHex(fGroundSprite, 8), getSpriteDescriptionStation(fGroundSprite, false));
+      writeln(t, '<b>Custom Sprite Layout</b><br><b>Ground sprite:</b> ');
+      fGroundSprite.printHtml(t, path, settings);
       fSpriteLayout.printHtml(t, path, settings);
    end;
 end;
