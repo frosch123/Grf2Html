@@ -16,3 +16,5 @@
 0F=wagonspeedlimits
 10=planespeed
 11=dual company colors
+12=miscmods2
+13=map size information

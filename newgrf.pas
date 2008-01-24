@@ -22,7 +22,7 @@ uses sysutils, classes, contnrs, grfbase, nfobase, nfoact0, nfoact123, nfoact5A1
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.4';
-   dataVersion                          : string = '15th November 2007';
+   dataVersion                          : string = '23rd January 2008';
 
 function parseNewgrf(grfFile: TObjectList): TObjectList;
 procedure printHtml(path, grfName: string; newgrf: TObjectList; const settings: TGrf2HtmlSettings);
@@ -34,7 +34,7 @@ implementation
 procedure printAbout;
 begin
    writeln(grf2HtmlVersion);
-   writeln('Copyright 2007 by Christoph Elsenhans.');
+   writeln('Copyright 2007-2008 by Christoph Elsenhans.');
    writeln;
    writeln('This program comes with ABSOLUTELY NO WARRANTY.');
    writeln('This is free software, and you are welcome to redistribute it');
