@@ -765,12 +765,13 @@ begin
          bracketsNeeded := false;
          if variable = $1A then
          begin
-            v := (($FFFFFFFF shr (8 * (4 - fSize))) shr shift) and andMask;
+            v := ($FFFFFFFF shr shift) and andMask;
             if divMod <> none then
             begin
                v := v + addValue;
                if divMod = division then v := v div divModValue else v := v mod divModValue;
             end;
+            v := v and ($FFFFFFFF shr (8 * (4 - fSize)));
             s := '0x' + intToHex(v, 2 * fSize);
          end else
          begin
@@ -797,7 +798,7 @@ begin
                s := s + ' shr ' + intToStr(shift);
                bracketsNeeded := true;
             end;
-            v := ($FFFFFFFF shr (8 * (4 - fSize))) shr shift; // Bits that are not already masked out by fSize or shift
+            v := $FFFFFFFF shr shift; // Bits that are not already masked out by shift
             if andMask and v <> v then
             begin
                if bracketsNeeded then s := '(' + s + ')';
