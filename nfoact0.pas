@@ -610,12 +610,12 @@ begin
       end;
 
       write(t, '<table summary="Industry Layout" border="1" rules="all"><tr><th colspan="2" rowspan="2"></th><th colspan="', yMax - yMin + 1, '"> Y </th></tr><tr>');
-      for y := 0 to yMax - yMin do write(t, '<th>', y - yMin, '</th>');
+      for y := 0 to yMax - yMin do write(t, '<th>', yMin + y, '</th>');
       writeln(t, '</tr>');
       for x := 0 to xMax - xMin do
       begin
          if x = 0 then write(t, '<tr><th rowspan="', xMax - xMin + 1, '"> X </th>') else write(t, '<tr>');
-         write(t, '<th>', x - xMin, '</th>');
+         write(t, '<th>', xMin + x, '</th>');
          for y := 0 to yMax - yMin do
          begin
             if layout[x, y] = -1 then write(t, '<td></td>') else
