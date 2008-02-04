@@ -782,7 +782,7 @@ begin
                s := 'ResultOf[' + printAction2Dest(dest) + ']';
             end else
             begin
-               s := TableVarAction2General[variable];
+               s := TableVariables[variable];
                if s = 'unknown' then
                begin
                   if fRelated then s := TableVarAction2Related[fFeature][variable] else

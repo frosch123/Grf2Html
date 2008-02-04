@@ -300,7 +300,7 @@ function getAction79DVariable(variable: byte): string;
 begin
    result := '0x' + intToHex(variable, 2) + ' ';
    if variable < $80 then result := result + '"Parameter ' + intToStr(variable) + '"' else
-                          result := result + '"' + TableAction79DVariable[variable] + '"';
+                          result := result + '"' + TableVariables[variable - $80] + '"';
 end;
 
 

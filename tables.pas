@@ -65,8 +65,9 @@ var
    TableAction0General                  : TTable;
    TableAction0Features                 : array[FTrain..FObject] of TTable;
 
+   TableVariables                       : TSingleColumnTable; // Variables in VarAction2 (non-feature specific) and Action 7/9/D (minus 0x80).
+
    TableVarAction2Operator              : TSingleColumnTable;
-   TableVarAction2General               : TSingleColumnTable;
    TableVarAction2Features              : array[FTrain..FObject] of TSingleColumnTable;
    TableVarAction2Related               : array[FTrain..FObject] of TSingleColumnTable;
 
@@ -74,7 +75,6 @@ var
 
    TableAction5Type                     : TSingleColumnTable;
 
-   TableAction79DVariable               : TSingleColumnTable;
    TableAction79Condition               : TSingleColumnTable;
 
    TableActionBMessage                  : TSingleColumnTable;
@@ -99,7 +99,7 @@ type
    end;
 
 const
-   TableList : array[0..(17 + 4 * 16) - 1] of TTableList = (
+   TableList : array[0..(16 + 4 * 16) - 1] of TTableList = (
       (name:'TableFeature'                ; typ:TSingleColumnTable; table:@TableFeature),
       (name:'TablePrimaryObject'          ; typ:TSingleColumnTable; table:@TablePrimaryObject),
       (name:'TableRelatedObject'          ; typ:TSingleColumnTable; table:@TableRelatedObject),
@@ -124,8 +124,9 @@ const
       (name:''                            ; typ:TTable            ; table:@TableAction0Features[FSignal]),
       (name:'TableAction0Objects'         ; typ:TTable            ; table:@TableAction0Features[FObject]),
 
+      (name:'TableVariables'              ; typ:TSingleColumnTable; table:@TableVariables),
+
       (name:'TableVarAction2Operator'     ; typ:TSingleColumnTable; table:@TableVarAction2Operator),
-      (name:'TableVarAction2General'      ; typ:TSingleColumnTable; table:@TableVarAction2General),
 
       (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FTrain]),
       (name:'TableVarAction2Vehicles'     ; typ:TSingleColumnTable; table:@TableVarAction2Related[FTrain]),
@@ -191,7 +192,6 @@ const
 
       (name:'TableAction5Type'            ; typ:TSingleColumnTable; table:@TableAction5Type),
 
-      (name:'TableAction79DVariable'      ; typ:TSingleColumnTable; table:@TableAction79DVariable),
       (name:'TableAction79Condition'      ; typ:TSingleColumnTable; table:@TableAction79Condition),
 
       (name:'TableActionBMessage'         ; typ:TSingleColumnTable; table:@TableActionBMessage),
