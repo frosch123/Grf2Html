@@ -6,4 +6,6 @@
 0D=*@Sprite layout
 0E=1H@Various flags
 0F=4@Long format year of availability
-
+10=2H@Purchase text
+11=2H@Description of rail bridge
+12=2H@Description of road bridge
