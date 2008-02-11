@@ -96,6 +96,16 @@ type
       procedure printVerbose; override;
    end;
 
+   TGrf2HtmlOptionRange = class(TGrf2HtmlOption)
+   private
+      fLow, fHigh         : ^integer;
+   public
+      constructor create(var l, h: integer; commandLine, iniSection, iniKey, verboseName: string; defl, defh: integer; paramdesc, description: string);
+      function readFromCommandLine(paramNr: integer): integer; override;
+      procedure readFromIni(ini: TCustomIniFile); override;
+      procedure saveToIni(ini: TCustomIniFile); override;
+      procedure printVerbose; override;
+   end;
 
 constructor TGrf2HtmlOption.create(commandLine, iniSection, iniKey, verboseName, paramdesc, description: string);
 begin
@@ -349,6 +359,78 @@ begin
    if fValue^ then writeln('win') else writeln('dos');
 end;
 
+
+constructor TGrf2HtmlOptionRange.create(var l, h: integer; commandLine, iniSection, iniKey, verboseName: string; defl, defh: integer; paramdesc, description: string);
+begin
+   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description);
+   fLow := @l;
+   fHigh := @h;
+   fLow^ := defl;
+   fHigh^ := defh;
+end;
+
+function TGrf2HtmlOptionRange.readFromCommandLine(paramNr: integer): integer;
+var
+   s                                    : string;
+   i                                    : integer;
+   v1, v2                               : integer;
+begin
+   result := 1;
+   if paramNr > paramcount then s := '' else s := paramStr(paramNr);
+   i := pos(':', s);
+   if i = 0 then
+   begin
+      result := -1;
+      writeln(fCommandLine, ': Invalid range "', s, '"');
+      exit;
+   end;
+   v1 := strToIntDef(copy(s, 1, i - 1), -1);
+   v2 := strToIntDef(copy(s, i + 1, length(s)), -1);
+   if (v1 < 0) or (v1 > v2) then
+   begin
+      result := -1;
+      writeln(fCommandLine, ': Invalid range "', s, '"');
+      exit;
+   end;
+   fLow^ := v1;
+   fHigh^ := v2;
+   inherited readFromCommandLine(paramNr);
+end;
+
+procedure TGrf2HtmlOptionRange.readFromIni(ini: TCustomIniFile);
+var
+   v1, v2                               : integer;
+begin
+   if (fIniKey <> '') and not fFromCommandLine then
+   begin
+      v1 := ini.readInteger(fIniSection, fIniKey + '_from', fLow^);
+      v2 := ini.readInteger(fIniSection, fIniKey + '_to', fHigh^);
+      if (v1 < 0) or (v1 > v2) then
+      begin
+         writeln(fCommandLine, ': Invalid range ', v1, ' to ', v2);
+         exit;
+      end;
+      fLow^ := v1;
+      fHigh^ := v2;
+   end;
+end;
+
+procedure TGrf2HtmlOptionRange.saveToIni(ini: TCustomIniFile);
+begin
+   if fIniKey <> '' then
+   begin
+      ini.writeInteger(fIniSection, fIniKey + '_from', fLow^);
+      ini.writeInteger(fIniSection, fIniKey + '_to', fHigh^);
+   end;
+end;
+
+procedure TGrf2HtmlOptionRange.printVerbose;
+begin
+   if fVerboseName = '' then exit;
+   if (fLow^ = 0) and (fHigh^ = high(integer)) then exit; // Skip if default setting.
+   inherited printVerbose;
+   writeln(fLow^, ' to ', fHigh^);
+end;
 
 function parseCommandLine(out settings: TGrf2HtmlSettings): TStringList;
 var
