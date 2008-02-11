@@ -41,7 +41,7 @@ uses
 
 var
    grf                                  : TObjectList;
-   nfo                                  : TObjectList;
+   nfo                                  : TNewGrfFile;
    stream                               : TFileStream;
 
    pattern, fn                          : string;
@@ -76,11 +76,11 @@ begin
             begin
                writeln('done');
                write('Parse newgrf... ');
-               nfo := parseNewgrf(grf);
+               nfo := TNewGrfFile.create(extractFileName(fn), grf);
                writeln('done');
                outPath := expandFilename(changeFileExt(fn, '') + pathSeparator);
                forceDirectories(outPath + 'data');
-               printHtml(outPath, fn, nfo, settings);
+               nfo.printHtml(outPath, settings);
                nfo.free;
             end;
          until findNext(search) <> 0;
