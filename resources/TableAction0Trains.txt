@@ -19,12 +19,12 @@
 1E=1H@Callback flags bit mask
 1F=1@Coefficient of tractive effort
 20=1@Coefficient of air drag
-21=1@Make vehicle shorter
+21=1I@Make vehicle shorter
 22=1H@Set visual effect type and position
 23=1@Set how much weight is added by making wagons powered
 24=1@Weight (high)
 25=1H@User-defined bit mask for veh. var. 0x42
-26=1@Retire vehicle early
+26=1I@Retire vehicle early
 27=1H@Miscellaneous flags
 28=2H@Refittable cargo classes
 29=2H@Non-refittable cargo classes

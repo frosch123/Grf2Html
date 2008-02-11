@@ -11,7 +11,7 @@
 13=4H@Bit mask of cargo types available for refitting
 14=1H@Callback flags bit mask
 15=1@Refit cost
-16=1@Retire vehicle early
+16=1I@Retire vehicle early
 17=1H@Miscellaneous vehicle flags
 18=2H@Refittable cargo classes
 19=2H@Non-refittable cargo classes

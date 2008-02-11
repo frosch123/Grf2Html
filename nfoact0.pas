@@ -147,12 +147,13 @@ type
       property tile[i: integer]: TIndustryLayoutTile read getTile;
    end;
 
-   TAction0DataType = (a0dec, a0hex, a0str, a0special);
+   TAction0DataType = (a0unsigned, a0signed, a0hex, a0str, a0special);
    TAction0Data = record
       size      : shortint; // -1 for special, 1 - 4 plain
       typ       : TAction0DataType;
       case shortint of
-          0: (plain: longword);
+          0: (plainunsigned: longword);
+          1: (plainsigned  : longint);
          -1: (special: TAction0SpecialProperty);
    end;
 
@@ -662,7 +663,13 @@ begin
          exit;
       end;
 
-      typ := a0dec;
+      typ := a0unsigned;
+      tmp := pos('I', s);
+      if tmp <> 0 then
+      begin
+         typ := a0signed;
+         delete(s, tmp, 1);
+      end;
       tmp := pos('H', s);
       if tmp <> 0 then
       begin
@@ -715,8 +722,14 @@ begin
          begin
             fData[i, j].size := size;
             fData[i, j].typ := typ;
-            fData[i, j].plain := 0;
-            for k := 0 to size - 1 do fData[i, j].plain := fData[i, j].plain + (ps.getByte shl (8 * k));
+            fData[i, j].plainunsigned := 0;
+            for k := 0 to size - 1 do fData[i, j].plainunsigned := fData[i, j].plainunsigned + (ps.getByte shl (8 * k));
+            if typ = a0signed then
+            begin
+               tmp := fData[i, j].plainunsigned;
+               if tmp >= $80 shl (8 * (size - 1)) then tmp := tmp - 1 shl (8 * size);
+               fData[i, j].plainsigned := tmp;
+            end;
          end;
       end;
    end;
@@ -818,12 +831,13 @@ begin
                writeln(t, '<tr valign="top"><th align="left">0x', intToHex(fProps[j], 2), ' "', s, '"</th>');
                for i := colNr to min(colNr + aimedCols, fNumIDs) - 1 do
                begin
-                  write(t, '<td>0x', intToHex(fData[j, i].plain, 2 * fData[j, i].size));
+                  write(t, '<td>0x', intToHex(fData[j, i].plainunsigned and ($FFFFFFFF shr (8 * (4 - fData[j, i].size))), 2 * fData[j, i].size));
                   case fData[j, i].typ of
-                     a0dec: write(t, ' (', fData[j, i].plain, ')');
+                     a0unsigned: write(t, ' (', fData[j, i].plainunsigned, ')');
+                     a0signed:   write(t, ' (', fData[j, i].plainsigned, ')');
                      a0str: begin
                                setLength(s2, fData[j, i].size);
-                               for k := 1 to fData[j, i].size do s2[k] := char(fData[j, i].plain shr ((k - 1) * 8));
+                               for k := 1 to fData[j, i].size do s2[k] := char(fData[j, i].plainunsigned shr ((k - 1) * 8));
                                write(t, ' (', formatTextPrintable(s2, false), ')');
                             end;
                   end;

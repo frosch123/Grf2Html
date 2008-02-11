@@ -14,7 +14,7 @@
 18=1@Coefficient of tractive effort
 19=1@Coefficient of air drag
 1A=1@Refit cost
-1B=1@Retire vehicle early
+1B=1I@Retire vehicle early
 1C=1H@Miscellaneous vehicle flags
 1D=2H@Refittable cargo classes
 1E=2H@Non-refittable cargo classes
