@@ -153,6 +153,7 @@ type
 
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 function grfID2Str(grfID: longword): string;
+function signedCast(v: longword; size: integer): longint;
 
 implementation
 
@@ -659,6 +660,16 @@ begin
    s[4] := char((grfID shr 24) and $FF);
    result := '0x' + intToHex(ord(s[1]), 2) + ' 0x' + intToHex(ord(s[2]), 2) + ' 0x' + intToHex(ord(s[3]), 2) + ' 0x' + intToHex(ord(s[4]), 2) +
              ' (' + formatTextPrintable(s, false) + ')';
+end;
+
+function signedCast(v: longword; size: integer): longint;
+begin
+   if size < 4 then
+   begin
+      v := v and ($FFFFFFFF shr (8 * (4 - size)));
+      result := v;
+      if v shr (8 * size - 1) <> 0 then result := result - 1 shl (8 * size);
+   end else result := v;
 end;
 
 end.

@@ -724,12 +724,7 @@ begin
             fData[i, j].typ := typ;
             fData[i, j].plainunsigned := 0;
             for k := 0 to size - 1 do fData[i, j].plainunsigned := fData[i, j].plainunsigned + (ps.getByte shl (8 * k));
-            if typ = a0signed then
-            begin
-               tmp := fData[i, j].plainunsigned;
-               if tmp >= $80 shl (8 * (size - 1)) then tmp := tmp - 1 shl (8 * size);
-               fData[i, j].plainsigned := tmp;
-            end;
+            if typ = a0signed then fData[i, j].plainsigned := signedCast(fData[i, j].plainunsigned, size);
          end;
       end;
    end;

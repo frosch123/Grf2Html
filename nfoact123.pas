@@ -682,8 +682,8 @@ begin
          andMask := ps.get(fSize);
          if divMod <> none then
          begin
-            addValue := ps.get(fSize);
-            divModValue := ps.get(fSize);
+            addValue := signedCast(ps.get(fSize), fSize);
+            divModValue := signedCast(ps.get(fSize), fSize);
          end else
          begin
             addValue := 0;

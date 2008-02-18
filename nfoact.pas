@@ -445,6 +445,7 @@ begin
    fCondition := ps.getByte;
    if fCondition < 2 then fValue := ps.getByte else
    begin
+      // Note: value is unsigned
       fValue := 0;
       for i := 0 to fVarSize - 1 do fValue := fValue or (ps.getByte shl (8 * i));
    end;
