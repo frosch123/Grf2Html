@@ -245,7 +245,7 @@ begin
    writeln(t, '<table summary="Property value" width="100%" border="1" rules="all">');
    for i := 0 to length(fItems) - 1 do
    begin
-      writeln(t, '<tr valign="top"><th align="left" width="30">', i, '</th><td>');
+      writeln(t, '<tr valign="top"><th align="left" width="', settings.action0subIndexColWidth, '">', i, '</th><td>');
       fItems[i].printHtml(t, path, settings);
       writeln(t, '</td></tr>');
    end;
@@ -610,7 +610,9 @@ begin
          layout[x - xMin, y - yMin] := i;
       end;
 
-      write(t, '<table summary="Industry Layout" border="1" rules="all"><tr><th colspan="2" rowspan="2"></th><th colspan="', yMax - yMin + 1, '"> Y </th></tr><tr>');
+      write(t, '<table summary="Industry Layout" border="1" rules="all">',
+                '<colgroup span="2"></colgroup><colgroup span="', yMax - yMin + 1, '" width="*"></colgroup>',
+                '<tr><th colspan="2" rowspan="2"></th><th colspan="', yMax - yMin + 1, '"> Y </th></tr><tr>');
       for y := 0 to yMax - yMin do write(t, '<th>', yMin + y, '</th>');
       writeln(t, '</tr>');
       for x := 0 to xMax - xMin do
@@ -796,7 +798,7 @@ begin
 
    if fFirstID + fNumIDs - 1 > $FF then len := 4 else len := 2;
 
-   aimedCols := max(2, (settings.aimedWidth - 300) div 100); // only a guess
+   aimedCols := max(2, (settings.aimedWidth - settings.action0FirstColWidth) div settings.action0ColWidth); // only a guess
    hasPlain := false;
    if fNumIDs > 0 then
    begin

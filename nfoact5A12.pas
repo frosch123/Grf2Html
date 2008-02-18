@@ -186,7 +186,7 @@ begin
          continue;
       end;
 
-      maxWidth := 100;
+      maxWidth := settings.action5A12ColWidth;
       for i := 0 to fNumSprites[setNr] - 1 do
       begin
          s := subSprite[subNr + i];

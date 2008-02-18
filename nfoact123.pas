@@ -295,7 +295,7 @@ begin
 
    if fSpritesPerSet * fNumSets = 0 then exit;
 
-   maxW := 100;
+   maxW := settings.action1ColWidth;
    for i := 0 to subSpriteCount - 1 do
       if subSprite[i] is TRealSprite then maxW := max(maxW, (subSprite[i] as TRealSprite).width);
    aimedCols := max(1, settings.aimedWidth div maxW);

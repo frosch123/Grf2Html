@@ -23,11 +23,24 @@ uses sysutils, classes, inifiles, contnrs;
 type
    TGrf2HtmlSettings = record
       winPalette     : boolean;                  // true = windows palette; false = dos palette
-      aimedWidth     : integer;                  // Approximated width of the output in pixels. Used to guess number of columns
       suppressData   : boolean;                  // Do not generate any data files (images, ...)
+      update         : array[0..1] of integer;   // Only generate data files for sprites in this range
+      range          : array[0..1] of integer;   // Only generate output for sprites in this range
+
+      // Explicitly used widths (pixels) of columns
+      linkFrameWidth           : integer;        // Width of the left frame
+      action0subIndexColWidth  : integer;        // Width of the index-columns of StationSpriteLayouts, StationCustomLayouts, IndustryLayouts
+
+      // Estimated widths (pixels) of columns for guessing a suitable number of columns
+      aimedWidth               : integer;        // Approximated width of the right frame
+      action0FirstColWidth     : integer;        // Estimated width of the first column of Action0s (PropertyName)
+      action0ColWidth          : integer;        // Estimated width of Action0 columns with plain data
+      action1ColWidth          : integer;        // Estimated minimal width of Action1 columns
+      action5A12ColWidth       : integer;        // Estimated minimal width of Action5/A/12 columns
    end;
 
 function parseCommandLine(out settings: TGrf2HtmlSettings): TStringList;
+function suppressDataForSprite(const settings: TGrf2HtmlSettings; nr: integer): boolean;
 
 implementation
 
@@ -447,13 +460,24 @@ begin
    result := TStringList.create;
    s := changeFileExt(paramStr(0), '.ini');
    options := TObjectList.create(true);
+
    options.add(TGrf2HtmlOptionSetOnly.create(printUsage           , '-h'        , ''        , ''          , ''                                    , ''       , 'Prints this message and exits.'));
    options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + extractFileName(s) + '".'));
    options.add(TGrf2HtmlOptionSetOnly.create(settings.suppressData, '--nodata'  , ''        , ''          , 'Skip data'                           , ''       , 'Skip generation of non-html data files'#13#10'(images, binary included data, ...).'));
    options.add(TGrf2HtmlOptionPalette.create(settings.winPalette  , '-p'        , 'Grf2Html', 'WinPalette', 'Palette'    , true                   , '<pal>'  , 'Specifies the palette to use in decoding: "win" or "dos".'));
+   options.add(TGrf2HtmlOptionRange  .create(settings.range[0], settings.range[1], '-r', '' , ''          , 'Range'      , 0, high(integer)       , '<first>:<last>', 'Only generate output for a range of spritenumbers.'));
+   options.add(TGrf2HtmlOptionRange  .create(settings.update[0], settings.update[1], '-u', '' , ''        , 'Updaterange', 0, high(integer)       , '<first>:<last>', 'Only generate non-html data files in a range of sprites.'#13#10'Behaves like ''--nodata'' for sprites outside of the range.'));
    options.add(TGrf2HtmlOptionSetOnly.create(verbose              , '-v'        , 'Grf2Html', 'Verbose'   , ''                                    , ''       , 'Prints used options'));
    options.add(TGrf2HtmlOptionInteger.create(settings.aimedWidth  , '-w'        , 'Grf2Html', 'AimedWidth', 'Aimed width', 1000, 10, high(integer), '<width>', 'Aimed width for content frame in pixels.'#13#10'Used to determine number of columns in output.'));
    options.add(TGrf2HtmlOptionSetOnly.create(writeini             , '--writeini', ''        , ''          , 'Write inifile'                       , ''       , 'Prints current options to the file specified by "-ini".'));
+
+   options.add(TGrf2HtmlOptionInteger.create(settings.linkFrameWidth, ''        , 'Format'  , 'LinkFrameWidth',          '', 200, 1, high(integer), '', ''));
+   options.add(TGrf2HtmlOptionInteger.create(settings.action0subIndexColWidth, '', 'Format' , 'Action0SubIndexColWidth', '',  30, 1, high(integer), '', ''));
+
+   options.add(TGrf2HtmlOptionInteger.create(settings.action0FirstColWidth, '',   'Format'  , 'Action0FirstColWidth',    '', 300, 1, high(integer), '', ''));
+   options.add(TGrf2HtmlOptionInteger.create(settings.action0ColWidth, '',        'Format'  , 'Action0ColWidth',         '', 100, 10, high(integer), '', ''));
+   options.add(TGrf2HtmlOptionInteger.create(settings.action1ColWidth, '',        'Format'  , 'Action1ColWidth',         '', 110, 10, high(integer), '', ''));
+   options.add(TGrf2HtmlOptionInteger.create(settings.action5A12ColWidth, '',     'Format'  , 'Action5A12ColWidth',      '', 100, 10, high(integer), '', ''));
 
    nr := 1;
    while nr <= paramCount do
@@ -509,6 +533,11 @@ begin
    end;
 
    options.free;
+end;
+
+function suppressDataForSprite(const settings: TGrf2HtmlSettings; nr: integer): boolean;
+begin
+   result := settings.suppressData or (nr < settings.update[0]) or (nr > settings.update[1]);
 end;
 
 end.

@@ -226,7 +226,7 @@ begin
    if length(fParentSprites) > 0 then
    begin
       fn := fName + '.png';
-      if not settings.suppressData then
+      if not suppressDataForSprite(settings, fParent.spriteNr) then
       begin
          worldToScreen(16, 0, 0, bbExt[0], y);
          worldToScreen(0, 16, 0, bbExt[1], y);

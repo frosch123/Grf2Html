@@ -154,7 +154,7 @@ begin
    inherited printHtml(t, path, settings);
    fn := 'sprite' + intToStr(spriteNr) + '.png';
    writeln(t, '<img alt="', spriteNr, '" src="data/', fn, '"><br>Rel: &lt;', fRelPos.x, ',', fRelPos.y, '&gt;<br>Compr: 0x', intToHex(fCompression, 2));
-   if not settings.suppressData then savePng(path + 'data' + pathSeparator + fn);
+   if not suppressDataForSprite(settings, spriteNr) then savePng(path + 'data' + pathSeparator + fn);
 end;
 
 function TRealSprite.getShortDesc: string;
@@ -224,7 +224,7 @@ var
 begin
    inherited printHtml(t, path, settings);
    writeln(t, 'Binary Include Sprite: <a href="data/', fName, '">', fName, '</a>');
-   if (not settings.suppressData) and (fName <> '') then
+   if (not suppressDataForSprite(settings, spriteNr)) and (fName <> '') then
    begin
       try
          assignFile(f, path + 'data' + pathSeparator + fName);
