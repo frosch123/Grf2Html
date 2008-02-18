@@ -601,12 +601,24 @@ begin
             if parseStringCodes then
             begin
                case ord(s[i]) of
+                  $01: begin
+                          charlen := 2;
+                          if i + 1 <= length(s) then tmp := ord(s[i + 1]) else tmp := 0;
+                          result := result + '&lt;0x01 X offset 0x' + intToHex(tmp, 2) + ' (' + intToStr(tmp) + ')&gt;';
+                       end;
+                  $1F: begin
+                          charlen := 3;
+                          if i + 1 <= length(s) then tmp := ord(s[i + 1]) else tmp := 0;
+                          if i + 2 <= length(s) then tmp2 := ord(s[i + 2]) else tmp2 := 0;
+                          result := result + '&lt;0x1F X offset 0x' + intToHex(tmp , 2) + ' (' + intToStr(tmp ) + '); ' +
+                                                      'Y offset 0x' + intToHex(tmp2, 2) + ' (' + intToStr(tmp2) + ')&gt;';
+                       end;
                   $81: begin
                           charlen := 3;
                           tmp := 0;
                           if i + 1 <= length(s) then tmp := tmp or ord(s[i + 1]);
                           if i + 2 <= length(s) then tmp := tmp or (ord(s[i + 2]) shl 8);
-                          result := result + '&lt;0x81 string 0x' + intToHex(tmp,4) + '&gt;';
+                          result := result + '&lt;0x81 string 0x' + intToHex(tmp, 4) + '&gt;';
                        end;
                   $99: begin
                           charlen := 2;

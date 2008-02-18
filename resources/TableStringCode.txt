@@ -1,3 +1,6 @@
+0D=new line
+0E=small font
+0F=large font
 7B=dword
 7C=signed word
 7D=signed byte
