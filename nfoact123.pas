@@ -769,6 +769,7 @@ begin
             if divMod <> none then
             begin
                v := v + addValue;
+               v := v and ($FFFFFFFF shr (8 * (4 - fSize)));
                if divMod = division then v := v div divModValue else v := v mod divModValue;
             end;
             v := v and ($FFFFFFFF shr (8 * (4 - fSize)));
@@ -798,8 +799,8 @@ begin
                s := s + ' shr ' + intToStr(shift);
                bracketsNeeded := true;
             end;
-            v := $FFFFFFFF shr shift; // Bits that are not already masked out by shift
-            if andMask and v <> v then
+            v := $FFFFFFFF shr max(shift, 8 * (4 - fSize)); // Bits that are not already masked out by shift or size
+            if longint(andMask) and v <> v then
             begin
                if bracketsNeeded then s := '(' + s + ')';
                s := s + ' and 0x' + intToHex(andMask, 2 * fSize);
