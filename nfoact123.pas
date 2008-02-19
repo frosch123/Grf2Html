@@ -197,14 +197,22 @@ type
 
 implementation
 
-function readAction2Dest(parent: TNewGrfSprite; ps: TPseudoSpriteReader; const action2Table: TAction2Table): TAction2Dest;
+function checkCallback(var value: word): boolean;
 begin
-   result.value := ps.getWord;
-   if result.value and $8000 <> 0 then
+   result := value and $8000 <> 0;
+   if result then
    begin
       // callback result
       // "For compatibility with earlier patch versions, FF in the high byte is taken to mean the same thing as 80"
-      if result.value and $FF00 = $FF00 then result.value := result.value and $80FF;
+      if value and $FF00 = $FF00 then value := value and $80FF;
+   end;
+end;
+
+function readAction2Dest(parent: TNewGrfSprite; ps: TPseudoSpriteReader; const action2Table: TAction2Table): TAction2Dest;
+begin
+   result.value := ps.getWord;
+   if checkCallback(result.value) then
+   begin
       result.dest := nil;
    end else
    begin
@@ -414,12 +422,12 @@ begin
    for i := 0 to length(fEntries[0]) - 1 do
    begin
       fEntries[0][i] := ps.getWord;
-      if fAction1 <> nil then fAction1.registerLink(fEntries[0][i], self);
+      if (not checkCallback(fEntries[0][i])) and (fAction1 <> nil) then fAction1.registerLink(fEntries[0][i], self);
    end;
    for i := 0 to length(fEntries[1]) - 1 do
    begin
       fEntries[1][i] := ps.getWord;
-      if fAction1 <> nil then fAction1.registerLink(fEntries[1][i], self);
+      if (not checkCallback(fEntries[1][i])) and (fAction1 <> nil) then fAction1.registerLink(fEntries[1][i], self);
    end;
    if (length(fEntries[0]) <> 1) or (length(fEntries[1]) <> 0) then
    begin
