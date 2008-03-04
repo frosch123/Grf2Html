@@ -446,7 +446,7 @@ begin
       result := (first + last) div 2;
       spr := TSprite(fSprites[result]).spriteNr;
       if spr = nr then exit;
-      if spr > nr then first := result + 1 else last := result;
+      if spr < nr then first := result + 1 else last := result;
    end;
    result := first;
 end;
