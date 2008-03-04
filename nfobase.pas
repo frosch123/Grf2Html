@@ -154,6 +154,7 @@ type
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 function grfID2Str(grfID: longword): string;
 function signedCast(v: longword; size: integer): longint;
+function unsignedCast(v: longword; size: integer): longword;
 
 implementation
 
@@ -674,11 +675,16 @@ begin
              ' (' + formatTextPrintable(s, false) + ')';
 end;
 
+function unsignedCast(v: longword; size: integer): longword;
+begin
+   result := v and ($FFFFFFFF shr (8 * (4 - size)));
+end;
+
 function signedCast(v: longword; size: integer): longint;
 begin
    if size < 4 then
    begin
-      v := v and ($FFFFFFFF shr (8 * (4 - size)));
+      v := unsignedCast(v, size);
       result := v;
       if v shr (8 * size - 1) <> 0 then result := result - 1 shl (8 * size);
    end else result := v;

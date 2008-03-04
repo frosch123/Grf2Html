@@ -776,11 +776,10 @@ begin
             v := ($FFFFFFFF shr shift) and andMask;
             if divMod <> none then
             begin
-               v := v + addValue;
-               v := v and ($FFFFFFFF shr (8 * (4 - fSize)));
+               v := signedCast(v + addValue, fSize);
                if divMod = division then v := v div divModValue else v := v mod divModValue;
             end;
-            v := v and ($FFFFFFFF shr (8 * (4 - fSize)));
+            v := unsignedCast(v, fSize);
             s := '0x' + intToHex(v, 2 * fSize);
          end else
          begin
@@ -816,12 +815,27 @@ begin
             end;
             if divMod <> none then
             begin
-               if bracketsNeeded then s := '(' + s + ')';
-               s := '(' + s + ' + 0x' + intToHex(addValue, 2 * fSize);
-               if divMod = division then s := s + ') div<sub>[signed]</sub> 0x' else
-                                         s := s + ') mod<sub>[signed]</sub> 0x';
-               s := s + intToHex(divModValue, 2 * fSize);
-               bracketsNeeded := true;
+               if addValue <> 0 then
+               begin
+                  if bracketsNeeded then s := '(' + s + ')';
+                  if addValue < 0 then s := s + ' - ' + intToStr(-addValue) else
+                                       s := s + ' + ' + intToStr( addValue);
+                  bracketsNeeded := true;
+               end;
+               if divMod = division then
+               begin
+                  if divModValue <> 1 then
+                  begin
+                     if bracketsNeeded then s := '(' + s + ')';
+                     s := s + ' div<sub>[signed]</sub> ' + intToStr(divModValue);
+                     bracketsNeeded := true;
+                  end;
+               end else
+               begin
+                  if bracketsNeeded then s := '(' + s + ')';
+                  s := s + ' mod<sub>[signed]</sub> ' + intToStr(divModValue);
+                  bracketsNeeded := true;
+               end;
             end;
          end;
 

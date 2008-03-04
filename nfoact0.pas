@@ -828,7 +828,7 @@ begin
                writeln(t, '<tr valign="top"><th align="left">0x', intToHex(fProps[j], 2), ' "', s, '"</th>');
                for i := colNr to min(colNr + aimedCols, fNumIDs) - 1 do
                begin
-                  write(t, '<td>0x', intToHex(fData[j, i].plainunsigned and ($FFFFFFFF shr (8 * (4 - fData[j, i].size))), 2 * fData[j, i].size));
+                  write(t, '<td>0x', intToHex(unsignedCast(fData[j, i].plainunsigned, fData[j, i].size), 2 * fData[j, i].size));
                   case fData[j, i].typ of
                      a0unsigned: write(t, ' (', fData[j, i].plainunsigned, ')');
                      a0signed:   write(t, ' (', fData[j, i].plainsigned, ')');
