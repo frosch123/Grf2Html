@@ -154,6 +154,7 @@ type
       fTriggers   : byte;
       fAllTriggers: boolean;
       fRandBit    : integer;
+      fRandCount  : integer;
       fCases      : array of TAction2Dest;
       function getNumCases: integer;
       function getCase(i: integer): TAction2Dest;
@@ -163,6 +164,7 @@ type
       property useRelated: boolean read fRelated;
       property allTriggersNeeded: boolean read fAllTriggers;
       property firstRandomBit: integer read fRandBit;
+      property numRandomBits: integer read fRandCount;
       property numCases: integer read getNumCases;
       property cases[i: integer]: TAction2Dest read getCase;
    end;
@@ -870,9 +872,23 @@ begin
    fAllTriggers := (ps.peekByte and $80) <> 0;
    fTriggers := ps.getByte and $7F;
    fRandBit := ps.getByte;
+
    setLength(fCases, ps.getByte);
    for i := 0 to length(fCases) - 1 do fCases[i] := readAction2Dest(self, ps, action2Table);
+
    testSpriteEnd(ps);
+
+   i := length(fCases);
+   fRandCount := 0;
+   if i = 0 then error('"nrand" must not be zero.') else
+   begin
+      while i and 1 = 0 do
+      begin
+         inc(fRandCount);
+         i := i shr 1;
+      end;
+      if i <> 1 then error('"nrand" must be a power of two.')
+   end;
 end;
 
 function TRandomAction2.getNumCases: integer;
@@ -918,7 +934,7 @@ begin
          end;
    end;
    writeln(t, ' ', s, '</td></tr>');
-   writeln(t, '<tr><th align="left">First random bit</th><td>', fRandBit, '</td></tr>');
+   writeln(t, '<tr><th align="left">Random bits</th><td>', fRandBit, ' to ', fRandBit + fRandCount - 1, ' (', fRandCount, ' bits)</td></tr>');
    writeln(t, '<tr valign="top"><th align="left">Choose between</th><td>');
    for i := 0 to length(fCases) - 1 do
    begin
