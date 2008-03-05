@@ -70,7 +70,7 @@ begin
                writeln('error while reading file.');
                halt;
             end;
-            grf := loadGrf(stream, settings.winPalette);
+            grf := loadGrf(stream, settings.palette = palWin);
             stream.free;
             if grf = nil then writeln('invalid grf file') else
             begin

@@ -20,9 +20,13 @@ interface
 
 uses sysutils, classes, inifiles, contnrs;
 
+const
+   palDos   = 0;
+   palWin   = 1;
+
 type
    TGrf2HtmlSettings = record
-      winPalette     : boolean;                  // true = windows palette; false = dos palette
+      palette        : integer;                  // palWin = windows palette; palDos = dos palette
       suppressData   : boolean;                  // Do not generate any data files (images, ...)
       update         : array[0..1] of integer;   // Only generate data files for sprites in this range
       range          : array[0..1] of integer;   // Only generate output for sprites in this range
@@ -98,15 +102,25 @@ type
       procedure printVerbose; override;
    end;
 
-   TGrf2HtmlOptionPalette = class(TGrf2HtmlOption)
+   TGrf2HtmlOptionEnum = class(TGrf2HtmlOption)
    private
-      fValue              : ^boolean;
+      fEnums              : TStrings; {TStringList}
+      fValue              : ^integer;
    public
-      constructor create(var value: boolean; commandLine, iniSection, iniKey, verboseName: string; default: boolean; paramdesc, description: string);
+      constructor create(var value: integer; commandLine, iniSection, iniKey, verboseName: string; default: integer; paramdesc, description: string);
+      destructor destroy; override;
       function readFromCommandLine(paramNr: integer): integer; override;
       procedure readFromIni(ini: TCustomIniFile); override;
       procedure saveToIni(ini: TCustomIniFile); override;
       procedure printVerbose; override;
+      property strings: TStrings read fEnums;
+   end;
+
+   TGrf2HtmlOptionPalette = class(TGrf2HtmlOptionEnum)
+   public
+      constructor create(var value: integer);
+      procedure readFromIni(ini: TCustomIniFile); override;
+      procedure saveToIni(ini: TCustomIniFile); override;
    end;
 
    TGrf2HtmlOptionRange = class(TGrf2HtmlOption)
@@ -325,51 +339,108 @@ begin
 end;
 
 
-constructor TGrf2HtmlOptionPalette.create(var value: boolean; commandLine, iniSection, iniKey, verboseName: string; default: boolean; paramdesc, description: string);
+constructor TGrf2HtmlOptionEnum.create(var value: integer; commandLine, iniSection, iniKey, verboseName: string; default: integer; paramdesc, description: string);
 begin
    inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description);
    fValue := @value;
    fValue^ := default;
+   fEnums := TStringList.create;
 end;
 
-function TGrf2HtmlOptionPalette.readFromCommandLine(paramNr: integer): integer;
+destructor TGrf2HtmlOptionEnum.destroy;
+begin
+   fEnums.free;
+   inherited destroy;
+end;
+
+function TGrf2HtmlOptionEnum.readFromCommandLine(paramNr: integer): integer;
 var
    s                                    : string;
+   v, i                                 : integer;
 begin
    result := 1;
    if paramNr > paramcount then s := '' else s := paramStr(paramNr);
-   if compareText(s, 'win') = 0 then fValue^ := true else
-   if compareText(s, 'dos') = 0 then fValue^ := false else
+   if s <> '' then v := fEnums.indexOf(s) else v := -1;
+   if v >= 0 then fValue^ := v else
    begin
-      write(fCommandLine, ': "win" or "dos" expected.');
-      if s <> '' then writeln(' "', s, '" found.') else writeln;
+      write(fCommandLine, ': ');
+      if s = '' then writeln(fParamDesc,' expected.') else writeln('"', s, '" is invalid.');
+      write('Valid values: ');
+      for i := 0 to fEnums.count - 1 do
+      begin
+         if i <> 0 then write(', ');
+         write('"', fEnums[i], '"');
+      end;
+      writeln;
       result := -1;
       exit;
    end;
    inherited readFromCommandLine(paramNr);
 end;
 
+procedure TGrf2HtmlOptionEnum.readFromIni(ini: TCustomIniFile);
+var
+   s                                    : string;
+   v, i                                 : integer;
+begin
+   if (fIniKey <> '') and not fFromCommandLine then
+   begin
+      s := ini.readString(fIniSection, fIniKey, fEnums[fValue^]);
+      if s <> '' then v := fEnums.indexOf(s) else v := -1;
+      if v >= 0 then fValue^ := v else
+      begin
+         writeln(fCommandLine, ': Ignoring invalid value "',s, '".');
+         write('Valid values: ');
+         for i := 0 to fEnums.count - 1 do
+         begin
+            if i <> 0 then write(', ');
+            write('"', fEnums[i], '"');
+         end;
+         writeln;
+      end;
+   end;
+end;
+
+procedure TGrf2HtmlOptionEnum.saveToIni(ini: TCustomIniFile);
+begin
+   if fIniKey <> '' then
+   begin
+      ini.writeString(fIniSection, fIniKey, fEnums[fValue^]);
+   end;
+end;
+
+procedure TGrf2HtmlOptionEnum.printVerbose;
+begin
+   if fVerboseName = '' then exit;
+   inherited printVerbose;
+   writeln(fEnums[fValue^]);
+end;
+
+
+constructor TGrf2HtmlOptionPalette.create(var value: integer);
+begin
+   inherited create(value, '-p', 'Grf2Html', 'Palette', 'Palette', palWin, '<pal>', 'Specifies the palette to use in decoding: "win" or "dos".');
+   strings.add('dos');
+   strings.add('win');
+end;
+
 procedure TGrf2HtmlOptionPalette.readFromIni(ini: TCustomIniFile);
 begin
    if (fIniKey <> '') and not fFromCommandLine then
    begin
-      fValue^ := ini.readBool(fIniSection, fIniKey, fValue^);
+      if ini.valueExists('Grf2Html', 'WinPalette') then
+      begin
+         // Compatibility to older versions of Grf2Html
+         if ini.readBool('Grf2Html', 'WinPalette', fValue^ = palWin) then fValue^ := palWin else fValue^ := palDos;
+      end else inherited readFromIni(ini);
    end;
 end;
 
 procedure TGrf2HtmlOptionPalette.saveToIni(ini: TCustomIniFile);
 begin
-   if fIniKey <> '' then
-   begin
-      ini.writeBool(fIniSection, fIniKey, fValue^);
-   end;
-end;
-
-procedure TGrf2HtmlOptionPalette.printVerbose;
-begin
-   if fVerboseName = '' then exit;
-   inherited printVerbose;
-   if fValue^ then writeln('win') else writeln('dos');
+   // Remove value of older versions of Grf2Html
+   ini.deleteKey('Grf2Html', 'WinPalette');
+   inherited saveToIni(ini);
 end;
 
 
@@ -445,6 +516,7 @@ begin
    writeln(fLow^, ' to ', fHigh^);
 end;
 
+
 function parseCommandLine(out settings: TGrf2HtmlSettings): TStringList;
 var
    options                              : TObjectList;
@@ -464,7 +536,7 @@ begin
    options.add(TGrf2HtmlOptionSetOnly.create(printUsage           , '-h'        , ''        , ''          , ''                                    , ''       , 'Prints this message and exits.'));
    options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + extractFileName(s) + '".'));
    options.add(TGrf2HtmlOptionSetOnly.create(settings.suppressData, '--nodata'  , ''        , ''          , 'Skip data'                           , ''       , 'Skip generation of non-html data files'#13#10'(images, binary included data, ...).'));
-   options.add(TGrf2HtmlOptionPalette.create(settings.winPalette  , '-p'        , 'Grf2Html', 'WinPalette', 'Palette'    , true                   , '<pal>'  , 'Specifies the palette to use in decoding: "win" or "dos".'));
+   options.add(TGrf2HtmlOptionPalette.create(settings.palette));
    options.add(TGrf2HtmlOptionRange  .create(settings.range[0], settings.range[1], '-r', '' , ''          , 'Range'      , 0, high(integer)       , '<first>:<last>', 'Only generate output for a range of spritenumbers.'));
    options.add(TGrf2HtmlOptionRange  .create(settings.update[0], settings.update[1], '-u', '' , ''        , 'Updaterange', 0, high(integer)       , '<first>:<last>', 'Only generate non-html data files in a range of sprites.'#13#10'Behaves like ''--nodata'' for sprites outside of the range.'));
    options.add(TGrf2HtmlOptionSetOnly.create(verbose              , '-v'        , 'Grf2Html', 'Verbose'   , ''                                    , ''       , 'Prints used options'));
@@ -506,7 +578,7 @@ begin
       end else result.add(s);
    end;
 
-   if printUsage or ((result.count = 0) and not writeIni) then
+   if printUsage or ((result.count = 0) and not writeIni and not verbose) then
    begin
       writeln('Usage: ', extractFilename(paramStr(0)), ' [options] <inputfiles ...>');
       writeln(' <inputfile ...>   Grfs to decode. Important: Encoded .grf (not .nfo).');
