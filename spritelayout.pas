@@ -256,8 +256,8 @@ begin
          with bb.canvas do
          begin
             {$IFDEF FPC}
-               pen.FPColor := FPColor($FFFF, $FFFF, $FFFF);
-               brush.FPColor := FPColor($FFFF, $FFFF, $FFFF);
+               pen.FPColor := colTransparent;
+               brush.FPColor := colTransparent;
             {$ELSE}
                pen.color := $FFFFFF;
                brush.color := $FFFFFF;
@@ -312,6 +312,9 @@ begin
                end;
          end;
 
+         {$IFNDEF FPC}
+            bb.setTransparent($FFFFFF);
+         {$ENDIF}
          bb.savePng(path + 'data' + pathSeparator + fn);
          bb.free;
       end;

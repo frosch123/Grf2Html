@@ -21,15 +21,19 @@ interface
 uses sysutils, classes, inifiles, contnrs;
 
 const
-   palDos   = 0;
-   palWin   = 1;
+   palDos     = 0;
+   palWin     = 1;
+
+   transBlue  = 0;
+   transReal  = 1;
 
 type
    TGrf2HtmlSettings = record
-      palette        : integer;                  // palWin = windows palette; palDos = dos palette
-      suppressData   : boolean;                  // Do not generate any data files (images, ...)
-      update         : array[0..1] of integer;   // Only generate data files for sprites in this range
-      range          : array[0..1] of integer;   // Only generate output for sprites in this range
+      palette                  : integer;                  // palWin = windows palette; palDos = dos palette
+      suppressData             : boolean;                  // Do not generate any data files (images, ...)
+      update                   : array[0..1] of integer;   // Only generate data files for sprites in this range
+      range                    : array[0..1] of integer;   // Only generate output for sprites in this range
+      transparency             : integer;                  // representation of transparency: transBlue, transReal
 
       // Explicitly used widths (pixels) of columns
       linkFrameWidth           : integer;        // Width of the left frame
@@ -521,6 +525,7 @@ function parseCommandLine(out settings: TGrf2HtmlSettings): TStringList;
 var
    options                              : TObjectList;
    o                                    : TGrf2HtmlOption;
+   enum                                 : TGrf2HtmlOptionEnum;
    ini                                  : TIniFile;
    printUsage                           : boolean;
    iniName                              : string;
@@ -542,6 +547,11 @@ begin
    options.add(TGrf2HtmlOptionSetOnly.create(verbose              , '-v'        , 'Grf2Html', 'Verbose'   , ''                                    , ''       , 'Prints used options'));
    options.add(TGrf2HtmlOptionInteger.create(settings.aimedWidth  , '-w'        , 'Grf2Html', 'AimedWidth', 'Aimed width', 1000, 10, high(integer), '<width>', 'Aimed width for content frame in pixels.'#13#10'Used to determine number of columns in output.'));
    options.add(TGrf2HtmlOptionSetOnly.create(writeini             , '--writeini', ''        , ''          , 'Write inifile'                       , ''       , 'Prints current options to the file specified by "-ini".'));
+
+   enum := TGrf2HtmlOptionEnum.create(settings.transparency     , '', 'Grf2Html', 'Transparency'  , '', transBlue, '', '');
+   enum.strings.add('blue');
+   enum.strings.add('real');
+   options.add(enum);
 
    options.add(TGrf2HtmlOptionInteger.create(settings.linkFrameWidth, ''        , 'Format'  , 'LinkFrameWidth',          '', 200, 1, high(integer), '', ''));
    options.add(TGrf2HtmlOptionInteger.create(settings.action0subIndexColWidth, '', 'Format' , 'Action0SubIndexColWidth', '',  30, 1, high(integer), '', ''));

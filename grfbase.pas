@@ -54,7 +54,7 @@ type
       fPixelData    : array of byte;
    public
       constructor create(spriteNr: integer; w, h: integer; var data; aCompression: TSpriteCompression; relX, relY: integer; useWinPalette: boolean);
-      procedure savePng(fileName: string);
+      procedure savePng(fileName: string; transparency: integer);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property width: integer read fwidth;
@@ -139,12 +139,14 @@ begin
    if length(fPixelData) > 0 then move(data, fPixelData[0], length(fPixelData));
 end;
 
-procedure TRealSprite.savePng(fileName: string);
+procedure TRealSprite.savePng(fileName: string; transparency: integer);
 var
    pal                                  : ^TPalette;
+   transColor                           : integer;
 begin
    if fWinPalette then pal := @winPal else pal := @dosPal;
-   osspecific.savePng(fileName, pal^, fWidth, fHeight, @(fPixelData[0]));
+   if transparency = transReal then transColor := 0 else transColor := -1;
+   osspecific.savePng(fileName, pal^, fWidth, fHeight, @(fPixelData[0]), transColor);
 end;
 
 procedure TRealSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -154,7 +156,7 @@ begin
    inherited printHtml(t, path, settings);
    fn := 'sprite' + intToStr(spriteNr) + '.png';
    writeln(t, '<img alt="', spriteNr, '" src="data/', fn, '"><br>Rel: &lt;', fRelPos.x, ',', fRelPos.y, '&gt;<br>Compr: 0x', intToHex(fCompression, 2));
-   if not suppressDataForSprite(settings, spriteNr) then savePng(path + 'data' + pathSeparator + fn);
+   if not suppressDataForSprite(settings, spriteNr) then savePng(path + 'data' + pathSeparator + fn, settings.transparency);
 end;
 
 function TRealSprite.getShortDesc: string;

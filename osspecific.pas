@@ -40,6 +40,9 @@ type
       constructor create(width, height: integer);
       destructor destroy; override;
       procedure savePng(const fileName: string);
+      {$IFNDEF FPC}
+         procedure setTransparent(c: TColor);
+      {$ENDIF}
       property canvas: TCanvas read getCanvas;
       property width: integer read getWidth;
       property height: integer read getHeight;
@@ -57,7 +60,7 @@ const
       pathSeparator = '/';
    {$ENDIF}
 
-procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray);
+procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray; transparentColor: integer = -1);
 
 implementation
 
@@ -71,7 +74,7 @@ const
    PNG_FILTER_TYPE_DEFAULT              = 0;
    PNG_INTERLACE_NONE                   = 0;
 
-procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray);
+procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray; transparentColor: integer = -1);
    procedure error(const msg: string);
    begin
       writeln(msg);
@@ -83,6 +86,7 @@ var
    rows                                 : packed array of pointer;
    i                                    : integer;
    f                                    : PFILE;
+   alphaValues                          : packed array[byte] of byte;
 begin
    f := fopen(pchar(fileName), 'wb');
    if f = nil then error('Error while creating "' + fileName + '".');
@@ -103,6 +107,15 @@ begin
 
    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
    png_set_PLTE(png_ptr, info_ptr, @palette[0], length(palette));
+
+   if transparentColor >= 0 then
+   begin
+      for i := low(alphaValues) to high(alphaValues) do
+      begin
+         if i = transparentColor then alphaValues[i] := 0 else alphaValues[i] := $FF;
+      end;
+      png_set_tRNS(png_ptr, info_ptr, @alphaValues[0], length(alphaValues), nil);
+   end;
 
    png_write_info(png_ptr, info_ptr);
 
@@ -160,8 +173,10 @@ var
    bitmap                               : array of byte;
    x, y, i                              : integer;
    c                                    : TFPColor;
+   transparentColor                     : integer;
 begin
    // A "fImage.saveToFile(fileName);" would suffice here. But fpc's own png encoding is awfully slow.
+   transparentColor := -1;
    setLength(bitmap, width * height);
    for y := 0 to height - 1 do
    for x := 0 to width - 1 do bitmap[y * width + x] := fImage.pixels[x,y];
@@ -171,8 +186,9 @@ begin
       pal[i].red := c.red shr 8;
       pal[i].green := c.green shr 8;
       pal[i].blue := c.blue shr 8;
+      if c = colTransparent then transparentColor := i;
    end;
-   osspecific.savePng(fileName, pal, width, height, @bitmap[0]);
+   osspecific.savePng(fileName, pal, width, height, @bitmap[0], transparentColor);
 end;
 
 {$ELSE}
@@ -234,10 +250,11 @@ begin
     *)
 end;
 
-procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray);
+procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray; transparentColor: integer = -1);
 var
    y                                    : integer;
    bmp                                  : TBitmap;
+   c                                    : png_color;
 begin
    bmp := TBitmap.create;
 
@@ -246,6 +263,13 @@ begin
    bmp.height := height;
 
    forcePalette(bmp.handle, palette);
+
+   if transparentColor >= 0 then
+   begin
+      c := palette[transparentColor];
+      bmp.transparentColor := c.red or (c.green shl 8) or (c.blue shl 16);
+      bmp.transparent := true;
+   end;
 
    // set bitmap data
    if width > 0 then
@@ -290,6 +314,12 @@ end;
 procedure TOSIndependentImage.savePng(const fileName: string);
 begin
    saveBitmapAsPng(fileName, fBitmap);
+end;
+
+procedure TOSIndependentImage.setTransparent(c: TColor);
+begin
+   fBitmap.transparentColor := c;
+   fBitmap.transparent := true;
 end;
 
 {$ENDIF}
