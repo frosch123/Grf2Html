@@ -27,6 +27,9 @@ const
    transBlue  = 0;
    transReal  = 1;
 
+   boolNo     = 0;
+   boolYes    = 1;
+
 type
    TGrf2HtmlSettings = record
       palette                  : integer;                  // palWin = windows palette; palDos = dos palette
@@ -34,6 +37,7 @@ type
       update                   : array[0..1] of integer;   // Only generate data files for sprites in this range
       range                    : array[0..1] of integer;   // Only generate output for sprites in this range
       transparency             : integer;                  // representation of transparency: transBlue, transReal
+      subSpritesInIndex        : integer;                  // link to subsprites in the index frame: boolNo, boolYes
 
       // Explicitly used widths (pixels) of columns
       linkFrameWidth           : integer;        // Width of the left frame
@@ -547,6 +551,11 @@ begin
    options.add(TGrf2HtmlOptionSetOnly.create(verbose              , '-v'        , 'Grf2Html', 'Verbose'   , ''                                    , ''       , 'Prints used options'));
    options.add(TGrf2HtmlOptionInteger.create(settings.aimedWidth  , '-w'        , 'Grf2Html', 'AimedWidth', 'Aimed width', 1000, 10, high(integer), '<width>', 'Aimed width for content frame in pixels.'#13#10'Used to determine number of columns in output.'));
    options.add(TGrf2HtmlOptionSetOnly.create(writeini             , '--writeini', ''        , ''          , 'Write inifile'                       , ''       , 'Prints current options to the file specified by "-ini".'));
+
+   enum := TGrf2HtmlOptionEnum.create(settings.subSpritesInIndex, '', 'Grf2Html', 'SubSpriteIndex', '', boolNo   , '', '');
+   enum.strings.add('no');
+   enum.strings.add('yes');
+   options.add(enum);
 
    enum := TGrf2HtmlOptionEnum.create(settings.transparency     , '', 'Grf2Html', 'Transparency'  , '', transBlue, '', '');
    enum.strings.add('blue');

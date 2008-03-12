@@ -283,7 +283,10 @@ begin
       if i * 100 div spriteCount <> (i - 1) * 100 div spriteCount then write(#13'Generating html', (i * 100 div spriteCount): 3, '%');
 
       s := fSprites[i] as TSprite;
-      writeln(t, '<tr><td align=right>', i, '</td><td><a href="nfo.html#sprite', i, '" target="content">', s.getShortDesc, '</a></td></tr>');
+      if (ssCnt = 0) or (settings.subSpritesInIndex = boolYes) then
+      begin
+         writeln(t, '<tr><td align=right>', i, '</td><td><a href="nfo.html#sprite', i, '" target="content">', s.getShortDesc, '</a></td></tr>');
+      end;
 
       if ssCnt > 0 then dec(ssCnt) else
       begin
