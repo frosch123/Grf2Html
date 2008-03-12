@@ -24,7 +24,7 @@ Contents:
 
    The windows version of Grf2Html makes use of PNG Delphi by Gustavo Daud [5].
 
-(*) See sections 5 and 6 about errors and limitations for details.
+(*) See sections 6 and 7 about errors and limitations for details.
 
 
 2) Installation:
@@ -75,6 +75,7 @@ Contents:
      2) Run "make".
      3) Optionally run "./grf2html --writeini" to create the default ini-file, that is bundled with the normal binary.
 
+
 4) Usage:
    Run Grf2Html from a console using:
       grf2html [options] <inputfiles ...>
@@ -90,6 +91,7 @@ Contents:
 
    However you can as well add Grf2Html to the explorer (or similiar program of your OS) context menu for files with .grf extention.
    In that case you want probably put your default options into "grf2html.ini", though they perhaps already suit your needs.
+   Also note that not all options are available from the commandline. See section 5 for the options in the inifile.
 
    IMPORTANT:
    Depending on your operating- and file-system decoding a NewGrf can take some time. This is because Grf2Html outputs a lot files.
@@ -101,7 +103,33 @@ Contents:
    layouts won't be generated either.
 
 
-5) Errors: What to do, if Grf2Html prints error messages into the output?
+5) The inifile:
+   This section describes the options in the inifile. Only the important options are also available on the commandline (see section 4).
+   You find the inifile in the same directory as the executable (as long as you do not specify an other file with the "--ini <file>"
+   command-line option. If the file does not exist yet, it is recommended to create it with the "--writeini" option to get all keys
+   with their default values into the correct sections.
+
+5.1) [Grf2Html] section:
+   Palette:                 Works the same as the "-p" option. Specify "win" or "dos".
+   Verbose:                 Set to "1" or "0" to enable or disable verbose output ("-v" option) by default.
+   AimedWidth:              Works the same as the "-w" option.
+   SubSpriteIndex:          Specifies if the left frame should also contain links to subsprites (e.g. realsprites in
+                            Action1/5/A/12, sounds in Action11). Specify "yes" or "no".
+   Transparency:            Controls whether transparent-blue of realsprites should be shown as "blue" or as "real" transparent.
+
+5.2) [Format] section:
+   In this section are some magical values regarding cetain widths (in pixel) of the output. You may want to modify them, if you have
+   larger/smaller fonts that me in your browser and the number-of-columns guessing of the "-w" option does not generate acceptable results.
+      LinkFrameWidth           Width of the left frame.
+      Action0SubIndexColWidth  Width of the column of e.g. number of spritelayout or customlayout in Action0s.
+      Action0FirstColWidth     Assumed width of left column (property name) in Action0s. Used the guess number of values per row.
+      Action0ColWidth          Assumed width of one column in Action0s. Used the guess number of values per row.
+      Action1ColWidth          The assumed width of a columns in Action1s is the maximum of the sprite width and this value.
+                               Used to guess number of sprites per row.
+      Action5A12ColWidth       The same as Action1ColWidth but for Action5/A/12.
+
+
+6) Errors: What to do, if Grf2Html prints error messages into the output?
    Sometimes Grf2Html prints a list of errors into the generated html output.
    In that case Grf2Html had problems understanding the input file.
    If you do not know the source of the errors proceed in the following steps:
@@ -121,6 +149,7 @@ Contents:
 6) Limitations:
     - BasicAction2s create hyperlinks to Action1 sets. They always refer to the last Action1.
       This might be wrong, if Action1s are skipped conditionally.
+    - The meanings of some varaction2 variables change during some callbacks. Grf2Html always prints the regular meaning.
     - The NFO code is interpreted directly from the file. Changes by Action6s are not taken into account. All bad things may happen.
     - ActionB always uses the english built-in-messages.
 
