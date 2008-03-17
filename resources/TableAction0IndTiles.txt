@@ -1,4 +1,4 @@
-08=1H@Substitute building type
+08=1H@Substitute tile type
 09=1H@Industry tile override
 0A=2H@Tile acceptance #1
 0B=2H@Tile acceptance #2
