@@ -1,14 +1,14 @@
-00=$0$ := $1$
-01=$0$ := $1$ + $2$
-02=$0$ := $1$ - $2$
+00=$0$ := $1H$
+01=$0$ := $1I$ + $2I$
+02=$0$ := $1I$ - $2I$
 03=$0$ := $1$ *<sub>[unsigned]</sub> $2$
-04=$0$ := $1$ *<sub>[signed]</sub> $2$
-05=$0$ := $1$ shl<sub>[unsigned]</sub> $2$
-06=$0$ := $1$ shl<sub>[signed]</sub> $2$
-07=$0$ := $1$ and $2$
-08=$0$ := $1$ or $2$
+04=$0$ := $1I$ *<sub>[signed]</sub> $2I$
+05=$0$ := $1H$ shl<sub>[unsigned]</sub> $2I$
+06=$0$ := $1H$ shl<sub>[signed]</sub> $2I$
+07=$0$ := $1H$ and $2H$
+08=$0$ := $1H$ or $2H$
 09=$0$ := $1$ div<sub>[unsigned]</sub> $2$
-0A=$0$ := $1$ div<sub>[signed]</sub> $2$
+0A=$0$ := $1I$ div<sub>[signed]</sub> $2I$
 0B=$0$ := $1$ mod<sub>[unsigned]</sub> $2$
-0C=$0$ := $1$ mod<sub>[signed]</sub> $2$
+0C=$0$ := $1I$ mod<sub>[signed]</sub> $2I$
 

@@ -676,13 +676,34 @@ end;
 
 procedure TActionD.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
-   s, p1, p2, d                         : string;
+   s, d                                 : string;
+   p1H, p2H, p1I, p2I, p1U, p2U         : string;
    f, c                                 : string;
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionD</b> - Assign parameters and calculate results<br>');
-   if fSource1 = $FF then p1 := '0x' + intToHex(fData, 8) else p1 := 'var[' + getAction79DVariable(fSource1) + ']';
-   if fSource2 = $FF then p2 := '0x' + intToHex(fData, 8) else p2 := 'var[' + getAction79DVariable(fSource2) + ']';
+   if fSource1 = $FF then
+   begin
+      p1H := '0x' + intToHex(fData, 8);
+      p1I := intToStr(longint(fData));
+      p1U := intToStr(fData);
+   end else
+   begin
+      p1H := 'var[' + getAction79DVariable(fSource1) + ']';
+      p1I := p1H;
+      p1U := p1H;
+   end;
+   if fSource2 = $FF then
+   begin
+      p2H := '0x' + intToHex(fData, 8);
+      p2I := intToStr(longint(fData));
+      p2U := intToStr(fData);
+   end else
+   begin
+      p2H := 'var[' + getAction79DVariable(fSource2) + ']';
+      p2I := p2H;
+      p2U := p2H;
+   end;
    d := 'var[' + getAction79DVariable(fTarget) + ']';
    f := TableFeature[(fData shr 8) and $FF];
    c := intToStr(fData shr 16);
@@ -691,19 +712,27 @@ begin
       normal          : s := TableActionDOperation[fOperator];
       readFromOtherGrf: begin
                            s := TableActionDOperation[0];
-                           p1 := p1 + ' from grfid ' + grfID2Str(fData);
+                           p1H := p1H + ' from grfid ' + grfID2Str(fData);
+                           p1I := p1H;
+                           p1U := p1H;
                         end;
       readPatchVars   : begin
                            s := TableActionDOperation[0];
-                           p1 := 'PatchVar[0x' + intToHex(fSource1, 2) + ' "' + TableActionDPatchVars[fSource1] + '"]';
+                           p1H := 'PatchVar[0x' + intToHex(fSource1, 2) + ' "' + TableActionDPatchVars[fSource1] + '"]';
+                           p1I := p1H;
+                           p1U := p1H;
                         end;
       GRM             : s := TableActionDGRMOperation[fSource1];
    end;
-   s := stringReplace(s, '$0$', d , [rfReplaceAll]);
-   s := stringReplace(s, '$1$', p1, [rfReplaceAll]);
-   s := stringReplace(s, '$2$', p2, [rfReplaceAll]);
-   s := stringReplace(s, '$3$', f , [rfReplaceAll]);
-   s := stringReplace(s, '$4$', c , [rfReplaceAll]);
+   s := stringReplace(s, '$0$' , d  , [rfReplaceAll]);
+   s := stringReplace(s, '$1H$', p1H, [rfReplaceAll]);
+   s := stringReplace(s, '$1I$', p1I, [rfReplaceAll]);
+   s := stringReplace(s, '$1$' , p1U, [rfReplaceAll]);
+   s := stringReplace(s, '$2H$', p2H, [rfReplaceAll]);
+   s := stringReplace(s, '$2I$', p2I, [rfReplaceAll]);
+   s := stringReplace(s, '$2$' , p2U, [rfReplaceAll]);
+   s := stringReplace(s, '$3$' , f  , [rfReplaceAll]);
+   s := stringReplace(s, '$4$' , c  , [rfReplaceAll]);
    writeln(t, '<b>Operation:</b> ', s);
 end;
 
