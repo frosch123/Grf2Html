@@ -156,7 +156,7 @@ begin
    inherited printHtml(t, path, settings);
    fn := 'sprite' + intToStr(spriteNr) + '.png';
    writeln(t, '<img alt="', spriteNr, '" src="data/', fn, '"><br>Rel: &lt;', fRelPos.x, ',', fRelPos.y, '&gt;<br>Compr: 0x', intToHex(fCompression, 2));
-   if not suppressDataForSprite(settings, spriteNr) then savePng(path + 'data' + pathSeparator + fn, settings.transparency);
+   if not suppressDataForSprite(settings, spriteNr) then savePng(path + 'data' + directorySeparator + fn, settings.transparency);
 end;
 
 function TRealSprite.getShortDesc: string;
@@ -229,7 +229,7 @@ begin
    if (not suppressDataForSprite(settings, spriteNr)) and (fName <> '') then
    begin
       try
-         assignFile(f, path + 'data' + pathSeparator + fName);
+         assignFile(f, path + 'data' + directorySeparator + fName);
          rewrite(f, 1);
       except
          writeln(t,' Error: Could not create file');

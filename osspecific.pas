@@ -48,17 +48,10 @@ type
       property height: integer read getHeight;
    end;
 
-// Free Pascal defines WINDOWS on windows. Lets do the same for Delphi.
 {$IFNDEF FPC}
-   {$DEFINE WINDOWS}
-{$ENDIF}
-
 const
-   {$IFDEF WINDOWS}
-      pathSeparator = '\';
-   {$ELSE}
-      pathSeparator = '/';
-   {$ENDIF}
+      directorySeparator = '\';
+{$ENDIF}
 
 procedure savePng(const fileName: string; const palette: TPalette; width, height: integer; data: PByteArray; transparentColor: integer = -1);
 

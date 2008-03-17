@@ -1029,7 +1029,7 @@ var
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Wave data</b><table summary="Properties"><tr><th align="left">File</th><td><a href="data/', fName, '">', fName, '</a></td></tr>');
-   assignFile(f, path + 'data' + pathSeparator + fName);
+   assignFile(f, path + 'data' + directorySeparator + fName);
    rewrite(f, 1);
    blockWrite(f, data^, size);
    closeFile(f);

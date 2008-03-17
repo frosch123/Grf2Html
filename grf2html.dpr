@@ -62,7 +62,7 @@ begin
       if findFirst(pattern, faReadOnly or faArchive, search) = 0 then
       begin
          repeat
-            fn := extractFileDir(pattern) + pathSeparator + search.name;
+            fn := extractFileDir(pattern) + directorySeparator + search.name;
             write('Load "', fn, '"... ');
             try
                stream := TFileStream.create(fn, fmOpenRead or fmShareDenyWrite);
@@ -78,7 +78,7 @@ begin
                write('Parse newgrf... ');
                nfo := TNewGrfFile.create(extractFileName(fn), grf);
                writeln('done');
-               outPath := expandFilename(changeFileExt(fn, '') + pathSeparator);
+               outPath := expandFilename(changeFileExt(fn, '') + directorySeparator);
                forceDirectories(outPath + 'data');
                nfo.printHtml(outPath, settings);
                nfo.free;

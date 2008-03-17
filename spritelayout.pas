@@ -315,7 +315,7 @@ begin
          {$IFNDEF FPC}
             bb.setTransparent($FFFFFF);
          {$ENDIF}
-         bb.savePng(path + 'data' + pathSeparator + fn);
+         bb.savePng(path + 'data' + directorySeparator + fn);
          bb.free;
       end;
       writeln(t, '<img align="top" alt="Bounding Box Preview" src="data/', fn, '">');
