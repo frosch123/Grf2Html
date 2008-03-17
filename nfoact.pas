@@ -503,7 +503,7 @@ begin
       begin
          s := intToStr(fSkip) + ' sprites';
       end;
-      s := s + ' (to ' + fDestination.printHtmlSpriteLink + ')';
+      s := s + ' (to ' + fDestination.printHtmlSpriteLink('content') + ')';
    end;
    writeln(t, '<tr><th align="left">Skip</th><td>', s, '</td></tr></table>');
 end;
@@ -929,7 +929,7 @@ begin
                begin
                   write(t, 'chain to 0x', intToHex(part, 2), ' (');
                   if partDest = nil then write(t, 'undefined)') else
-                                         write(t, partDest.printHtmlSpriteLink, ')');
+                                         write(t, partDest.printHtmlSpriteLink('content'), ')');
                end;
                writeln(t, '</td></tr>');
             end;
@@ -1095,7 +1095,7 @@ begin
    if (fAction8 <> nil) and (fAction8.grfID = fGrfID) then
    begin
       s := fParent.subSprite[fSoundNr];
-      if s <> nil then writeln(t, s.printHtmlSpriteLink) else
+      if s <> nil then writeln(t, s.printHtmlSpriteLink('content')) else
                        writeln(t, ' undefined sound');
    end;
    writeln(t, '</td></tr></table>');

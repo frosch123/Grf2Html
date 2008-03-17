@@ -114,7 +114,7 @@ begin
       begin
          if fAction1 <> nil then
          begin
-            result := result + (fAction1 as TAction1).printHtmlLinkToSet(nr);
+            result := result + (fAction1 as TAction1).printHtmlLinkToSet(nr, 'content');
          end else
          begin
             result := result + 'Action1 Set ' + intToStr(nr);

@@ -37,6 +37,7 @@ uses
   nfobase in 'nfobase.pas',
   outputsettings in 'outputsettings.pas',
   spritelayout in 'spritelayout.pas',
+  htmlwriter in 'htmlwriter.pas',
   osspecific in 'osspecific.pas';
 
 var

@@ -285,7 +285,7 @@ begin
       s := fSprites[i] as TSprite;
       if (ssCnt = 0) or (settings.subSpritesInIndex = boolYes) then
       begin
-         writeln(t, '<tr><td align=right>', i, '</td><td><a href="nfo.html#sprite', i, '" target="content">', s.getShortDesc, '</a></td></tr>');
+         writeln(t, '<tr><td align=right>', i, '</td><td>', s.printHtmlSpriteLink('sprites', false), '</td></tr>');
       end;
 
       if ssCnt > 0 then dec(ssCnt) else

@@ -18,7 +18,7 @@ unit nfoact123;
 
 interface
 
-uses sysutils, grfbase, nfobase, tables, spritelayout, math, outputsettings;
+uses sysutils, grfbase, nfobase, tables, spritelayout, math, htmlwriter, outputsettings;
 
 type
    TAction1 = class(TMultiSpriteAction)
@@ -34,7 +34,7 @@ type
       destructor destroy; override;
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       procedure registerLink(setNr: integer; from: TNewGrfSprite);
-      function printHtmlLinkToSet(setNr: integer): string;
+      function printHtmlLinkToSet(setNr: integer; const srcFrame: string): string;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property numSets: integer read fNumSets;
@@ -240,7 +240,7 @@ begin
       result := 'chain to 0x' + intToHex(dest.value, 2);
       if dest.dest <> nil then
       begin
-         result := result + ' (' + dest.dest.printHtmlSpriteLink + ')';
+         result := result + ' (' + dest.dest.printHtmlSpriteLink('content') + ')';
       end else result := result + ' (undefined)';
    end;
 end;
@@ -279,9 +279,9 @@ begin
    result := inherited processSubSprite(i, s);
 end;
 
-function TAction1.printHtmlLinkToSet(setNr: integer): string;
+function TAction1.printHtmlLinkToSet(setNr: integer; const srcFrame: string): string;
 begin
-   result := '<a href="#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr) + '">Action1 Set ' + intToStr(setNr) + '</a>';
+   result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr)) + 'Action1 Set ' + intToStr(setNr) + '</a>';
 end;
 
 procedure TAction1.registerLink(setNr: integer; from: TNewGrfSprite);
@@ -317,7 +317,7 @@ begin
       for j := 0 to fNumSets - 1 do
       begin
          writeln(t, '<tr valign="top"><th align="left" rowspan="', (fSpritesPerSet + aimedCols - 1) div aimedCols, '"><a name="sprite', spriteNr, 'set', j, '">Set ', j, '</a><br><font size="-2">Linked from: ');
-         fLinkedFrom[j].printHtml(t, path, settings);
+         fLinkedFrom[j].printHtml('content', t, path, settings);
          writeln(t, '</font></th>');
          for i := 0 to fSpritesPerSet - 1 do
          begin
@@ -351,7 +351,7 @@ begin
                if s = nil then writeln(t, '<td>', i, '<br>Missing sprite') else
                begin
                   writeln(t, '<td>', s.printHtmlSpriteAnchor, '<a name="sprite', spriteNr, 'set', nr, '"><b>Set ', nr, '</b></a> - ', s.printHtmlSpriteNr, '<br><font size="-2">Linked from: ');
-                  fLinkedFrom[nr].printHtml(t, path, settings);
+                  fLinkedFrom[nr].printHtml('content', t, path, settings);
                   write(t, '</font><br>');
                   if s is TRealSprite then s.printHtml(t, path, settings) else
                                            write(t, 'RealSprite expected');
@@ -408,7 +408,7 @@ end;
 procedure TAction2.printLinkedFrom(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
    write(t, '<font size="-2">Linked from: ');
-   fLinkedFrom.printHtml(t, path, settings);
+   fLinkedFrom.printHtml('content', t, path, settings);
    writeln(t, '</font>');
 end;
 
@@ -480,7 +480,7 @@ begin
       end else
       begin
          if fAction1 = nil then writeln(t, 'Action1 Set ' + intToStr(val)) else
-                                writeln(t, fAction1.printHtmlLinkToSet(val));
+                                writeln(t, fAction1.printHtmlLinkToSet(val, 'content'));
       end;
    end;
    write(t, '</td></tr>');
@@ -500,7 +500,7 @@ begin
          end else
          begin
             if fAction1 = nil then writeln(t, 'Action1 Set ' + intToStr(val)) else
-                                   writeln(t, fAction1.printHtmlLinkToSet(val));
+                                   writeln(t, fAction1.printHtmlLinkToSet(val, 'content'));
          end;
       end;
       write(t, '</td></tr>');

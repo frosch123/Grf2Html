@@ -18,7 +18,7 @@ unit grfbase;
 
 interface
 
-uses sysutils, {$IFNDEF FPC} windows, {$ENDIF} classes, osspecific, contnrs, math, outputsettings;
+uses sysutils, {$IFNDEF FPC} windows, {$ENDIF} classes, osspecific, contnrs, math, htmlwriter, outputsettings;
 
 const
    {TSpriteCompression}
@@ -38,7 +38,7 @@ type
       constructor create(spriteNr: integer);
       function printHtmlSpriteAnchor: string;
       function printHtmlSpriteNr: string;
-      function printHtmlSpriteLink: string;
+      function printHtmlSpriteLink(const srcFrame: string; withNumber: boolean = true): string;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual;
       function getShortDesc: string; virtual; abstract;
       property spriteNr: integer read fSpriteNr;
@@ -116,9 +116,11 @@ begin
    result := '#&nbsp;' + intToStr(spriteNr);
 end;
 
-function TSprite.printHtmlSpriteLink: string;
+function TSprite.printHtmlSpriteLink(const srcFrame: string; withNumber: boolean = true): string;
 begin
-   result := '<a href="#sprite' + intToStr(spriteNr) + '">' + printHtmlSpriteNr + ' ' + getShortDesc + '</a>';
+   result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr));
+   if withNumber then result := result + printHtmlSpriteNr + ' ';
+   result := result + getShortDesc + '</a>';
 end;
 
 procedure TSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);

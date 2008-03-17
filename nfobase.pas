@@ -147,7 +147,7 @@ type
    public
       constructor create;
       destructor destroy; override;
-      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+      procedure printHtml(const srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       procedure add(s: TSprite);
    end;
 
@@ -461,7 +461,7 @@ begin
       if fSprites[p] <> s then fSprites.insert(p,s);
 end;
 
-procedure TSpriteSet.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+procedure TSpriteSet.printHtml(srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
 begin
@@ -470,7 +470,7 @@ begin
       for i := 0 to fSprites.count - 1 do
       begin
          if i <> 0 then write(t, ', ');
-         write(t, TSprite(fSprites[i]).printHtmlSpriteLink);
+         write(t, TSprite(fSprites[i]).printHtmlSpriteLink(srcFrame));
       end;
       writeln(t);
    end;
