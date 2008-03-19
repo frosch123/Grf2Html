@@ -93,10 +93,11 @@ type
       fErrors    : TStringList;
       function getErrors: TStrings;
    protected
+      fNewGrfFile: TNewGrfFile;
       fAction8   : TAction8;
       procedure testSpriteEnd(ps: TPseudoSpriteReader);
    public
-      constructor create(spriteNr: integer);
+      constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
       destructor destroy; override;
       procedure error(msg: string);
       procedure useAction8(act8: TAction8); virtual;
@@ -109,7 +110,7 @@ type
    private
       fSpriteCount: integer;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property spriteCount: integer read fSpriteCount;
@@ -121,7 +122,7 @@ type
    private
       fRecolorTable: TRecolorTable;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property recolorTable: TRecolorTable read fRecolorTable;
    end;
@@ -133,7 +134,7 @@ type
    protected
       function getSubSpriteCount: integer; virtual; abstract;
    public
-      constructor create(spriteNr: integer);
+      constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
       destructor destroy; override;
       function processSubSprite(i: integer; s: TSprite): TSprite; virtual;
       property subSprite[i: integer]: TSprite read getSubSprite;
@@ -147,7 +148,7 @@ type
       fName       : string;
       fDesc       : string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property grfVersion: integer read fGrfVersion;
       property grfID: longword read fGrfID;
@@ -234,42 +235,42 @@ begin
       if src is TPseudoSprite then
       begin
          psr := TPseudoSpriteReader.create(src as TPseudoSprite);
-         if i = 0 then dst := TSpriteCountSprite.create(psr) else
+         if i = 0 then dst := TSpriteCountSprite.create(self, psr) else
          begin
             case psr.peekByte of
-               $00: dst := TAction0.create(psr);
+               $00: dst := TAction0.create(self, psr);
                $01: begin
-                       a1 := TAction1.create(psr);
+                       a1 := TAction1.create(self, psr);
                        dst := a1;
                     end;
-               $02: dst := TAction2.readAction2(psr, action2Table, a1);
-               $03: dst := TAction3.create(psr, action2Table);
-               $04: dst := TAction4.create(psr);
-               $05: dst := TAction5.create(psr);
-               $06: dst := TAction6.create(psr);
-               $07: dst := TAction7.create(psr);
+               $02: dst := TAction2.readAction2(self, psr, action2Table, a1);
+               $03: dst := TAction3.create(self, psr, action2Table);
+               $04: dst := TAction4.create(self, psr);
+               $05: dst := TAction5.create(self, psr);
+               $06: dst := TAction6.create(self, psr);
+               $07: dst := TAction7.create(self, psr);
                $08: begin
-                       dst := TAction8.create(psr);
+                       dst := TAction8.create(self, psr);
                        if a8 = nil then a8 := dst as TAction8 else
                                         (dst as TNewGrfSprite).error('Multiple Action8 found. Using first one, ignoring this one.');
                     end;
-               $09: dst := TAction9.create(psr);
-               $0A: dst := TActionA.create(psr);
-               $0B: dst := TActionB.create(psr);
-               $0C: dst := TActionC.create(psr);
-               $0D: dst := TActionD.create(psr);
-               $0E: dst := TActionE.create(psr);
-               $0F: dst := TActionF.create(psr, actionFTable);
+               $09: dst := TAction9.create(self, psr);
+               $0A: dst := TActionA.create(self, psr);
+               $0B: dst := TActionB.create(self, psr);
+               $0C: dst := TActionC.create(self, psr);
+               $0D: dst := TActionD.create(self, psr);
+               $0E: dst := TActionE.create(self, psr);
+               $0F: dst := TActionF.create(self, psr, actionFTable);
                $10: begin
-                       dst := TAction10.create(psr);
+                       dst := TAction10.create(self, psr);
                        j := (dst as TAction10).labelNr;
                        k := length(action10Table[j]);
                        setLength(action10Table[j], k + 1);
                        action10Table[j][k] := i;
                     end;
-               $11: dst := TAction11.create(psr);
-               $12: dst := TAction12.create(psr);
-               $13: dst := TAction13.create(psr);
+               $11: dst := TAction11.create(self, psr);
+               $12: dst := TAction12.create(self, psr);
+               $13: dst := TAction13.create(self, psr);
                else dst := src;
             end;
          end;
@@ -543,10 +544,11 @@ begin
    until c = #0;
 end;
 
-constructor TNewGrfSprite.create(spriteNr: integer);
+constructor TNewGrfSprite.create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
 begin
    inherited create(spriteNr);
    fErrors := TStringList.create;
+   fNewGrfFile := aNewGrfFile;
    fAction8 := nil;
 end;
 
@@ -599,9 +601,10 @@ begin
    delete(result, 1, 1);
 end;
 
-constructor TSpriteCountSprite.create(ps: TPseudoSpriteReader);
+
+constructor TSpriteCountSprite.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    fSpriteCount := ps.getDWord;
    testSpriteEnd(ps);
 end;
@@ -617,11 +620,12 @@ begin
    result := 'SpriteCount';
 end;
 
-constructor TRecolorSprite.create(ps: TPseudoSpriteReader);
+
+constructor TRecolorSprite.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    if ps.getByte <> 0 then error('ReColorSprite does not start with 0x00');
    for i := 0 to high(byte) do fRecolorTable[i] := ps.getByte;
    testSpriteEnd(ps);
@@ -650,9 +654,10 @@ begin
    writeln(t, '</table>');
 end;
 
-constructor TMultiSpriteAction.create(spriteNr: integer);
+
+constructor TMultiSpriteAction.create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
 begin
-   inherited create(spriteNr);
+   inherited create(aNewGrfFile, spriteNr);
    setLength(fSubSprites, 0);
 end;
 
@@ -675,9 +680,10 @@ begin
    result := s;
 end;
 
-constructor TAction8.create(ps: TPseudoSpriteReader);
+
+constructor TAction8.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $08);
    ps.getByte;
    fGrfVersion := ps.getByte;
@@ -697,6 +703,7 @@ begin
    writeln(t, '<tr><th align="left">Description</th><td>', formatTextPrintable(description, true), '</td></tr>');
    writeln(t, '</table>');
 end;
+
 
 constructor TSpriteSet.create;
 begin
@@ -750,6 +757,7 @@ begin
       writeln(t);
    end;
 end;
+
 
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 var

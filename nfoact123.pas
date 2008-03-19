@@ -30,7 +30,7 @@ type
    protected
       function getSubSpriteCount: integer; override;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       destructor destroy; override;
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       procedure registerLink(setNr: integer; from: TNewGrfSprite);
@@ -55,9 +55,9 @@ type
       fCargoID    : integer;
       fLinkedFrom : TSpriteSet;
    public
-      constructor create(spriteNr: integer; feature: TFeature; cargoID: integer);
+      constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer; feature: TFeature; cargoID: integer);
       destructor destroy; override;
-      class function readAction2(ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
+      class function readAction2(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
       procedure registerLink(from: TNewGrfSprite);
       procedure printLinkedFrom(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       property feature: TFeature read fFeature;
@@ -71,7 +71,7 @@ type
       function getNumEntries(typ: integer): integer;
       function getEntry(typ, nr: integer): word;
    public
-      constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
+      constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; action1: TAction1);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property numEntries[typ: integer]: integer read getNumEntries; // typ=0 moving etc..., typ=1 loading etc...
       property entry[typ, nr: integer]: word read getEntry;
@@ -84,7 +84,7 @@ type
       fGroundSprite            : TTTDPSprite;
       fSpriteLayout            : TSpriteLayout;
    public
-      constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
+      constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; action1: TAction1);
       destructor destroy; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property groundSprite: TTTDPSprite read fGroundSprite;
@@ -100,7 +100,7 @@ type
       function getInputAmount(i: integer): word;
       function getOutputAmount(i: integer): word;
    public
-      constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader);
+      constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRegisters: boolean read fUseRegisters;
       property inputAmount[i: integer]: word read getInputAmount;
@@ -136,7 +136,7 @@ type
       function getNumCases: integer;
       function getCase(i: integer): TVarAction2Case;
    public
-      constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+      constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRelated: boolean read fRelated;
       property varSize: integer read fSize;
@@ -159,7 +159,7 @@ type
       function getNumCases: integer;
       function getCase(i: integer): TAction2Dest;
    public
-      constructor create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+      constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property useRelated: boolean read fRelated;
       property allTriggersNeeded: boolean read fAllTriggers;
@@ -184,7 +184,7 @@ type
       function getCargoBit(i: integer): integer;
       function getDest(i: integer): TAction2Dest;
    public
-      constructor create(ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property liveryOverride: boolean read fLivery;
@@ -245,11 +245,12 @@ begin
    end;
 end;
 
-constructor TAction1.create(ps: TPseudoSpriteReader);
+
+constructor TAction1.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $01);
    ps.getByte;
    fFeature := ps.getByte;
@@ -365,9 +366,10 @@ begin
    end;
 end;
 
-constructor TAction2.create(spriteNr: integer; feature: TFeature; cargoID: integer);
+
+constructor TAction2.create(aNewGrfFile: TNewGrfFile; spriteNr: integer; feature: TFeature; cargoID: integer);
 begin
-   inherited create(spriteNr);
+   inherited create(aNewGrfFile, spriteNr);
    fFeature := feature;
    fCargoID := cargoID;
    fLinkedFrom := TSpriteSet.create;
@@ -379,7 +381,7 @@ begin
    inherited destroy;
 end;
 
-class function TAction2.readAction2(ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
+class function TAction2.readAction2(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; var action2Table: TAction2Table; action1: TAction1): TAction2;
 var
    feature                              : TFeature;
    ID                                   : integer;
@@ -389,12 +391,12 @@ begin
    feature := ps.getByte;
    ID := ps.getByte;
    case ps.peekByte of
-      $80, $83                    : result := TRandomAction2.create(feature, ID, ps, action2Table);
-      $81, $82, $85, $86, $89, $8A: result := TVarAction2.create(feature, ID, ps, action2Table);
+      $80, $83                    : result := TRandomAction2.create(feature, ID, aNewGrfFile, ps, action2Table);
+      $81, $82, $85, $86, $89, $8A: result := TVarAction2.create(feature, ID, aNewGrfFile, ps, action2Table);
       else                          case feature of
-                                       FHouse, FIndTile: result := THouseIndTileAction2.create(feature, ID, ps, action1);
-                                       FIndustry       : result := TIndustryProductionCallback.create(feature, ID, ps);
-                                       else              result := TBasicAction2.create(feature, ID, ps, action1);
+                                       FHouse, FIndTile: result := THouseIndTileAction2.create(feature, ID, aNewGrfFile, ps, action1);
+                                       FIndustry       : result := TIndustryProductionCallback.create(feature, ID, aNewGrfFile, ps);
+                                       else              result := TBasicAction2.create(feature, ID, aNewGrfFile, ps, action1);
                                     end;
    end;
    action2Table[ID] := result;
@@ -412,11 +414,12 @@ begin
    writeln(t, '</font>');
 end;
 
-constructor TBasicAction2.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
+
+constructor TBasicAction2.create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; action1: TAction1);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr, feature, cargoID);
+   inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
    fAction1 := action1;
    if fAction1 = nil then error('Missing Action1');
    setLength(fEntries[0], ps.getByte);
@@ -508,7 +511,8 @@ begin
    writeln(t, '</table');
 end;
 
-constructor THouseIndTileAction2.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; action1: TAction1);
+
+constructor THouseIndTileAction2.create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; action1: TAction1);
 var
    num                                  : integer;
    spr                                  : longword;
@@ -517,7 +521,7 @@ var
    i                                    : integer;
    desc                                 : TTTDPSprite;
 begin
-   inherited create(ps.spriteNr, feature, cargoID);
+   inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
    fSpriteLayout := TSpriteLayout.create(self, 'sprite' + intToStr(spriteNr));
    num := ps.getByte;
    fAction1 := action1;
@@ -582,11 +586,12 @@ begin
    writeln(t, '</td></tr></table>');
 end;
 
-constructor TIndustryProductionCallback.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader);
+
+constructor TIndustryProductionCallback.create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    tmp                                  : integer;
 begin
-   inherited create(ps.spriteNr, feature, cargoID);
+   inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
    tmp := ps.getByte;
    fUseRegisters := tmp = $01;
    case tmp of
@@ -655,13 +660,14 @@ begin
    writeln(t, '</table>');
 end;
 
-constructor TVarAction2.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+
+constructor TVarAction2.create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
 var
    tmp                                  : integer;
    nr, i                                : integer;
    termTyp                              : byte;
 begin
-   inherited create(ps.spriteNr, feature, cargoID);
+   inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
    tmp := ps.getByte;
    fRelated := (tmp and 1) = 0;
    case tmp of
@@ -864,11 +870,12 @@ begin
    writeln(t, '</td></tr><tr><th align="left">Default</th><td>', printAction2Dest(fDefault), '</td></tr></table');
 end;
 
-constructor TRandomAction2.create(feature: TFeature; cargoID: integer; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+
+constructor TRandomAction2.create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr, feature, cargoID);
+   inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
    fRelated := ps.getByte = $83;
    fAllTriggers := (ps.peekByte and $80) <> 0;
    fTriggers := ps.getByte and $7F;
@@ -945,12 +952,13 @@ begin
    writeln(t, '</td></tr></table>');
 end;
 
-constructor TAction3.create(ps: TPseudoSpriteReader; const action2Table: TAction2Table);
+
+constructor TAction3.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
 var
    tmp                                  : integer;
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $03);
    ps.getByte;
    fFeature := ps.getByte;

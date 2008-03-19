@@ -171,7 +171,7 @@ type
    protected
       function getPropFromTable(p: byte; out format: string): string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       destructor destroy; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
@@ -637,7 +637,8 @@ begin
    end;
 end;
 
-constructor TAction0.create(ps: TPseudoSpriteReader);
+
+constructor TAction0.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i, j, k, tmp                         : integer;
    prop                                 : integer;
@@ -645,7 +646,7 @@ var
    typ                                  : TAction0DataType;
    s                                    : string;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $00);
    ps.getByte;
    fFeature := ps.getByte;

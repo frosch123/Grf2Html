@@ -32,7 +32,7 @@ type
       function getTextID(i: integer): integer;
       function getText(i: integer): string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
@@ -55,7 +55,7 @@ type
       function getParamAdd(i: integer): boolean;
       function getOffset(i: integer): integer;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property count: integer read getCount;
       property param[i: integer]: byte read getParam;
@@ -73,7 +73,7 @@ type
       fSkip        : byte;
       fDestination : TSprite;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property variable: byte read fVariable;
       property varSize: byte read fVarSize;
@@ -84,11 +84,11 @@ type
    end;
 
    TAction7 = class(TAction79)
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
    end;
 
    TAction9 = class(TAction79)
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
    end;
 
    TActionB = class(TNewGrfSprite)
@@ -101,7 +101,7 @@ type
       fData             : string;
       fParam0, fParam1  : byte;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property severity: byte read fSeverity;
@@ -118,7 +118,7 @@ type
    private
       fComment: string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property comment: string read fComment;
    end;
@@ -134,7 +134,7 @@ type
       fData: longword;
       fType: TActionDType;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       // TODO props
    end;
@@ -146,7 +146,7 @@ type
       function getDisableCount: integer;
       function getDisableGrf(i: integer): longword;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure useAction8(act8: TAction8); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property forceActivated: boolean read fForce;
@@ -182,7 +182,7 @@ type
       function getNumParts: integer;
       function getPart(i: integer): TTownNamePart;
    public
-      constructor create(ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
       procedure useAction8(act8: TAction8); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property ID: byte read fID;
@@ -199,7 +199,7 @@ type
       fLabelNr: byte;
       fComment: string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property labelNr: byte read fLabelNr;
       property comment: string read fComment;
@@ -221,7 +221,7 @@ type
       function getData: pointer;
       function getSoundData: pointer;
    public
-      constructor create(bin: TBinaryIncludeSprite);
+      constructor create(aNewGrfFile: TNewGrfFile; bin: TBinaryIncludeSprite);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property name: string read fName write fName;
 
@@ -240,7 +240,7 @@ type
       fGrfID    : longword;
       fSoundNr  : word;
    public
-      constructor create(ps: TPseudoSpriteReader; parent: TAction11);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; parent: TAction11);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property action11: TAction11 read fParent;
       property grfID: longword read fGrfID;
@@ -253,7 +253,7 @@ type
    protected
       function getSubSpriteCount: integer; override;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
@@ -268,7 +268,7 @@ type
       function getTextID(i: integer): word;
       function getText(i: integer): string;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property grfID: longword read fGrfID;
       property feature: TFeature read fFeature;
@@ -304,11 +304,11 @@ begin
 end;
 
 
-constructor TAction4.create(ps: TPseudoSpriteReader);
+constructor TAction4.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $04);
    ps.getByte;
    fFeature := ps.getByte;
@@ -362,12 +362,12 @@ begin
 end;
 
 
-constructor TAction6.create(ps: TPseudoSpriteReader);
+constructor TAction6.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    count                                : integer;
    tmp                                  : byte;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $06);
    ps.getByte;
    setLength(fParams, 0);
@@ -435,11 +435,11 @@ begin
 end;
 
 
-constructor TAction79.create(ps: TPseudoSpriteReader);
+constructor TAction79.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    fVariable := ps.getByte;
    fVarSize := ps.getByte;
    fCondition := ps.getByte;
@@ -509,29 +509,29 @@ begin
 end;
 
 
-constructor TAction7.create(ps: TPseudoSpriteReader);
+constructor TAction7.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
    assert(ps.peekByte = $07);
    ps.getByte;
-   inherited create(ps);
+   inherited create(aNewGrfFile, ps);
 end;
 
 
-constructor TAction9.create(ps: TPseudoSpriteReader);
+constructor TAction9.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
    assert(ps.peekByte = $09);
    ps.getByte;
-   inherited create(ps);
+   inherited create(aNewGrfFile, ps);
 end;
 
 
-constructor TActionB.create(ps: TPseudoSpriteReader);
+constructor TActionB.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    dataNum                              : integer;
    paramNum                             : integer;
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $0B);
    ps.getByte;
    fDuringInit := (ps.peekByte and $80) <> 0;
@@ -635,11 +635,11 @@ begin
 end;
 
 
-constructor TActionC.create(ps: TPseudoSpriteReader);
+constructor TActionC.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $0C);
    ps.getByte;
    setLength(fComment, ps.bytesLeft);
@@ -653,9 +653,9 @@ begin
 end;
 
 
-constructor TActionD.create(ps: TPseudoSpriteReader);
+constructor TActionD.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $0D);
    ps.getByte;
    fTarget := ps.getByte;
@@ -737,11 +737,11 @@ begin
 end;
 
 
-constructor TActionE.create(ps: TPseudoSpriteReader);
+constructor TActionE.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $0E);
    ps.getByte;
    setLength(fGrfIDs, ps.getByte);
@@ -794,12 +794,12 @@ begin
 end;
 
 
-constructor TActionF.create(ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
+constructor TActionF.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
 var
    i, j                                 : integer;
    tmp                                  : byte;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $0F);
    ps.getByte;
    fFinal := (ps.peekByte and $80) <> 0;
@@ -939,11 +939,11 @@ begin
 end;
 
 
-constructor TAction10.create(ps: TPseudoSpriteReader);
+constructor TAction10.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $10);
    ps.getByte;
    fLabelNr := ps.getByte;
@@ -960,7 +960,7 @@ begin
 end;
 
 
-constructor TWaveFile.create(bin: TBinaryIncludeSprite);
+constructor TWaveFile.create(aNewGrfFile: TNewGrfFile; bin: TBinaryIncludeSprite);
 var
    p                                    : integer;
    size                                 : integer;
@@ -969,7 +969,7 @@ var
    dataLen                              : longword;
    w                                    : word;
 begin
-   inherited create(bin.spriteNr);
+   inherited create(aNewGrfFile, bin.spriteNr);
    fName := bin.name;
    size := bin.size;
    setLength(fData, size);
@@ -1074,9 +1074,9 @@ begin
 end;
 
 
-constructor TSoundImport.create(ps: TPseudoSpriteReader; parent: TAction11);
+constructor TSoundImport.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; parent: TAction11);
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekWord = $00FE);
    ps.getWord;
    fParent := parent;
@@ -1102,9 +1102,9 @@ begin
 end;
 
 
-constructor TAction11.create(ps: TPseudoSpriteReader);
+constructor TAction11.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $11);
    ps.getByte;
    fSubSpriteCount := ps.getWord;
@@ -1122,11 +1122,11 @@ var
    err                                  : boolean;
 begin
    err := false;
-   if s is TBinaryIncludeSprite then s := TWaveFile.create(s as TBinaryIncludeSprite) else
+   if s is TBinaryIncludeSprite then s := TWaveFile.create(fNewGrfFile, s as TBinaryIncludeSprite) else
    if s is TPseudoSprite then
    begin
       psr := TPseudoSpriteReader.create(s as TPseudoSprite);
-      if psr.peekWord = $00FE then s := TSoundImport.create(psr, self) else err := true;
+      if psr.peekWord = $00FE then s := TSoundImport.create(fNewGrfFile, psr, self) else err := true;
       psr.free;
    end else err := true;
    if err then error('Action11: Sprite ' + s.printHtmlSpriteNr + ' must be a BinaryIncludeSprite or a SoundImport-PseudoSprite.');
@@ -1154,11 +1154,11 @@ begin
 end;
 
 
-constructor TAction13.create(ps: TPseudoSpriteReader);
+constructor TAction13.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i                                    : integer;
 begin
-   inherited create(ps.spriteNr);
+   inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $13);
    ps.getByte;
    fFeature := ps.getByte;

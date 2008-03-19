@@ -39,7 +39,7 @@ type
       property numSpritesInSet[setNr: integer]: integer read getNumSpritesInSet;
       property sprites[setNr, sprNr: integer]: TSprite read getSprite;
    public
-      constructor create(spriteNr: integer; allowRealSprites, allowRecolorSprites: boolean);
+      constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer; allowRealSprites, allowRecolorSprites: boolean);
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
@@ -53,7 +53,7 @@ type
       procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
       procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       property spriteType: byte read fType;
       property spriteOffset: integer read fOffset;
    end;
@@ -67,7 +67,7 @@ type
       procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
       procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       property numSets;
       property numSpritesInSet;
       property spriteID[setNr, sprNr: integer]: word read getSpriteID;
@@ -85,7 +85,7 @@ type
       procedure printSetHeader(var t: textFile; path: string; setNr: integer); override;
       procedure printSpriteHeader(var t: textFile; path: string; setNr, sprNr: integer); override;
    public
-      constructor create(ps: TPseudoSpriteReader);
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       property numSets;
       property numSpritesInSet;
       property sprites;
@@ -95,9 +95,9 @@ type
 
 implementation
 
-constructor TSpriteReplacementAction.create(spriteNr: integer; allowRealSprites, allowRecolorSprites: boolean);
+constructor TSpriteReplacementAction.create(aNewGrfFile: TNewGrfFile; spriteNr: integer; allowRealSprites, allowRecolorSprites: boolean);
 begin
-   inherited create(spriteNr);
+   inherited create(aNewGrfFile, spriteNr);
    setLength(fNumSprites, 0);
    fTotalSprites := 0;
    fReal := allowRealSprites;
@@ -121,7 +121,7 @@ begin
       if fRecolor then
       begin
          psr := TPseudoSpriteReader.create(s as TPseudoSprite);
-         s := TRecolorSprite.create(psr);
+         s := TRecolorSprite.create(fNewGrfFile, psr);
          psr.free;
       end else err := true;
    end else err := true;
@@ -229,11 +229,11 @@ begin
 end;
 
 
-constructor TAction5.create(ps: TPseudoSpriteReader);
+constructor TAction5.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    hasOffset                            : boolean;
 begin
-   inherited create(ps.spriteNr, true, true);
+   inherited create(aNewGrfFile, ps.spriteNr, true, true);
    assert(ps.peekByte = $05);
    ps.getByte;
    hasOffset := (ps.peekByte and $80) <> 0;
@@ -261,11 +261,11 @@ begin
 end;
 
 
-constructor TActionA.create(ps: TPseudoSpriteReader);
+constructor TActionA.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    sets, i                              : integer;
 begin
-   inherited create(ps.spriteNr, true, true);
+   inherited create(aNewGrfFile, ps.spriteNr, true, true);
    assert(ps.peekByte = $0A);
    ps.getByte;
    sets := ps.getByte;
@@ -299,11 +299,11 @@ begin
 end;
 
 
-constructor TAction12.create(ps: TPseudoSpriteReader);
+constructor TAction12.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    sets, i                              : integer;
 begin
-   inherited create(ps.spriteNr, true, false);
+   inherited create(aNewGrfFile, ps.spriteNr, true, false);
    assert(ps.peekByte = $12);
    ps.getByte;
    sets := ps.getByte;
