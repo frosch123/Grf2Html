@@ -33,7 +33,7 @@ type
       function getText(i: integer): string;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
-      procedure useAction8(act8: TAction8); override;
+      procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property langID: byte read fLangID;
@@ -102,7 +102,7 @@ type
       fParam0, fParam1  : byte;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
-      procedure useAction8(act8: TAction8); override;
+      procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property severity: byte read fSeverity;
       property duringInit: boolean read fDuringInit;
@@ -147,7 +147,7 @@ type
       function getDisableGrf(i: integer): longword;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
-      procedure useAction8(act8: TAction8); override;
+      procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property forceActivated: boolean read fForce;
       property disableCount: integer read getDisableCount;
@@ -183,7 +183,7 @@ type
       function getPart(i: integer): TTownNamePart;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; var actionFTable: TActionFTable);
-      procedure useAction8(act8: TAction8); override;
+      procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property ID: byte read fID;
       property finalDefinition: boolean read fFinal;
@@ -336,23 +336,25 @@ begin
    if (i >= 0) and (i < length(fStrings)) then result := fStrings[i] else result := '';
 end;
 
-procedure TAction4.useAction8(act8: TAction8);
+procedure TAction4.secondPass;
 begin
-   inherited useAction8(act8);
-   if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
+   inherited secondPass;
+   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TAction4.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
    i                                    : integer;
+   a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Action4</b> - Define custom texts');
    writeln(t, '<table summary="Properties">');
    if fFeature = $48 then s := 'generic string' else s := TableFeature[fFeature];
    writeln(t, '<tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', s, '"</td></tr>');
-   writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(fAction8, fLangID), '</td></tr>');
+   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    for i := 0 to length(fStrings) - 1 do
    begin
       if fGenericStrings then s := intToHex(textID[i], 4) else s := intToHex(textID[i], 2);
@@ -577,16 +579,17 @@ begin
    testSpriteEnd(ps);
 end;
 
-procedure TActionB.useAction8(act8: TAction8);
+procedure TActionB.secondPass;
 begin
-   inherited useAction8(act8);
-   if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
+   inherited secondPass;
+   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TActionB.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s, s2, s3                            : string;
    i                                    : integer;
+   a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>ActionB</b> - Generate error message');
@@ -596,7 +599,8 @@ begin
    s := TableActionBSeverity[fSeverity, 0];
    s2 := TableActionBSeverity[fSeverity, 1];
    writeln(t, '<tr><th align="left">Severity</th><td>0x', intToHex(fSeverity, 2), ' "', s, '"</td></tr>');
-   writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(fAction8, fLangID), '</td></tr>');
+   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    if fMsgID = $FF then s := ' "custom message"' else s := ' "built-in message"';
    writeln(t, '<tr><th align="left">MessageID</th><td>0x', intToHex(fMsgID, 2), s, '</td></tr>');
    s2 := s2 + ' ' + fMsg;
@@ -760,27 +764,33 @@ begin
    result := fGrfIDs[i];
 end;
 
-procedure TActionE.useAction8(act8: TAction8);
+procedure TActionE.secondPass;
 var
    i                                    : integer;
+   a8                                   : TAction8;
 begin
-   inherited useAction8(act8);
-   if act8 = nil then error('Missing Action8: Cannot detect force-activation');
-   for i := 0 to length(fGrfIDs) - 1 do
-      if fGrfIDs[i] = act8.grfID then
-      begin
-         fForce := true;
-         break;
-      end;
+   inherited secondPass;
+   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if a8 = nil then error('Missing Action8: Cannot detect force-activation') else
+   begin
+      for i := 0 to length(fGrfIDs) - 1 do
+         if fGrfIDs[i] = a8.grfID then
+         begin
+            fForce := true;
+            break;
+         end;
+   end;
 end;
 
 procedure TActionE.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    i                                    : integer;
    thisGrf                              : longword;
+   a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
-   if fAction8 = nil then thisGrf := $FFFFFFFF else thisGrf := fAction8.grfID;
+   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if a8 = nil then thisGrf := $FFFFFFFF else thisGrf := a8.grfID;
    writeln(t, '<b>ActionE</b> - Deactivate other graphics files or force activation of current file');
    write(t, '<table summary="Properties"><tr><th align="left">Force activation</th><td>');
    if fForce then write(t, 'yes: ', grfID2Str(thisGrf)) else write(t, 'no');
@@ -881,10 +891,10 @@ begin
    result := fParts[i];
 end;
 
-procedure TActionF.useAction8(act8: TAction8);
+procedure TActionF.secondPass;
 begin
-   inherited useAction8(act8);
-   if act8 = nil then error('No Action8 found. LanguageID not interpretable.');
+   inherited secondPass;
+   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TActionF.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -895,8 +905,10 @@ var
    increment                            : int64;
    offset                               : int64;
    nextThres                            : int64;
+   a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
+   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
    writeln(t, '<b>ActionF</b> - Define new town name styles');
    writeln(t, '<table summary="Properties"><tr><th align="left">ID</th><td>0x', intToHex(fID, 2), '</td></tr>');
    write(t, '<tr><th align="left">Type</th><td>');
@@ -906,7 +918,7 @@ begin
       writeln(t, '<tr valign="top"><th align="left">Final name</th><td><table summary="Names for final definition" border="1" rules="all"><tr><th>Language</th><th>Name</th></tr>');
       for i := 0 to length(fFinalLangs) - 1 do
       begin
-         writeln(t, '<tr><td>0x', intToHex(fFinalLangs[i], 2), getLanguageName(fAction8, fFinalLangs[i]), '</td><td>', formatTextPrintable(fFinalNames[i], true), '</td></tr>');
+         writeln(t, '<tr><td>0x', intToHex(fFinalLangs[i], 2), getLanguageName(a8, fFinalLangs[i]), '</td><td>', formatTextPrintable(fFinalNames[i], true), '</td></tr>');
       end;
       writeln(t, '</table></td></tr>');
    end else writeln(t, 'intermediate definition</td></tr>');
@@ -1092,7 +1104,7 @@ begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Import sound</b><table summary="Properties"><tr><th align="left">GrfID</th><td>', grfID2Str(fGrfID), '</td></tr');
    writeln(t, '<tr><th align="left">Sound</th><td>Nr 0x', intToHex(fSoundNr, 4), ' (', fSoundNr, '), ID 0x', intToHex(fSoundNr + 73, 4), ' (', fSoundNr + 73, ')');
-   if (fAction8 <> nil) and (fAction8.grfID = fGrfID) then
+   if (fNewGrfFile <> nil) and (fNewGrfFile.action8 <> nil) and (fNewGrfFile.action8.grfID = fGrfID) then
    begin
       s := fParent.subSprite[fSoundNr];
       if s <> nil then writeln(t, s.printHtmlSpriteLink('content')) else

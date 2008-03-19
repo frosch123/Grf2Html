@@ -173,6 +173,7 @@ type
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       destructor destroy; override;
+      procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property numProps: integer read getNumProps;
@@ -706,7 +707,6 @@ begin
                FHouse   : if prop = $20 then
                           begin
                              // Houses, cargo acceptance watch list
-                             if fAction8 = nil then error('Cargo acceptance watch list: Missing Action8, cannot determine meaning of listentrys.');
                              fData[i, j].special := TAction0ByteArray.create(self, ps);
                           end else assert(false, 'TableAction0Houses corrupted');
                FGlobal  : if prop = $10 then
@@ -748,6 +748,21 @@ begin
       end;
    end;
    inherited destroy;
+end;
+
+procedure TAction0.secondPass;
+var
+   i                                    : integer;
+begin
+   inherited secondPass;
+   if fFeature <> FHouse then exit;
+   if (fNewGrfFile <> nil) and (fNewGrfFile.action8 <> nil) then exit;
+   for i := 0 to length(fProps) - 1 do
+      if fProps[i] = $20 then
+      begin
+         error('Cargo acceptance watch list: Missing Action8, cannot determine meaning of listentrys.');
+         exit;
+      end;
 end;
 
 function TAction0.getPropFromTable(p: byte; out format: string): string;

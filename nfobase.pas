@@ -43,17 +43,20 @@ const
 
 type
    TFeature = byte;
+   TAction8 = class;
 
    TNewGrfFile = class
    private
       fGrfName     : string;
       fSprites     : TObjectList;
+      fAction8     : TAction8;
    public
       constructor create(aGrfName: string; grfFile: TObjectList);
       destructor destroy; override;
       procedure printHtml(path: string; settings: TGrf2HtmlSettings);
       property grfName: string read fGrfName write fGrfName;
       property sprites: TObjectList read fSprites;
+      property action8: TAction8 read fAction8;
    end;
 
    TPseudoSpriteReader = class
@@ -86,21 +89,18 @@ type
       property size: integer read getSize;
    end;
 
-   TAction8 = class;
-
    TNewGrfSprite = class(TSprite)
    private
       fErrors    : TStringList;
       function getErrors: TStrings;
    protected
       fNewGrfFile: TNewGrfFile;
-      fAction8   : TAction8;
       procedure testSpriteEnd(ps: TPseudoSpriteReader);
    public
       constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
       destructor destroy; override;
       procedure error(msg: string);
-      procedure useAction8(act8: TAction8); virtual;
+      procedure secondPass; virtual;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property errors: TStrings read getErrors;
@@ -192,7 +192,6 @@ var
 
    a1                                   : TAction1;
    action2Table                         : TAction2Table;
-   a8                                   : TAction8;
    actionFTable                         : TActionFTable;
    action10Table                        : array[byte] of array of integer;
 
@@ -201,6 +200,7 @@ var
 begin
    inherited create;
    fGrfName := aGrfName;
+   fAction8 := nil;
    grfFile.ownsObjects := false;
    fSprites := TObjectList.create(true);
 
@@ -209,7 +209,6 @@ begin
    ssNr := 0;
 
    a1 := nil;
-   a8 := nil;
    for i := 0 to 255 do
    begin
       setLength(action10Table[i], 0);
@@ -251,8 +250,8 @@ begin
                $07: dst := TAction7.create(self, psr);
                $08: begin
                        dst := TAction8.create(self, psr);
-                       if a8 = nil then a8 := dst as TAction8 else
-                                        (dst as TNewGrfSprite).error('Multiple Action8 found. Using first one, ignoring this one.');
+                       if fAction8 = nil then fAction8 := dst as TAction8 else
+                                              (dst as TNewGrfSprite).error('Multiple Action8 found. Using first one, ignoring this one.');
                     end;
                $09: dst := TAction9.create(self, psr);
                $0A: dst := TActionA.create(self, psr);
@@ -292,7 +291,6 @@ begin
    // Set up Action7/9 destinations and Action8 links
    for i := 0 to fSprites.count - 1 do
    begin
-      if fSprites[i] is TNewGrfSprite then (fSprites[i] as TNewGrfSprite).useAction8(a8);
       if fSprites[i] is TAction79 then
          with fSprites[i] as TAction79 do
          begin
@@ -315,6 +313,7 @@ begin
                if (j > 0) and (i + j + 1 < fSprites.count) then destination := fSprites[i + 1 + j] as TSprite;
             end;
          end;
+      if fSprites[i] is TNewGrfSprite then (fSprites[i] as TNewGrfSprite).secondPass;
    end;
    grfFile.free;
 end;
@@ -544,12 +543,12 @@ begin
    until c = #0;
 end;
 
+
 constructor TNewGrfSprite.create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
 begin
    inherited create(spriteNr);
    fErrors := TStringList.create;
    fNewGrfFile := aNewGrfFile;
-   fAction8 := nil;
 end;
 
 destructor TNewGrfSprite.destroy;
@@ -563,9 +562,9 @@ begin
    fErrors.add(msg);
 end;
 
-procedure TNewGrfSprite.useAction8(act8: TAction8);
+procedure TNewGrfSprite.secondPass;
 begin
-   fAction8 := act8;
+   // nothing to do
 end;
 
 function TNewGrfSprite.getErrors: TStrings;
