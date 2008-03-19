@@ -678,6 +678,7 @@ begin
          variable := ps.getByte;
          if variable in [$60..$7F] then parameter := ps.getByte else parameter := 0;
          if variable = $7E then proc := action2Table[parameter] else proc := nil;
+         if proc <> nil then proc.registerLink(self);
          termTyp := ps.getByte;
          shift := termTyp and $1F;
          case termTyp and $C0 of
