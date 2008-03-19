@@ -29,7 +29,6 @@ uses
 {$ENDIF}
   tables in 'tables.pas',
   grfbase in 'grfbase.pas',
-  newgrf in 'newgrf.pas',
   nfoact0 in 'nfoact0.pas',
   nfoact5A12 in 'nfoact5A12.pas',
   nfoact123 in 'nfoact123.pas',
