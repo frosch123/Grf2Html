@@ -92,9 +92,9 @@ type
    TNewGrfSprite = class(TSprite)
    private
       fErrors    : TStringList;
+      fNewGrfFile: TNewGrfFile;
       function getErrors: TStrings;
    protected
-      fNewGrfFile: TNewGrfFile;
       procedure testSpriteEnd(ps: TPseudoSpriteReader);
    public
       constructor create(aNewGrfFile: TNewGrfFile; spriteNr: integer);
@@ -104,6 +104,7 @@ type
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
       property errors: TStrings read getErrors;
+      property newGrfFile: TNewGrfFile read fNewGrfFile;
    end;
 
    TSpriteCountSprite = class(TNewGrfSprite)

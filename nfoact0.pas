@@ -756,7 +756,7 @@ var
 begin
    inherited secondPass;
    if fFeature <> FHouse then exit;
-   if (fNewGrfFile <> nil) and (fNewGrfFile.action8 <> nil) then exit;
+   if (newGrfFile <> nil) and (newGrfFile.action8 <> nil) then exit;
    for i := 0 to length(fProps) - 1 do
       if fProps[i] = $20 then
       begin

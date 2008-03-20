@@ -339,7 +339,7 @@ end;
 procedure TAction4.secondPass;
 begin
    inherited secondPass;
-   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
+   if (newGrfFile = nil) or (newGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TAction4.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -353,7 +353,7 @@ begin
    writeln(t, '<table summary="Properties">');
    if fFeature = $48 then s := 'generic string' else s := TableFeature[fFeature];
    writeln(t, '<tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', s, '"</td></tr>');
-   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    for i := 0 to length(fStrings) - 1 do
    begin
@@ -582,7 +582,7 @@ end;
 procedure TActionB.secondPass;
 begin
    inherited secondPass;
-   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
+   if (newGrfFile = nil) or (newGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TActionB.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -599,7 +599,7 @@ begin
    s := TableActionBSeverity[fSeverity, 0];
    s2 := TableActionBSeverity[fSeverity, 1];
    writeln(t, '<tr><th align="left">Severity</th><td>0x', intToHex(fSeverity, 2), ' "', s, '"</td></tr>');
-   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    if fMsgID = $FF then s := ' "custom message"' else s := ' "built-in message"';
    writeln(t, '<tr><th align="left">MessageID</th><td>0x', intToHex(fMsgID, 2), s, '</td></tr>');
@@ -770,7 +770,7 @@ var
    a8                                   : TAction8;
 begin
    inherited secondPass;
-   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    if a8 = nil then error('Missing Action8: Cannot detect force-activation') else
    begin
       for i := 0 to length(fGrfIDs) - 1 do
@@ -789,7 +789,7 @@ var
    a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
-   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    if a8 = nil then thisGrf := $FFFFFFFF else thisGrf := a8.grfID;
    writeln(t, '<b>ActionE</b> - Deactivate other graphics files or force activation of current file');
    write(t, '<table summary="Properties"><tr><th align="left">Force activation</th><td>');
@@ -894,7 +894,7 @@ end;
 procedure TActionF.secondPass;
 begin
    inherited secondPass;
-   if (fNewGrfFile = nil) or (fNewGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
+   if (newGrfFile = nil) or (newGrfFile.action8 = nil) then error('No Action8 found. LanguageID not interpretable.');
 end;
 
 procedure TActionF.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -908,7 +908,7 @@ var
    a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
-   if fNewGrfFile = nil then a8 := nil else a8 := fNewGrfFile.action8;
+   if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    writeln(t, '<b>ActionF</b> - Define new town name styles');
    writeln(t, '<table summary="Properties"><tr><th align="left">ID</th><td>0x', intToHex(fID, 2), '</td></tr>');
    write(t, '<tr><th align="left">Type</th><td>');
@@ -1104,7 +1104,7 @@ begin
    inherited printHtml(t, path, settings);
    writeln(t, '<b>Import sound</b><table summary="Properties"><tr><th align="left">GrfID</th><td>', grfID2Str(fGrfID), '</td></tr');
    writeln(t, '<tr><th align="left">Sound</th><td>Nr 0x', intToHex(fSoundNr, 4), ' (', fSoundNr, '), ID 0x', intToHex(fSoundNr + 73, 4), ' (', fSoundNr + 73, ')');
-   if (fNewGrfFile <> nil) and (fNewGrfFile.action8 <> nil) and (fNewGrfFile.action8.grfID = fGrfID) then
+   if (newGrfFile <> nil) and (newGrfFile.action8 <> nil) and (newGrfFile.action8.grfID = fGrfID) then
    begin
       s := fParent.subSprite[fSoundNr];
       if s <> nil then writeln(t, s.printHtmlSpriteLink('content')) else
@@ -1134,11 +1134,11 @@ var
    err                                  : boolean;
 begin
    err := false;
-   if s is TBinaryIncludeSprite then s := TWaveFile.create(fNewGrfFile, s as TBinaryIncludeSprite) else
+   if s is TBinaryIncludeSprite then s := TWaveFile.create(newGrfFile, s as TBinaryIncludeSprite) else
    if s is TPseudoSprite then
    begin
       psr := TPseudoSpriteReader.create(s as TPseudoSprite);
-      if psr.peekWord = $00FE then s := TSoundImport.create(fNewGrfFile, psr, self) else err := true;
+      if psr.peekWord = $00FE then s := TSoundImport.create(newGrfFile, psr, self) else err := true;
       psr.free;
    end else err := true;
    if err then error('Action11: Sprite ' + s.printHtmlSpriteNr + ' must be a BinaryIncludeSprite or a SoundImport-PseudoSprite.');

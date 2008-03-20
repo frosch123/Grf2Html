@@ -121,7 +121,7 @@ begin
       if fRecolor then
       begin
          psr := TPseudoSpriteReader.create(s as TPseudoSprite);
-         s := TRecolorSprite.create(fNewGrfFile, psr);
+         s := TRecolorSprite.create(newGrfFile, psr);
          psr.free;
       end else err := true;
    end else err := true;
