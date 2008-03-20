@@ -319,6 +319,11 @@ begin
    if fGenericStrings then fFirstString := ps.getWord else fFirstString := ps.getByte;
    for i := 0 to length(fStrings) - 1 do fStrings[i] := ps.getString;
    testSpriteEnd(ps);
+
+   if not fGenericStrings then
+   begin
+      for i := 0 to length(fStrings) - 1 do newGrfFile.registerEntity(fFeature, fFirstString + i, self);
+   end;
 end;
 
 function TAction4.getNumStrings: integer;
@@ -357,8 +362,12 @@ begin
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    for i := 0 to length(fStrings) - 1 do
    begin
-      if fGenericStrings then s := intToHex(textID[i], 4) else s := intToHex(textID[i], 2);
-      writeln(t, '<tr><th align="left">Text 0x', s, '</th><td>', formatTextPrintable(fStrings[i], true), '</td></tr>');
+      if fGenericStrings then s := '0x' + intToHex(textID[i], 4) else
+      begin
+         s := '0x' + intToHex(textID[i], 2);
+         if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, textID[i]] <> nil) then s := newGrfFile.printEntityLinkBegin('content', fFeature, textID[i]) + s +  '</a>';
+      end;
+      writeln(t, '<tr><th align="left">Text ', s, '</th><td>', formatTextPrintable(fStrings[i], true), '</td></tr>');
    end;
    writeln(t, '</table>');
 end;

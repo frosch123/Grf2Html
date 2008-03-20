@@ -581,6 +581,7 @@ procedure TAction0IndustryLayout.printHtml(var t: textFile; path: string; const 
 var
    xMin, yMin, xMax, yMax, x, y, i      : integer;
    layout                               : array of array of integer;
+   s                                    : string;
 begin
    if length(fTiles) > 0 then
    begin
@@ -627,7 +628,11 @@ begin
                begin
                   case typ of
                      oldTile: write(t, '<td>old 0x', intToHex(tile, 2), '</td>');
-                     newTile: write(t, '<td>new 0x', intToHex(tile, 4), '</td>');
+                     newTile: begin
+                                 s := '0x' + intToHex(tile, 4);
+                                 if (settings.entityFrame = boolYes) and (fAction0.newGrfFile.entity[FIndTile, tile] <> nil) then s := fAction0.newGrfFile.printEntityLinkBegin('content', fIndTile, tile) + s + '</a>';
+                                 write(t, '<td>new ', s, '</td>');
+                              end;
                      empty  : write(t, '<td>clear</td>');
                   end;
                end;
@@ -732,6 +737,8 @@ begin
       end;
    end;
    testSpriteEnd(ps);
+
+   for i := 0 to fNumIDs - 1 do newGrfFile.registerEntity(fFeature, fFirstID + i, self);
 end;
 
 destructor TAction0.destroy;
@@ -835,7 +842,12 @@ begin
       begin
          if colNr <> 0 then write(t, '<br>');
          write(t, '<table summary="Properties" border="1" rules="all"><tr><th>Property</th>');
-         for i := colNr to min(colNr + aimedCols, fNumIDs) - 1 do write(t, '<th>ID 0x', intToHex(fFirstID + i, len), ' (', fFirstID + i, ')</th>');
+         for i := colNr to min(colNr + aimedCols, fNumIDs) - 1 do
+         begin
+            s2 := 'ID 0x' + intToHex(fFirstID + i, len) + ' (' + intToStr(fFirstID + i) + ')';
+            if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, fFirstId + i] <> nil) then s2 := newGrfFile.printEntityLinkBegin('content', fFeature, fFirstId + i) + s2 + '</a>';
+            write(t, '<th>', s2, '</th>');
+         end;
          writeln(t, '</tr>');
          for j := 0 to length(fProps) - 1 do
             if fData[j, 0].size in [0..4] then
@@ -872,7 +884,9 @@ begin
             s := getPropFromTable(fProps[j], s2);
             for i := 0 to fNumIDs - 1 do
             begin
-               writeln(t, '<br><b>', s, ' - ID 0x', intToHex(fFirstID + i, len), ' (', fFirstID + i, ')</b><br>');
+               s2 := 'ID 0x' + intToHex(fFirstID + i, len) + ' (' + intToStr(fFirstID + i) + ')';
+               if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, fFirstId + i] <> nil) then s2 := newGrfFile.printEntityLinkBegin('content', fFeature, fFirstId + i) + s2 + '</a>';
+               writeln(t, '<br><b>', s, ' - ', s2, '</b><br>');
                fData[j, i].special.printHtml(t, path, settings);
             end;
          end;

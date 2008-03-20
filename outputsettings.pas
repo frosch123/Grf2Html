@@ -39,6 +39,8 @@ type
       transparency             : integer;                  // representation of transparency: transBlue, transReal
       subSpritesInIndex        : integer;                  // link to subsprites in the index frame: boolNo, boolYes
       outputPath               : string;                   // path where the output should go to
+      indexFrame               : integer;                  // enable index frame: boolNo, boolYes
+      entityFrame              : integer;                  // enable entity frame: boolNo, boolYes
 
       // Explicitly used widths (pixels) of columns
       linkFrameWidth           : integer;        // Width of the left frame
@@ -564,7 +566,17 @@ begin
    enum.strings.add('real');
    options.add(enum);
 
-   options.add(TGrf2HtmlOptionInteger.create(settings.linkFrameWidth, ''        , 'Format'  , 'LinkFrameWidth',          '', 200, 1, high(integer), '', ''));
+   enum := TGrf2HtmlOptionEnum.create(settings.indexFrame       , '', 'Grf2Html', 'IndexFrame'    , '', boolYes  , '', '');
+   enum.strings.add('no');
+   enum.strings.add('yes');
+   options.add(enum);
+
+   enum := TGrf2HtmlOptionEnum.create(settings.entityFrame      , '', 'Grf2Html', 'EntityFrame'   , '', boolYes  , '', '');
+   enum.strings.add('no');
+   enum.strings.add('yes');
+   options.add(enum);
+
+   options.add(TGrf2HtmlOptionInteger.create(settings.linkFrameWidth, ''        , 'Format'  , 'LinkFrameWidth',          '', 250, 1, high(integer), '', ''));
    options.add(TGrf2HtmlOptionInteger.create(settings.action0subIndexColWidth, '', 'Format' , 'Action0SubIndexColWidth', '',  30, 1, high(integer), '', ''));
 
    options.add(TGrf2HtmlOptionInteger.create(settings.action0FirstColWidth, '',   'Format'  , 'Action0FirstColWidth',    '', 300, 1, high(integer), '', ''));

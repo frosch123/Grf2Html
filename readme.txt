@@ -113,24 +113,26 @@ Contents:
    with their default values into the correct sections.
 
 5.1) [Grf2Html] section:
+   AimedWidth:              Works the same as the "-w" option.
+   EntityFrame:             Enabled/Disabled the left entity frame. Specify "yes" or "no".
+   IndexFrame:              Enables/Disabled the left index frame. Specify "yes" or "no".
    OutputPath:              Works the same as the "-o" option.
    Palette:                 Works the same as the "-p" option. Specify "win" or "dos".
-   Verbose:                 Set to "1" or "0" to enable or disable verbose output ("-v" option) by default.
-   AimedWidth:              Works the same as the "-w" option.
    SubSpriteIndex:          Specifies if the left frame should also contain links to subsprites (e.g. realsprites in
                             Action1/5/A/12, sounds in Action11). Specify "yes" or "no".
    Transparency:            Controls whether transparent-blue of realsprites should be shown as "blue" or as "real" transparent.
+   Verbose:                 Set to "1" or "0" to enable or disable verbose output ("-v" option) by default.
 
 5.2) [Format] section:
    In this section are some magical values regarding cetain widths (in pixel) of the output. You may want to modify them, if you have
    larger/smaller fonts that me in your browser and the number-of-columns guessing of the "-w" option does not generate acceptable results.
-      LinkFrameWidth           Width of the left frame.
-      Action0SubIndexColWidth  Width of the column of e.g. number of spritelayout or customlayout in Action0s.
-      Action0FirstColWidth     Assumed width of left column (property name) in Action0s. Used the guess number of values per row.
       Action0ColWidth          Assumed width of one column in Action0s. Used the guess number of values per row.
+      Action0FirstColWidth     Assumed width of left column (property name) in Action0s. Used the guess number of values per row.
+      Action0SubIndexColWidth  Width of the column of e.g. number of spritelayout or customlayout in Action0s.
       Action1ColWidth          The assumed width of a columns in Action1s is the maximum of the sprite width and this value.
                                Used to guess number of sprites per row.
       Action5A12ColWidth       The same as Action1ColWidth but for Action5/A/12.
+      LinkFrameWidth           Width of the left frame.
 
 
 6) Errors: What to do, if Grf2Html prints error messages into the output?

@@ -318,7 +318,7 @@ begin
       for j := 0 to fNumSets - 1 do
       begin
          writeln(t, '<tr valign="top"><th align="left" rowspan="', (fSpritesPerSet + aimedCols - 1) div aimedCols, '"><a name="sprite', spriteNr, 'set', j, '">Set ', j, '</a><br><font size="-2">Linked from: ');
-         fLinkedFrom[j].printHtml('content', t, path, settings);
+         fLinkedFrom[j].printHtml('content', t, path, settings, true);
          writeln(t, '</font></th>');
          for i := 0 to fSpritesPerSet - 1 do
          begin
@@ -352,7 +352,7 @@ begin
                if s = nil then writeln(t, '<td>', i, '<br>Missing sprite') else
                begin
                   writeln(t, '<td>', s.printHtmlSpriteAnchor, '<a name="sprite', spriteNr, 'set', nr, '"><b>Set ', nr, '</b></a> - ', s.printHtmlSpriteNr, '<br><font size="-2">Linked from: ');
-                  fLinkedFrom[nr].printHtml('content', t, path, settings);
+                  fLinkedFrom[nr].printHtml('content', t, path, settings, true);
                   write(t, '</font><br>');
                   if s is TRealSprite then s.printHtml(t, path, settings) else
                                            write(t, 'RealSprite expected');
@@ -410,7 +410,7 @@ end;
 procedure TAction2.printLinkedFrom(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 begin
    write(t, '<font size="-2">Linked from: ');
-   fLinkedFrom.printHtml('content', t, path, settings);
+   fLinkedFrom.printHtml('content', t, path, settings, true);
    writeln(t, '</font>');
 end;
 
@@ -976,6 +976,8 @@ begin
    end;
    fDefault := readAction2Dest(self, ps, action2Table);
    testSpriteEnd(ps);
+
+   for i := 0 to length(fFeatID) - 1 do newGrfFile.registerEntity(fFeature, fFeatID[i], self);
 end;
 
 function TAction3.getGenericCallback: boolean;
@@ -1010,7 +1012,7 @@ end;
 
 procedure TAction3.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
-   s                                    : string;
+   s, s2                                : string;
    i                                    : integer;
 begin
    inherited printHtml(t, path, settings);
@@ -1023,7 +1025,12 @@ begin
    if not genericCallback then
    begin
       s := '';
-      for i := 0 to length(fFeatID) - 1 do s := s + '0x' + intToHex(fFeatID[i], 2) + ' ';
+      for i := 0 to length(fFeatID) - 1 do
+      begin
+         s2 := '0x' + intToHex(fFeatID[i], 2);
+         if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, fFeatID[i]] <> nil) then s2 := newGrfFile.printEntityLinkBegin('content', fFeature, fFeatID[i]) + s2 + '</a> ';
+         s := s + s2;
+      end;
       writeln(t, '<tr><th align="left">IDs</th><td>', s, '</td></tr>');
    end;
    for i := 0 to length(fDest) - 1 do

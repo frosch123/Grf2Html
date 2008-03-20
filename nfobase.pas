@@ -18,7 +18,7 @@ unit nfobase;
 
 interface
 
-uses sysutils, classes, contnrs, grfbase, outputsettings;
+uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.4';
@@ -45,18 +45,50 @@ type
    TFeature = byte;
    TAction8 = class;
 
+   TSpriteSet = class
+   private
+      fSprites    : TList;
+      function findPosition(nr: integer): integer;
+   public
+      constructor create;
+      destructor destroy; override;
+      procedure printHtml(const srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings; singleLine: boolean);
+      procedure add(s: TSprite);
+   end;
+
+   TEntityList = class
+   private
+      fIDs    : array of integer;
+      fEntity : array of TSpriteSet;
+      function getID(i: integer) : integer;
+      function getEntity(i: integer): TSpriteSet;
+      function getCount: integer;
+   public
+      constructor create;
+      destructor destroy; override;
+      function findEntity(id: integer; createNew: boolean = false): TSpriteSet;
+      property count : integer read getCount;
+      property ID[i: integer]: integer read getID;
+      property entity[i: integer]: TSpriteSet read getEntity;
+   end;
+
    TNewGrfFile = class
    private
       fGrfName     : string;
       fSprites     : TObjectList;
       fAction8     : TAction8;
+      fEntity      : array[TFeature] of TEntityList;
+      function getEntity(f: TFeature; id: integer): TSpriteSet;
    public
       constructor create(aGrfName: string; grfFile: TObjectList);
       destructor destroy; override;
       procedure printHtml(path: string; settings: TGrf2HtmlSettings);
+      procedure registerEntity(f: TFeature; id: integer; s: TSprite);
+      function printEntityLinkBegin(const srcFrame: string; f: TFeature; id: integer) : string;
       property grfName: string read fGrfName write fGrfName;
       property sprites: TObjectList read fSprites;
       property action8: TAction8 read fAction8;
+      property entity[f: TFeature; id: integer]: TSpriteSet read getEntity;
    end;
 
    TPseudoSpriteReader = class
@@ -157,17 +189,6 @@ type
       property description: string read fDesc;
    end;
 
-   TSpriteSet = class
-   private
-      fSprites    : TList;
-      function findPosition(nr: integer): integer;
-   public
-      constructor create;
-      destructor destroy; override;
-      procedure printHtml(const srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings);
-      procedure add(s: TSprite);
-   end;
-
 function formatTextPrintable(s: string; parseStringCodes: boolean): string;
 function grfID2Str(grfID: longword): string;
 function signedCast(v: longword; size: integer): longint;
@@ -202,6 +223,8 @@ begin
    inherited create;
    fGrfName := aGrfName;
    fAction8 := nil;
+   for i := low(TFeature) to high(TFeature) do fEntity[i] := TEntityList.create;
+
    grfFile.ownsObjects := false;
    fSprites := TObjectList.create(true);
 
@@ -320,8 +343,11 @@ begin
 end;
 
 destructor TNewGrfFile.destroy;
+var
+   i                                    : integer;
 begin
    fSprites.free;
+   for i := low(TFeature) to high(TFeature) do fEntity[i].free;
    inherited destroy;
 end;
 
@@ -337,8 +363,9 @@ procedure TNewGrfFile.printHtml(path: string; settings: TGrf2HtmlSettings);
 var
    t, t2                                : textFile;
    b, b2                                : array[word] of byte; // text file buffers
-   i                                    : integer;
+   i, j                                 : integer;
    s                                    : TSprite;
+   str                                  : string;
    ssCnt, spriteCount                   : integer;
 begin
    if settings.range[0] < 0 then settings.range[0] := 0;
@@ -362,26 +389,66 @@ begin
 
    assignFile(t, path + 'index.html');
    rewrite(t);
-   writeln(t, '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">');
+   writeln(t, '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">');
    writeln(t, '<html><head>');
    writeln(t, '<title>' + fGrfName + '</title>');
    writeln(t, '<meta http-equiv="content-type" content="text/html; charset=utf-8">');
    writeln(t, '<meta name="generator" content="', grf2HtmlVersion, '">');
    writeln(t, '</head>');
-   writeln(t, '<frameset cols="', settings.linkFrameWidth, ',*"><frame src="sprites.html" name="sprites" noresize><frame src="nfo.html" name="content">');
+   write(t, '<frameset');
+   if (settings.indexFrame = boolYes) or (settings.entityFrame = boolYes) then writeln(t, ' cols="', settings.linkFrameWidth, ',*">') else
+                                                                               writeln(t, '>');
+   if (settings.indexFrame = boolYes) and (settings.entityFrame = boolYes) then writeln(t, ' <frameset rows="*,*" noresize>');
+   if settings.indexFrame  = boolYes then writeln(t, '  <frame src="sprites.html" name="sprites">');
+   if settings.entityFrame = boolYes then writeln(t, '  <frame src="entities.html" name="entities">');
+   if (settings.indexFrame = boolYes) and (settings.entityFrame = boolYes) then writeln(t, ' </frameset>');
+   writeln(t, ' <frame src="nfo.html" name="content">');
    writeln(t, '<noframes><body><a href="nfo.html">Content of grf</a></body></noframes>');
    writeln(t, '</frameset></html>');
    closeFile(t);
 
-   assignFile(t, path + 'sprites.html');
-   setTextBuf(t, b, sizeof(b));
-   rewrite(t);
-   writeln(t, '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">');
-   writeln(t, '<html><head>');
-   writeln(t, '<title>Sprites in ', fGrfName, '</title>');
-   writeln(t, '<meta http-equiv="content-type" content="text/html; charset=utf-8">');
-   writeln(t, '<meta name="generator" content="', grf2HtmlVersion, '">');
-   writeln(t, '</head><body><table summary="Sprite Index" width="100%">');
+   if settings.entityFrame = boolYes then
+   begin
+      assignFile(t, path + 'entities.html');
+      rewrite(t);
+      writeln(t, '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">');
+      writeln(t, '<html><head>');
+      writeln(t, '<title>Entities in ', fGrfName, '</title>');
+      writeln(t, '<meta http-equiv="content-type" content="text/html; charset=utf-8">');
+      writeln(t, '<meta name="generator" content="', grf2HtmlVersion, '">');
+      writeln(t, '</head><body>');
+
+      for i := low(TFeature) to high(TFeature) do
+      if fEntity[i].count > 0 then
+      begin
+         str := TableFeature[i];
+         if str = 'unknown' then str := 'Unknown Feature 0x' + intToHex(i, 2);
+         writeln(t, '<p><font size="+2"><b>', str, '</b></font><table width="100%" rules="rows" border="1">');
+         for j := 0 to fEntity[i].count - 1 do
+         begin
+            writeln(t, '<tr valign="top"><th align="left"><a name="feat', intToHex(i, 2), 'id', intToHex(fEntity[i].ID[j], 4), '">0x', intToHex(fEntity[i].ID[j], 2), '</th><td>');
+            fEntity[i].entity[j].printHtml('entities', t, path, settings, false);
+            writeln(t, '</td></tr>');
+         end;
+         writeln(t, '</table></p>');
+      end;
+
+      writeln(t, '</body></html>');
+      closeFile(t);
+   end;
+
+   if settings.indexFrame = boolYes then
+   begin
+      assignFile(t, path + 'sprites.html');
+      setTextBuf(t, b, sizeof(b));
+      rewrite(t);
+      writeln(t, '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">');
+      writeln(t, '<html><head>');
+      writeln(t, '<title>Sprites in ', fGrfName, '</title>');
+      writeln(t, '<meta http-equiv="content-type" content="text/html; charset=utf-8">');
+      writeln(t, '<meta name="generator" content="', grf2HtmlVersion, '">');
+      writeln(t, '</head><body><table summary="Sprite Index" width="100%">');
+   end;
 
    assignFile(t2, path + 'nfo.html');
    setTextBuf(t2, b2, sizeof(b2));
@@ -400,7 +467,7 @@ begin
       if i * 100 div spriteCount <> (i - 1) * 100 div spriteCount then write(#13'Generating html', (i * 100 div spriteCount): 3, '%');
 
       s := fSprites[i] as TSprite;
-      if (ssCnt = 0) or (settings.subSpritesInIndex = boolYes) then
+      if (settings.indexFrame = boolYes) and ((ssCnt = 0) or (settings.subSpritesInIndex = boolYes)) then
       begin
          writeln(t, '<tr><td align=right>', i, '</td><td>', s.printHtmlSpriteLink('sprites', false), '</td></tr>');
       end;
@@ -428,11 +495,31 @@ begin
    end;
 
    writeln(#13'Generating html finished');
+
    writeln(t2, '</table>Generated by ', grf2HtmlVersion, '</body></html>');
    closeFile(t2);
 
-   writeln(t, '</table></body></html>');
-   closeFile(t);
+   if settings.indexFrame = boolYes then
+   begin
+      writeln(t, '</table></body></html>');
+      closeFile(t);
+   end;
+end;
+
+function TNewGrfFile.getEntity(f: TFeature; id: integer): TSpriteSet;
+begin
+   result := fEntity[f].findEntity(id);
+end;
+
+procedure TNewGrfFile.registerEntity(f: TFeature; id: integer; s: TSprite);
+begin
+   // Global properties have nothing in common. Do not register them.
+   if f <> FGlobal then fEntity[f].findEntity(id, true).add(s);
+end;
+
+function TNewGrfFile.printEntityLinkBegin(const srcFrame: string; f: TFeature; id: integer) : string;
+begin
+   result := printLinkBegin(srcFrame, 'entities', 'entities.html#feat' + intToHex(f, 2) + 'id' + intToHex(id, 4));
 end;
 
 
@@ -743,7 +830,7 @@ begin
       if fSprites[p] <> s then fSprites.insert(p,s);
 end;
 
-procedure TSpriteSet.printHtml(srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+procedure TSpriteSet.printHtml(srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings; singleLine: boolean);
 var
    i                                    : integer;
 begin
@@ -751,11 +838,74 @@ begin
    begin
       for i := 0 to fSprites.count - 1 do
       begin
-         if i <> 0 then write(t, ', ');
+         if i <> 0 then
+         begin
+            if singleLine then write(t, ', ') else writeln(t, '<br>');
+         end;
          write(t, TSprite(fSprites[i]).printHtmlSpriteLink(srcFrame));
       end;
       writeln(t);
    end;
+end;
+
+
+constructor TEntityList.create;
+begin
+   inherited create;
+   setLength(fIDs, 0);
+   setLength(fEntity, 0);
+end;
+
+destructor TEntityList.destroy;
+var
+   i                                    : integer;
+begin
+   for i := 0 to length(fEntity) - 1 do fEntity[i].free;
+   inherited destroy;
+end;
+
+function TEntityList.findEntity(id: integer; createNew: boolean = false): TSpriteSet;
+var
+   i, j                                 : integer;
+begin
+   i := 0;
+   while (i < length(fIDs)) and (fIDs[i] < id) do inc(i);
+
+   if (i >= length(fIDs)) or (fIDs[i] <> id) then
+   begin
+      if not createNew then
+      begin
+         result := nil;
+         exit;
+      end;
+
+      setLength(fIDs, length(fIDs) + 1);
+      setLength(fEntity, length(fIDs) + 1);
+      for j := length(fIDs) - 1 downto i + 1 do
+      begin
+         fIDs[j] := fIDs[j - 1];
+         fEntity[j] := fEntity[j - 1];
+      end;
+      fIDs[i] := id;
+      fEntity[i] := TSpriteSet.create;
+   end;
+
+   result := fEntity[i];
+end;
+
+function TEntityList.getID(i: integer) : integer;
+begin
+   result := fIDs[i];
+end;
+
+function TEntityList.getEntity(i: integer): TSpriteSet;
+begin
+   result := fEntity[i];
+end;
+
+function TEntityList.getCount: integer;
+begin
+   result := length(fIDs);
 end;
 
 
