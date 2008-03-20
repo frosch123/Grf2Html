@@ -81,13 +81,16 @@ Contents:
       grf2html [options] <inputfiles ...>
    <inputfile ...>   Grfs to decode. Important: Specify an encoded .grf (not a .nfo).
    Options:
-    -h               Prints this message and exits.
-    --ini <file>     Reads default values from <file>. Default "grf2html.ini".
-    --nodata         Skip generation of non-html data files (images, binary included data, ...).
-    -p <pal>         Specifies the palette to use in decoding: "win" or "dos".
-    -v               Prints used options
-    -w <width>       Aimed width for content frame in pixels. Used to determine number of columns in output.
-    --writeini       Prints current options to the file specified by "-ini".
+    -h                Prints this message and exits.
+    --ini <file>      Reads default values from <file>. Default "grf2html.ini".
+    --nodata          Skip generation of non-html data files (images, binary included data, ...).
+    -o <path>         Output files to <path>/<file>/... If empty use path of the inputfile.
+    -p <pal>          Specifies the palette to use in decoding: "win" or "dos".
+    -r <first>:<last> Only generate output for a range of spritenumbers.
+    -u <first>:<last> Only generate non-html data files in a range of sprites. Behaves like '--nodata' for sprites outside of the range.
+    -v                Prints used options
+    -w <width>        Aimed width for content frame in pixels. Used to determine number of columns in output.
+    --writeini        Prints current options to the file specified by "-ini".
 
    However you can as well add Grf2Html to the explorer (or similiar program of your OS) context menu for files with .grf extention.
    In that case you want probably put your default options into "grf2html.ini", though they perhaps already suit your needs.
@@ -110,6 +113,7 @@ Contents:
    with their default values into the correct sections.
 
 5.1) [Grf2Html] section:
+   OutputPath:              Works the same as the "-o" option.
    Palette:                 Works the same as the "-p" option. Specify "win" or "dos".
    Verbose:                 Set to "1" or "0" to enable or disable verbose output ("-v" option) by default.
    AimedWidth:              Works the same as the "-w" option.

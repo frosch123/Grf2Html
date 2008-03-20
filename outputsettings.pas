@@ -18,7 +18,7 @@ unit outputsettings;
 
 interface
 
-uses sysutils, classes, inifiles, contnrs;
+uses sysutils, classes, inifiles, contnrs, osspecific;
 
 const
    palDos     = 0;
@@ -38,6 +38,7 @@ type
       range                    : array[0..1] of integer;   // Only generate output for sprites in this range
       transparency             : integer;                  // representation of transparency: transBlue, transReal
       subSpritesInIndex        : integer;                  // link to subsprites in the index frame: boolNo, boolYes
+      outputPath               : string;                   // path where the output should go to
 
       // Explicitly used widths (pixels) of columns
       linkFrameWidth           : integer;        // Width of the left frame
@@ -545,6 +546,7 @@ begin
    options.add(TGrf2HtmlOptionSetOnly.create(printUsage           , '-h'        , ''        , ''          , ''                                    , ''       , 'Prints this message and exits.'));
    options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + extractFileName(s) + '".'));
    options.add(TGrf2HtmlOptionSetOnly.create(settings.suppressData, '--nodata'  , ''        , ''          , 'Skip data'                           , ''       , 'Skip generation of non-html data files'#13#10'(images, binary included data, ...).'));
+   options.add(TGrf2HtmlOptionString .create(settings.outputPath  , '-o'        , 'Grf2Html', 'OutputPath', 'Output path', ''                     , '<path>' , 'Output files to <path>' + directorySeparator + '<file>' + directorySeparator + '...'#13#10'If empty use path of the inputfile.'));
    options.add(TGrf2HtmlOptionPalette.create(settings.palette));
    options.add(TGrf2HtmlOptionRange  .create(settings.range[0], settings.range[1], '-r', '' , ''          , 'Range'      , 0, high(integer)       , '<first>:<last>', 'Only generate output for a range of spritenumbers.'));
    options.add(TGrf2HtmlOptionRange  .create(settings.update[0], settings.update[1], '-u', '' , ''        , 'Updaterange', 0, high(integer)       , '<first>:<last>', 'Only generate non-html data files in a range of sprites.'#13#10'Behaves like ''--nodata'' for sprites outside of the range.'));

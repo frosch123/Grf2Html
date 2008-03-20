@@ -78,7 +78,14 @@ begin
                write('Parse newgrf... ');
                nfo := TNewGrfFile.create(extractFileName(fn), grf);
                writeln('done');
-               outPath := expandFilename(changeFileExt(fn, '') + directorySeparator);
+               outPath := trim(settings.outputPath);
+               if outPath = '' then
+               begin
+                  outPath := expandFilename(changeFileExt(fn, '') + directorySeparator);
+               end else
+               begin
+                  outPath := expandFilename(outPath) + directorySeparator + extractFileName(changeFileExt(fn, '')) + directorySeparator;
+               end;
                forceDirectories(outPath + 'data');
                nfo.printHtml(outPath, settings);
                nfo.free;
