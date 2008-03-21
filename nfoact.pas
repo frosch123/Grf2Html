@@ -31,6 +31,7 @@ type
       function getNumStrings: integer;
       function getTextID(i: integer): integer;
       function getText(i: integer): string;
+      function getAssociatedID(i: integer): integer;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure secondPass; override;
@@ -39,6 +40,7 @@ type
       property langID: byte read fLangID;
       property genericStrings: boolean read fGenericStrings;
       property numStrings: integer read getNumStrings;
+      property associatedID[i: integer]: integer read getAssociatedID; // Returns the "normal" feature-ID the text belongs to (e.g. vehicle text xx -> vehicle xx, station text C5xx -> station xx). -1 if none.
       property textID[i: integer]: integer read getTextID;
       property text[i: integer]: string read getText;
    end;
@@ -306,7 +308,7 @@ end;
 
 constructor TAction4.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
-   i                                    : integer;
+   i, associated                        : integer;
 begin
    inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $04);
@@ -320,9 +322,10 @@ begin
    for i := 0 to length(fStrings) - 1 do fStrings[i] := ps.getString;
    testSpriteEnd(ps);
 
-   if not fGenericStrings then
+   for i := 0 to length(fStrings) - 1 do
    begin
-      for i := 0 to length(fStrings) - 1 do newGrfFile.registerEntity(fFeature, fFirstString + i, self);
+      associated := associatedID[i];
+      if associated >= 0 then newGrfFile.registerEntity(fFeature, associated, self);
    end;
 end;
 
@@ -341,6 +344,21 @@ begin
    if (i >= 0) and (i < length(fStrings)) then result := fStrings[i] else result := '';
 end;
 
+function TAction4.getAssociatedID(i: integer): integer;
+begin
+   result := getTextID(i);
+   if not fGenericStrings then exit;
+
+   case fFeature of
+      FStation: case result and $FF00 of
+                   $C500: result := result and $FF; // Station Class Name, Station Name // TODO: Does Station Class Name 0xC4xx fit here?
+                   else   result := -1;
+                end;
+      FHouse:   if result and $FF00 = $C900 then result := result and $FF else result := -1;
+      else      result := -1;
+   end;
+end;
+
 procedure TAction4.secondPass;
 begin
    inherited secondPass;
@@ -350,7 +368,7 @@ end;
 procedure TAction4.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 var
    s                                    : string;
-   i                                    : integer;
+   i, associated                        : integer;
    a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
@@ -362,11 +380,10 @@ begin
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    for i := 0 to length(fStrings) - 1 do
    begin
-      if fGenericStrings then s := '0x' + intToHex(textID[i], 4) else
-      begin
-         s := '0x' + intToHex(textID[i], 2);
-         if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, textID[i]] <> nil) then s := newGrfFile.printEntityLinkBegin('content', fFeature, textID[i]) + s +  '</a>';
-      end;
+      associated := associatedID[i];
+      if fGenericStrings then s := '0x' + intToHex(textID[i], 4) else s := '0x' + intToHex(textID[i], 2);
+      if (associated >= 0) and (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, associated] <> nil) then
+         s := newGrfFile.printEntityLinkBegin('content', fFeature, associated) + s +  '</a>';
       writeln(t, '<tr><th align="left">Text ', s, '</th><td>', formatTextPrintable(fStrings[i], true), '</td></tr>');
    end;
    writeln(t, '</table>');
