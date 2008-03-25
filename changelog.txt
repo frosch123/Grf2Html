@@ -1,3 +1,32 @@
+Version 0.5 - 25. Mar. 2008
+ - Update to current NewGrfSpecs:
+     Add PatchVariables 0x12 and 0x13.
+     Add bridge properties 0x10, 0x11 and 0x12.
+ - Preliminary support of the preliminary NewAirports specs.
+ - Feature: Make links to Action1 sets and Action2s bidirectional.
+ - Feature: Add a new frame ("entity"-frame) to group actions, which refer to the same ID of the same feature.
+ - Feature: Add some new command line options:
+     Allow setting an output-path.
+     Allow restricting the output to a specific sprite range. (useful for big files)
+     Generate data files (images, etc) only for a specific sprite range. (like "--nodata", but only inside a range)
+ - Feature: Add lots of ini file options (in addition to the usual command line options):
+     Enable/disable the two frames on the left.
+     Enable/disable omitting of subsprites (e.g. images in Action1/5/A/12, sound data) from the left index-frame.
+     Specify if transparent-blue should be displayed as blue or as "real" transparency.
+     Ability to modify some magic contants used while generating the output, like pixel-widths of various html-elements in the output.
+ - Feature: Improve readabilty of various actions:
+     Print signed values of Action0 properties as signed numbers.
+     Nicer bracket placement in AdvVarAct2.
+     Compute var1A constants and insert them directly.
+     Print range of used random bits in RandomAction2.
+     Make ActionD print constants as signed/unsigned decimal numbers in some cases, instead of always hex.
+     Place a space after the '#' of spritenumbers.
+     Make background of spritelayout-previews transparent, instead of white.
+ - Change: The command line parsing is now more tollerant towards spaces in some places.
+ - Fix: Interpret string control characters 0x01, 0x0D, 0x0E, 0x0F and 0x1F.
+ - Fix: Industry layout table row/column headers were wrong in some cases.
+ - Fix: General variables in VarAction2 and in Action7/9/D are the same.
+
 Version 0.4 - 16. Nov. 2007
  - Port to Free Pascal to enable compiling for Linux. (Thanks TrueLight for helping)
  - Update to current NewGrfSpecs:
