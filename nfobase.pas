@@ -54,6 +54,7 @@ type
       destructor destroy; override;
       procedure printHtml(const srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings; singleLine: boolean);
       procedure add(s: TSprite);
+      function hasInRange(min, max:integer) : boolean;
    end;
 
    TEntityList = class
@@ -367,6 +368,7 @@ var
    s                                    : TSprite;
    str                                  : string;
    ssCnt, spriteCount                   : integer;
+   first                                : boolean;
 begin
    if settings.range[0] < 0 then settings.range[0] := 0;
    if settings.range[1] >= sprites.count then settings.range[1] := sprites.count - 1;
@@ -421,16 +423,21 @@ begin
       for i := low(TFeature) to high(TFeature) do
       if fEntity[i].count > 0 then
       begin
+         first := true;
          str := TableFeature[i];
          if str = 'unknown' then str := 'Unknown Feature 0x' + intToHex(i, 2);
-         writeln(t, '<p><font size="+2"><b>', str, '</b></font><table width="100%" rules="rows" border="1">');
          for j := 0 to fEntity[i].count - 1 do
          begin
+            // Skip entities if no sprites of it are in the output range
+            if not fEntity[i].entity[j].hasInRange(settings.range[0], settings.range[1]) then continue;
+
+            if first then writeln(t, '<p><font size="+2"><b>', str, '</b></font><table width="100%" rules="rows" border="1">');
+            first := false;
             writeln(t, '<tr valign="top"><th align="left"><a name="feat', intToHex(i, 2), 'id', intToHex(fEntity[i].ID[j], 4), '">0x', intToHex(fEntity[i].ID[j], 2), '</th><td>');
             fEntity[i].entity[j].printHtml('entities', t, path, settings, false);
             writeln(t, '</td></tr>');
          end;
-         writeln(t, '</table></p>');
+         if not first then writeln(t, '</table></p>');
       end;
 
       writeln(t, '</body></html>');
@@ -846,6 +853,19 @@ begin
       end;
       writeln(t);
    end;
+end;
+
+function TSpriteSet.hasInRange(min, max:integer) : boolean;
+var
+   i, nr                                : integer;
+begin
+   result := true;
+   for i := 0 to fSprites.count - 1 do
+   begin
+      nr := TSprite(fSprites[i]).spriteNr;
+      if (nr >= min) and (nr <= max) then exit;
+   end;
+   result := false;
 end;
 
 
