@@ -469,7 +469,7 @@ begin
       s := fSprites[i] as TSprite;
       if (settings.indexFrame = boolYes) and ((ssCnt = 0) or (settings.subSpritesInIndex = boolYes)) then
       begin
-         writeln(t, '<tr><td align=right>', i, '</td><td>', s.printHtmlSpriteLink('sprites', false), '</td></tr>');
+         writeln(t, '<tr><td align=right>', i, '</td><td>', s.printHtmlSpriteLink('sprites', settings, false), '</td></tr>');
       end;
 
       if ssCnt > 0 then dec(ssCnt) else
@@ -842,7 +842,7 @@ begin
          begin
             if singleLine then write(t, ', ') else writeln(t, '<br>');
          end;
-         write(t, TSprite(fSprites[i]).printHtmlSpriteLink(srcFrame));
+         write(t, TSprite(fSprites[i]).printHtmlSpriteLink(srcFrame, settings));
       end;
       writeln(t);
    end;

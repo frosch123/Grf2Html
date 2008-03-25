@@ -34,7 +34,7 @@ type
       destructor destroy; override;
       function processSubSprite(i: integer; s: TSprite): TSprite; override;
       procedure registerLink(setNr: integer; from: TNewGrfSprite);
-      function printHtmlLinkToSet(setNr: integer; const srcFrame: string): string;
+      function printHtmlLinkToSet(setNr: integer; const srcFrame: string; const settings: TGrf2HtmlSettings): string;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property feature: TFeature read fFeature;
       property numSets: integer read fNumSets;
@@ -228,7 +228,7 @@ begin
    end;
 end;
 
-function printAction2Dest(dest: TAction2Dest): string;
+function printAction2Dest(dest: TAction2Dest; const settings: TGrf2HtmlSettings): string;
 begin
    if dest.value and $8000 <> 0 then
    begin
@@ -240,7 +240,7 @@ begin
       result := 'chain to 0x' + intToHex(dest.value, 2);
       if dest.dest <> nil then
       begin
-         result := result + ' (' + dest.dest.printHtmlSpriteLink('content') + ')';
+         result := result + ' (' + dest.dest.printHtmlSpriteLink('content', settings) + ')';
       end else result := result + ' (undefined)';
    end;
 end;
@@ -280,9 +280,14 @@ begin
    result := inherited processSubSprite(i, s);
 end;
 
-function TAction1.printHtmlLinkToSet(setNr: integer; const srcFrame: string): string;
+function TAction1.printHtmlLinkToSet(setNr: integer; const srcFrame: string; const settings: TGrf2HtmlSettings): string;
+var
+   inRange                              : boolean;
 begin
-   result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr)) + 'Action1 Set ' + intToStr(setNr) + '</a>';
+   inRange := (spriteNr >= settings.range[0]) and (spriteNr <= settings.range[1]);
+   if inRange then result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr) + 'set' + intToStr(setNr)) else result := '';
+   result := result + 'Action1 Set ' + intToStr(setNr);
+   if inRange then result := result + '</a>';
 end;
 
 procedure TAction1.registerLink(setNr: integer; from: TNewGrfSprite);
@@ -483,7 +488,7 @@ begin
       end else
       begin
          if fAction1 = nil then writeln(t, 'Action1 Set ' + intToStr(val)) else
-                                writeln(t, fAction1.printHtmlLinkToSet(val, 'content'));
+                                writeln(t, fAction1.printHtmlLinkToSet(val, 'content', settings));
       end;
    end;
    write(t, '</td></tr>');
@@ -503,7 +508,7 @@ begin
          end else
          begin
             if fAction1 = nil then writeln(t, 'Action1 Set ' + intToStr(val)) else
-                                   writeln(t, fAction1.printHtmlLinkToSet(val, 'content'));
+                                   writeln(t, fAction1.printHtmlLinkToSet(val, 'content', settings));
          end;
       end;
       write(t, '</td></tr>');
@@ -796,7 +801,7 @@ begin
             begin
                dest.value := parameter;
                dest.dest := proc;
-               s := 'ResultOf[' + printAction2Dest(dest) + ']';
+               s := 'ResultOf[' + printAction2Dest(dest, settings) + ']';
             end else
             begin
                s := TableVariables[variable];
@@ -863,11 +868,11 @@ begin
          with fCases[i] do
          begin
             writeln(t, '<tr><td>0x', intToHex(min, 2 * fSize), ' (', min, ')</td><td>0x', intToHex(max, 2 * fSize), ' (', max, ')</td><td>',
-                       printAction2Dest(fCases[i].dest), '</td></tr>');
+                       printAction2Dest(fCases[i].dest, settings), '</td></tr>');
          end;
       writeln(t, '</table>');
    end;
-   writeln(t, '</td></tr><tr><th align="left">Default</th><td>', printAction2Dest(fDefault), '</td></tr></table');
+   writeln(t, '</td></tr><tr><th align="left">Default</th><td>', printAction2Dest(fDefault, settings), '</td></tr></table');
 end;
 
 
@@ -947,7 +952,7 @@ begin
    for i := 0 to length(fCases) - 1 do
    begin
       if i <> 0 then write(t, ', ');
-      writeln(t, printAction2Dest(fCases[i]));
+      writeln(t, printAction2Dest(fCases[i], settings));
    end;
    writeln(t, '</td></tr></table>');
 end;
@@ -1036,9 +1041,9 @@ begin
    for i := 0 to length(fDest) - 1 do
    begin
       writeln(t, '<tr><th align="left">cargobit 0x', intToHex(fCargoBit[i], 2), ' (', fCargoBit[i], ')</th><td>',
-                 printAction2Dest(fDest[i]), '</td></tr>');
+                 printAction2Dest(fDest[i], settings), '</td></tr>');
    end;
-   writeln(t, '<tr><th align="left">default</th><td>', printAction2Dest(fDefault), '</td></tr></table>');
+   writeln(t, '<tr><th align="left">default</th><td>', printAction2Dest(fDefault, settings), '</td></tr></table>');
 end;
 
 

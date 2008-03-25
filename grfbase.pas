@@ -38,7 +38,7 @@ type
       constructor create(spriteNr: integer);
       function printHtmlSpriteAnchor: string;
       function printHtmlSpriteNr: string;
-      function printHtmlSpriteLink(const srcFrame: string; withNumber: boolean = true): string;
+      function printHtmlSpriteLink(const srcFrame: string; const settings: TGrf2HtmlSettings; withNumber: boolean = true): string;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual;
       function getShortDesc: string; virtual; abstract;
       property spriteNr: integer read fSpriteNr;
@@ -116,11 +116,15 @@ begin
    result := '#&nbsp;' + intToStr(spriteNr);
 end;
 
-function TSprite.printHtmlSpriteLink(const srcFrame: string; withNumber: boolean = true): string;
+function TSprite.printHtmlSpriteLink(const srcFrame: string; const settings: TGrf2HtmlSettings; withNumber: boolean = true): string;
+var
+   inRange                              : boolean;
 begin
-   result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr));
+   inRange := (spriteNr >= settings.range[0]) and (spriteNr <= settings.range[1]);
+   if inRange then result := printLinkBegin(srcFrame, 'content', 'nfo.html#sprite' + intToStr(spriteNr)) else result := '';
    if withNumber then result := result + printHtmlSpriteNr + ' ';
-   result := result + getShortDesc + '</a>';
+   result := result + getShortDesc;
+   if inRange then result := result + '</a>';
 end;
 
 procedure TSprite.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
