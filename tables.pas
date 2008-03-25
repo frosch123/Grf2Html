@@ -62,6 +62,9 @@ var
    TableLanguage                        : TSingleColumnTable;
    TableStringCode                      : TSingleColumnTable;
 
+   TableDirection                       : TSingleColumnTable;
+   TableAirportStateHeading             : TSingleColumnTable;
+
    TableAction0General                  : TTable;
    TableAction0Features                 : array[FTrain..FObject] of TTable;
 
@@ -99,12 +102,15 @@ type
    end;
 
 const
-   TableList : array[0..(16 + 4 * 16) - 1] of TTableList = (
+   TableList : array[0..(18 + 4 * 16) - 1] of TTableList = (
       (name:'TableFeature'                ; typ:TSingleColumnTable; table:@TableFeature),
       (name:'TablePrimaryObject'          ; typ:TSingleColumnTable; table:@TablePrimaryObject),
       (name:'TableRelatedObject'          ; typ:TSingleColumnTable; table:@TableRelatedObject),
       (name:'TableLanguage'               ; typ:TSingleColumnTable; table:@TableLanguage),
       (name:'TableStringCode'             ; typ:TSingleColumnTable; table:@TableStringCode),
+
+      (name:'TableDirection'              ; typ:TSingleColumnTable; table:@TableDirection),
+      (name:'TableAirportStateHeading'    ; typ:TSingleColumnTable; table:@TableAirportStateHeading),
 
       (name:'TableAction0General'         ; typ:TTable            ; table:@TableAction0General),
       (name:'TableAction0Trains'          ; typ:TTable            ; table:@TableAction0Features[FTrain]),
@@ -120,7 +126,7 @@ const
       (name:'TableAction0Industries'      ; typ:TTable            ; table:@TableAction0Features[FIndustry]),
       (name:'TableAction0Cargos'          ; typ:TTable            ; table:@TableAction0Features[FCargo]),
       (name:'TableAction0Sounds'          ; typ:TTable            ; table:@TableAction0Features[FSound]),
-      (name:''                            ; typ:TTable            ; table:@TableAction0Features[FAirport]),
+      (name:'TableAction0Airports'        ; typ:TTable            ; table:@TableAction0Features[FAirport]),
       (name:''                            ; typ:TTable            ; table:@TableAction0Features[FSignal]),
       (name:'TableAction0Objects'         ; typ:TTable            ; table:@TableAction0Features[FObject]),
 
@@ -164,8 +170,8 @@ const
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FSound]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FSound]),
 
-      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FAirport]),
-      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FAirport]),
+      (name:'TableVarAction2Stations'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FAirport]),
+      (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FAirport]),
 
       (name:'TableVarAction2Signals'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FSignal]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FSignal]),

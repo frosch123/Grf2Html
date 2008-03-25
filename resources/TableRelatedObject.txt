@@ -6,4 +6,4 @@
 07=town of house
 09=industry of tile
 0A=town of industry
-
+0D=town of airport

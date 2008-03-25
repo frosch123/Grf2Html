@@ -18,9 +18,10 @@ unit nfoact0;
 
 interface
 
-uses sysutils, nfobase, tables, math, spritelayout, outputsettings;
+uses sysutils, nfobase, tables, math, spritelayout, htmlwriter, outputsettings;
 
 type
+   TByteSet = set of byte;
    TAction0 = class;
 
    TAction0SpecialProperty = class
@@ -32,6 +33,9 @@ type
    end;
 
    TAction0SpecialPropertyArrayItem = class(TAction0SpecialProperty)
+   protected
+      fID, fNr                      : integer;
+   public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); virtual;
       class function itemCount(ps: TPseudoSpriteReader): integer; virtual; abstract; // Number of items; -1 = use MoreItems
       class function moreItems(ps: TPseudoSpriteReader): boolean; virtual; abstract;
@@ -147,6 +151,65 @@ type
       property tile[i: integer]: TIndustryLayoutTile read getTile;
    end;
 
+   TAction0AirportCustomLayout = class(TAction0SpecialPropertyArrayItem)
+   private
+      fDirection               : byte;
+      fMiniPic                 : byte;
+      fTiles                   : array of array of byte;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
+      class function itemCount(ps: TPseudoSpriteReader): integer; override;
+      class function moreItems(ps: TPseudoSpriteReader): boolean; override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      // TODO: props
+   end;
+
+   TAction0AirportFiniteStateMachineCommand = record
+      headingType                    : byte;
+      headingSubType                 : byte;
+      reserveBlocks                  : TByteSet;
+      releaseBlocks                  : TByteSet;
+      nextPos                        : byte;
+   end;
+   TAction0AirportFiniteStateMachine = class(TAction0SpecialPropertyArrayItem)
+   private
+      fPosition                      : array[0..2] of smallint;
+      fState                         : byte;
+      fFlags                         : word;
+      fBlock                         : byte;
+      fCommands                      : array of TAction0AirportFiniteStateMachineCommand;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
+      class function itemCount(ps: TPseudoSpriteReader): integer; override;
+      class function moreItems(ps: TPseudoSpriteReader): boolean; override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      // TODO: props
+   end;
+
+   TAction0AirportDepotLocation = class(TAction0SpecialPropertyArrayItem)
+   private
+      fPosition                 : array[0..1] of byte;
+      fDepotNr                  : byte;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
+      class function itemCount(ps: TPseudoSpriteReader): integer; override;
+      class function moreItems(ps: TPseudoSpriteReader): boolean; override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      // TODO: props
+   end;
+
+   TAction0AirportPlacementMask = class(TAction0SpecialPropertyArrayItem)
+   private
+      fDirection               : byte;
+      fFlags                   : array of array of byte;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer); override;
+      class function itemCount(ps: TPseudoSpriteReader): integer; override;
+      class function moreItems(ps: TPseudoSpriteReader): boolean; override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      // TODO: props
+   end;
+
    TAction0DataType = (a0unsigned, a0signed, a0hex, a0str, a0special);
    TAction0Data = record
       size      : shortint; // -1 for special, 1 - 4 plain
@@ -194,6 +257,8 @@ end;
 constructor TAction0SpecialPropertyArrayItem.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
 begin
    inherited create(action0);
+   fID := ID;
+   fNr := nr;
 end;
 
 constructor TAction0SpecialPropertyArray.create(action0: TAction0; ps: TPseudoSpriteReader; ID: integer; typ: TAction0SpecialPropertyArrayItemClass);
@@ -644,6 +709,311 @@ begin
 end;
 
 
+constructor TAction0AirportCustomLayout.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
+var
+   i, j, n, m                           : integer;
+begin
+   inherited create(action0, ps, ID, nr);
+   fDirection := ps.getByte;
+   n := ps.getByte;
+   m := ps.getByte;
+   fMiniPic := ps.getByte;
+   setLength(fTiles, n, m);
+   for i := 0 to m - 1 do
+   for j := 0 to n - 1 do fTiles[j, i] := ps.getByte;
+end;
+
+class function TAction0AirportCustomLayout.itemCount(ps: TPseudoSpriteReader): integer;
+begin
+   result := ps.getByte;
+end;
+
+class function TAction0AirportCustomLayout.moreItems(ps: TPseudoSpriteReader): boolean;
+begin
+   result := false; // use itemCount
+end;
+
+procedure TAction0AirportCustomLayout.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i, j                                 : integer;
+begin
+   writeln(t, '<table summary="Airport Custom Layout Properties">');
+   writeln(t, '<tr><th align="left">Direction</th><td>0x', intToHex(fDirection, 2), ' "', TableDirection[fDirection], '"</td></tr>');
+   writeln(t, '<tr><th align="left">MiniPic</th><td>0x', intToHex(fMiniPic, 2), ' (', fMiniPic, ')</td></tr>');
+   writeln(t, '<tr valign="top"><th align="left">Tiles</th><td>');
+   write(t, '<table summary="Airport Custom Layout" border="1" rules="all">');
+   if length(fTiles) > 0 then
+   begin
+      writeln(t, '<tr><th colspan="2" rowspan="2"></th><th colspan="', length(fTiles[0]), '">Y</th></tr><tr>');
+      for i := 0 to length(fTiles[0]) - 1 do write(t, '<th>', i, '</th>');
+      writeln(t, '</tr>');
+      writeln(t, '<tr><th rowspan="', length(fTiles), '">X</th>');
+      for i := 0 to length(fTiles) - 1 do
+      begin
+         if i <> 0 then write(t, '<tr>');
+         write(t, '<th align="right">', i, '</th>');
+         for j := 0 to length(fTiles[i]) - 1 do
+         begin
+            if fTiles[i, j] = $FF then write(t, '<td>(empty)</td>') else
+                                       write(t, '<td>0x', intToHex(fTiles[i, j], 2), ' (', fTiles[i, j], ')</td>');
+         end;
+         writeln(t, '</tr>');
+      end;
+   end;
+   writeln(t, '</table></td></tr></table>');
+end;
+
+constructor TAction0AirportFiniteStateMachine.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
+procedure readBlocks(var blocks: TByteSet; ps: TPseudoSpriteReader);
+var
+   block                                : byte;
+begin
+   blocks := [];
+   block := ps.getByte;
+   if block = $7E then
+   begin
+      repeat
+         block := ps.getByte;
+         if block <> $7F then include(blocks, block);
+      until (block = $7F) or (ps.bytesLeft <= 0);
+   end else include(blocks, block);
+end;
+var
+   i                                    : integer;
+begin
+   inherited create(action0, ps, ID, nr);
+   fPosition[0] := ps.getWord; // signed
+   fPosition[1] := ps.getWord; // signed
+   fPosition[2] := ps.getWord; // signed
+   fState := ps.getByte;
+   fFlags := ps.getWord;
+   fBlock := ps.getByte;
+   setLength(fCommands, ps.getByte);
+   for i := 0 to length(fCommands) - 1 do
+   with fCommands[i] do
+   begin
+      headingType := ps.getByte;
+      if headingType in [$7B..$7E] then headingSubType := ps.getByte;
+      readBlocks(reserveBlocks, ps);
+      readBlocks(releaseBlocks, ps);
+      nextPos := ps.getByte;
+   end;
+end;
+
+class function TAction0AirportFiniteStateMachine.itemCount(ps: TPseudoSpriteReader): integer;
+begin
+   result := ps.getByte;
+end;
+
+class function TAction0AirportFiniteStateMachine.moreItems(ps: TPseudoSpriteReader): boolean;
+begin
+   result := false; // use itemCount
+end;
+
+procedure TAction0AirportFiniteStateMachine.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   s                                    : string;
+   i, j                                 : integer;
+begin
+   writeln(t, '<a name="sprite', fAction0.spriteNr, 'id', fID, 'fsm', fNr, '"></a>');
+   writeln(t, '<table summary="Airport Finite State Machine" width="100%">');
+   writeln(t, '<colgroup><col width="100"><col width="*"></colgroup>');
+   writeln(t, '<tr><th align="left">Position</th><td>&lt;', fPosition[0], ', ', fPosition[1], ', ', fPosition[2], '&gt;</td></tr>');
+   case fState of
+      $00     : s := 'none';
+      $01..$24: s := 'Terminal ' + intToStr(fState - $01 + 1);
+      $25..$3C: s := 'Helipad ' + intToStr(fState - $25 + 1);
+      else      s := TableAirportStateHeading[fState];
+   end;
+   writeln(t, '<tr><th align="left">State</th><td>0x', intToHex(fState, 2), ' "', s, '"</td></tr>');
+   s := '';
+   if fFlags and $001 <> 0 then
+   begin
+      s := s + '"Set vehicle facing to ' + TableDirection[(fFlags shr 1) and $07] + '"';
+   end;
+   if fFlags and $010 <> 0 then
+   begin
+      if s <> '' then s := s + ', ';
+      s := s + '"No taxiing limit"';
+   end;
+   if fFlags and $020 <> 0 then
+   begin
+      if s <> '' then s := s + ', ';
+      s := s + '"Slow turn"';
+   end;
+   if fFlags and $040 <> 0 then
+   begin
+      if s <> '' then s := s + ', ';
+      s := s + '"Slow down for landing"';
+   end;
+   if fFlags and $080 <> 0 then
+   begin
+      if s <> '' then s := s + ', ';
+      s := s + '"Slow flight"';
+   end;
+   if fFlags and $100 <> 0 then
+   begin
+      if s <> '' then s := s + ', ';
+      s := s + '"Check for callbacks"';
+   end;
+   if s <> '' then s := ' (' + s + ')';
+   writeln(t, '<tr><th align="left">Flags</th><td>0x', intToHex(fFlags, 4), s, '</td></tr>');
+   writeln(t, '<tr><th align="left">Block</th><td>0x', intToHex(fBlock, 2), '</td></tr>');
+   writeln(t, '<tr valign="top"><th align="left">Commands</th><td>');
+   writeln(t, '<table summary="Commands" border="1" rules="all" width="100%">');
+   writeln(t, '<colgroup><col width="*" span="3"><col width="80"></colgroup>');
+   writeln(t, '<tr valign="top"><th>Heading</th><th>Reserve blocks</th><th>Release blocks</th><th>Next Position</th></tr>');
+   for i := 0 to length(fCommands) - 1 do
+   with fCommands[i] do
+   begin
+      case headingType of
+         $00     : s := 'all';
+         $01..$24: s := 'Terminal ' + intToStr(headingType - $01 + 1);
+         $25..$3C: s := 'Helipad ' + intToStr(headingType - $25 + 1);
+         $60..$6F: s := 'Runway ' + intToStr(headingType - $60 + 1);
+         $70..$77: s := 'Hangar ' + intToStr(headingType - $70 + 1);
+         $7B:      begin
+                      s := 'Set heading to 0x' + intToHex(headingSubType, 2) + ' ';
+                      case headingSubType of
+                         $01..$24: s := s + 'Terminal ' + intToStr(headingSubType - $01 + 1);
+                         $25..$3C: s := s + 'Helipad ' + intToStr(headingSubType - $25 + 1);
+                         $60..$6F: s := s + 'Runway ' + intToStr(headingSubType - $60 + 1);
+                         $70..$77: s := s + 'Hangar ' + intToStr(headingSubType - $70 + 1);
+                         else      s := s + TableAirportStateHeading[headingSubType];
+                      end;
+                   end;
+         $7C:      s := 'Choose runway with length >= ' + intToStr(headingSubType);
+         $7D:      s := 'Choose helipad from group ' + intToStr(headingSubType);
+         $7E:      s := 'Choose terminal from group ' + intToStr(headingSubType);
+         else      s := TableAirportStateHeading[headingType];
+      end;
+      write(t, '<tr valign="top"><td>0x', intToHex(headingType, 2));
+      if headingType in [$7B..$7E] then write(t, ' 0x', intToHex(headingSubType, 2));
+      writeln(t, ' "', s, '"</td>');
+
+      if $00 in reserveBlocks then s := '(none)' else
+      begin
+         s := '';
+         for j := $01 to $7A do
+            if j in reserveBlocks then
+            begin
+               if s <> '' then s := s + ', ';
+               s := s + '0x' + intToHex(j, 2);
+               case j of
+                  $01..$24: s := s + ' (Terminal ' + intToStr(j - $01 + 1) + ')';
+                  $25..$3C: s := s + ' (Helipad ' + intToStr(j - $25 + 1) + ')';
+               end;
+            end;
+         if s = '' then s := '(none)';
+      end;
+      if $7D in reserveBlocks then s := s + ' (hold till free)';
+      writeln(t, '<td>', s, '</td>');
+
+      if $FF in releaseBlocks then s := s + '(all)' else
+      begin
+         s := '';
+         for j := $01 to $7A do
+            if j in releaseBlocks then
+            begin
+               if s <> '' then s := s + ', ';
+               s := s + '0x' + intToHex(j, 2);
+               case j of
+                  $01..$24: s := s + ' (Terminal ' + intToStr(j - $01 + 1) + ')';
+                  $25..$3C: s := s + ' (Helipad ' + intToStr(j - $25 + 1) + ')';
+               end;
+            end;
+         if s = '' then s := '(none)';
+      end;
+      writeln(t, '<td>', s, '</td>');
+
+      writeln(t, '<td>', printLinkBegin('content', 'content', 'nfo.html#sprite' + intToStr(fAction0.spriteNr) + 'id' + intToStr(fID) + 'fsm' + intToStr(nextPos)), '0x', intToHex(nextPos, 2), ' (', nextPos, ')</a></td></tr>');
+   end;
+   writeln(t, '</table></td></tr></table>');
+end;
+
+
+constructor TAction0AirportDepotLocation.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
+begin
+   inherited create(action0, ps, ID, nr);
+   fPosition[0] := ps.getByte;
+   fPosition[1] := ps.getByte;
+   fDepotNr := ps.getByte;
+end;
+
+class function TAction0AirportDepotLocation.itemCount(ps: TPseudoSpriteReader): integer;
+begin
+   result := ps.getByte;
+end;
+
+class function TAction0AirportDepotLocation.moreItems(ps: TPseudoSpriteReader): boolean;
+begin
+   result := false; // use itemCount
+end;
+
+procedure TAction0AirportDepotLocation.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   writeln(t, '<table summary="Airport Depot Location">');
+   writeln(t, '<tr><th align="left">X</th><td>', fPosition[0], '</td></tr>');
+   writeln(t, '<tr><th align="left">Y</th><td>', fPosition[1], '</td></tr>');
+   writeln(t, '<tr><th align="left">Depot Nr</th><td>0x', intToHex(fDepotNr,2), ' (', fDepotNr, ')</td></tr>');
+   writeln(t, '</table>');
+end;
+
+
+constructor TAction0AirportPlacementMask.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
+var
+   i, j, n, m                           : integer;
+begin
+   inherited create(action0, ps, ID, nr);
+   fDirection := ps.getByte;
+   n := ps.getByte;
+   m := ps.getByte;
+   setLength(fFlags, n, m);
+   for i := 0 to m - 1 do
+   for j := 0 to n - 1 do fFlags[j, i] := ps.getByte;
+end;
+
+class function TAction0AirportPlacementMask.itemCount(ps: TPseudoSpriteReader): integer;
+begin
+   result := ps.getByte;
+end;
+
+class function TAction0AirportPlacementMask.moreItems(ps: TPseudoSpriteReader): boolean;
+begin
+   result := false; // use itemCount
+end;
+
+procedure TAction0AirportPlacementMask.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i, j                                 : integer;
+begin
+   writeln(t, '<table summary="Airport Placement Mask Properties">');
+   writeln(t, '<tr><th align="left">Direction</th><td>0x', intToHex(fDirection, 2), ' "', TableDirection[fDirection], '"</td></tr>');
+   writeln(t, '<tr valign="top"><th align="left">Height</th><td>');
+   write(t, '<table summary="Airport Placement Mask" border="1" rules="all">');
+   if length(fFlags) > 0 then
+   begin
+      writeln(t, '<tr><th colspan="2" rowspan="2"></th><th colspan="', length(fFlags[0]), '">Y</th></tr><tr>');
+      for i := 0 to length(fFlags[0]) - 1 do write(t, '<th>', i, '</th>');
+      writeln(t, '</tr>');
+      writeln(t, '<tr><th rowspan="', length(fFlags), '">X</th>');
+      for i := 0 to length(fFlags) - 1 do
+      begin
+         if i <> 0 then write(t, '<tr>');
+         writeln(t, '<th align="left">', i, '</th>');
+         for j := 0 to length(fFlags[i]) - 1 do
+         begin
+            write(t, '<td>', fFlags[i, j] and 7);
+            if fFlags[i,j] and $80 <> 0 then write(t, ' (on water)');
+            writeln(t, '</td>');
+         end;
+         writeln(t, '</tr>');
+      end;
+   end;
+   writeln(t, '</table></td></tr></table>');
+end;
+
+
 constructor TAction0.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i, j, k, tmp                         : integer;
@@ -723,6 +1093,16 @@ begin
                              $0A: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstID + j, TAction0IndustryLayout);
                              $15: fData[i, j].special := TAction0ByteArray.create(self, ps); // Industry, random sound effects
                              else assert(false, 'TableAction0Industries corrupted');
+                          end;
+               FAirport : case prop of
+                             $09: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstId + j, TAction0StationSpriteLayout);
+                             $0E: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstId + j, TAction0AirportCustomLayout);
+                             $1A: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstId + j, TAction0AirportFiniteStateMachine);
+                             $1D: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstId + j, TAction0AirportDepotLocation);
+                             $1E: fData[i, j].special := TAction0ByteArray.create(self, ps); // Terminal groups
+                             $1F: fData[i, j].special := TAction0ByteArray.create(self, ps); // Helipad groups
+                             $23: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstId + j, TAction0AirportPlacementMask);
+                             else assert(false, 'TableAction0Airports corrupted');
                           end;
                else       assert(false, 'TableAction0xxx corrupted');
             end;

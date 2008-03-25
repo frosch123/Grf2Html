@@ -351,10 +351,14 @@ begin
 
    case fFeature of
       FStation: case result and $FF00 of
-                   $C500: result := result and $FF; // Station Class Name, Station Name // TODO: Does Station Class Name 0xC4xx fit here?
+                   $C500: result := result and $FF; // Station Name // TODO: Does Station Class Name 0xC4xx fit here?
                    else   result := -1;
                 end;
       FHouse:   if result and $FF00 = $C900 then result := result and $FF else result := -1;
+      FAirport: case result and $FF00 of
+                   $CE00: result := result and $FF; // Airport Name // TODO: Does Airport Class Name 0xCDxx fit here?
+                   else   result := -1;
+                end;
       else      result := -1;
    end;
 end;

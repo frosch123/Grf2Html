@@ -1,0 +1,8 @@
+00=north
+01=north-east
+02=east
+03=south-east
+04=south
+05=south-west
+06=west
+07=north-west
