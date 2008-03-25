@@ -69,14 +69,16 @@ type
       fParamDesc        : string;
       fDescription      : string;
       fFromCommandLine  : boolean;
+      fExactMatch       : boolean;
+      function splitCommandLine(paramNr: integer): string;
    public
-      constructor create(commandLine, iniSection, iniKey, verboseName, paramdesc, description: string);
+      constructor create(commandLine, iniSection, iniKey, verboseName, paramdesc, description: string; exactMatch: boolean = true);
+      function isCommandLine(paramNr: integer): boolean; virtual;
       function readFromCommandLine(paramNr: integer): integer; virtual;
       procedure readFromIni(ini: TCustomIniFile); virtual; abstract;
       procedure saveToIni(ini: TCustomIniFile); virtual; abstract;
       procedure printVerbose; virtual;
       procedure printUsage;
-      property commandLineName : string read fCommandLine;
    end;
 
    TGrf2HtmlOptionSetOnly = class(TGrf2HtmlOption)
@@ -145,7 +147,7 @@ type
       procedure printVerbose; override;
    end;
 
-constructor TGrf2HtmlOption.create(commandLine, iniSection, iniKey, verboseName, paramdesc, description: string);
+constructor TGrf2HtmlOption.create(commandLine, iniSection, iniKey, verboseName, paramdesc, description: string; exactMatch: boolean = true);
 begin
    inherited create;
    fCommandLine := commandLine;
@@ -155,13 +157,34 @@ begin
    fParamDesc := paramdesc;
    fDescription := description;
    fFromCommandLine := false;
+   fExactMatch := exactMatch;
+end;
+
+function TGrf2HtmlOption.splitCommandLine(paramNr: integer): string;
+begin
+   result := paramStr(paramNr);
+   assert(compareText(copy(result, 1, length(fCommandLine)), fCommandLine) = 0);
+   delete(result, 1, length(fCommandLine));
+   result := trim(result);
+end;
+
+function TGrf2HtmlOption.isCommandLine(paramNr: integer): boolean;
+var
+   s                                    : string;
+begin
+   result := false;
+   if fCommandLine = '' then exit;
+   if paramNr > paramCount then exit;
+   s := paramStr(paramNr);
+   if fExactMatch and (length(s) <> length(fCommandLine)) then exit;
+   result := compareText(fCommandLine, copy(s, 1, length(fCommandLine))) = 0;
 end;
 
 function TGrf2HtmlOption.readFromCommandLine(paramNr: integer): integer;
 begin
    if fFromCommandLine then writeln(fCommandLine, ' multiple times defined. Using last one.');
    fFromCommandLine := true;
-   result := 0;
+   result := 1;
 end;
 
 procedure TGrf2HtmlOption.printUsage;
@@ -204,9 +227,8 @@ end;
 
 function TGrf2HtmlOptionSetOnly.readFromCommandLine(paramNr: integer): integer;
 begin
-   inherited readFromCommandLine(paramNr);
+   result := inherited readFromCommandLine(paramNr);
    fValue^ := true;
-   result := 0;
 end;
 
 procedure TGrf2HtmlOptionSetOnly.readFromIni(ini: TCustomIniFile);
@@ -235,7 +257,7 @@ end;
 
 constructor TGrf2HtmlOptionInteger.create(var value: integer; commandLine, iniSection, iniKey, verboseName: string; default, min, max: integer; paramdesc, description: string);
 begin
-   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description);
+   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description, false);
    fValue := @value;
    fValue^ := default;
    fMin := min;
@@ -245,13 +267,19 @@ end;
 function TGrf2HtmlOptionInteger.readFromCommandLine(paramNr: integer): integer;
 var
    v                                    : integer;
+   s                                    : string;
 begin
-   result := 1;
-   if paramNr > paramcount then v := low(v) else v := strToIntDef(paramStr(paramNr), low(v));
+   s := splitCommandLine(paramNr);
+   if s <> '' then result := 1 else
+   begin
+      result := 2;
+      if paramNr + 1 > paramcount then s := '' else s := paramStr(paramNr + 1);
+   end;
+   if s = '' then v := low(v) else v := strToIntDef(paramStr(paramNr), low(v));
    if v = low(v) then
    begin
       write(fCommandLine, ': ', fParamDesc, ' expected.');
-      if paramNr <= paramCount then writeln(' "', paramStr(paramNr), '" found.') else writeln;
+      if paramNr <= paramCount then writeln(' "', s, '" found.') else writeln;
       result := -1;
       exit;
    end;
@@ -315,14 +343,14 @@ end;
 
 function TGrf2HtmlOptionString.readFromCommandLine(paramNr: integer): integer;
 begin
-   result := 1;
+   result := 2;
    if paramNr > paramcount then
    begin
       writeln(fCommandLine, ': ', fParamDesc, ' expected.');
       result := -1;
       exit;
    end;
-   fValue^ := paramStr(paramNr);
+   fValue^ := paramStr(paramNr + 1);
    inherited readFromCommandLine(paramNr);
 end;
 
@@ -352,7 +380,7 @@ end;
 
 constructor TGrf2HtmlOptionEnum.create(var value: integer; commandLine, iniSection, iniKey, verboseName: string; default: integer; paramdesc, description: string);
 begin
-   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description);
+   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description, false);
    fValue := @value;
    fValue^ := default;
    fEnums := TStringList.create;
@@ -369,8 +397,12 @@ var
    s                                    : string;
    v, i                                 : integer;
 begin
-   result := 1;
-   if paramNr > paramcount then s := '' else s := paramStr(paramNr);
+   s := splitCommandLine(paramNr);
+   if s <> '' then result := 1 else
+   begin
+      result := 2;
+      if paramNr > paramcount then s := '' else s := paramStr(paramNr + 1);
+   end;
    if s <> '' then v := fEnums.indexOf(s) else v := -1;
    if v >= 0 then fValue^ := v else
    begin
@@ -457,7 +489,7 @@ end;
 
 constructor TGrf2HtmlOptionRange.create(var l, h: integer; commandLine, iniSection, iniKey, verboseName: string; defl, defh: integer; paramdesc, description: string);
 begin
-   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description);
+   inherited create(commandLine, iniSection, iniKey, verboseName, paramDesc, description, false);
    fLow := @l;
    fHigh := @h;
    fLow^ := defl;
@@ -470,8 +502,12 @@ var
    i                                    : integer;
    v1, v2                               : integer;
 begin
-   result := 1;
-   if paramNr > paramcount then s := '' else s := paramStr(paramNr);
+   s := splitCommandLine(paramNr);
+   if s <> '' then result := 1 else
+   begin
+      result := 2;
+      if paramNr > paramcount then s := '' else s := paramStr(paramNr + 1);
+   end;
    i := pos(':', s);
    if i = 0 then
    begin
@@ -548,7 +584,7 @@ begin
    options.add(TGrf2HtmlOptionSetOnly.create(printUsage           , '-h'        , ''        , ''          , ''                                    , ''       , 'Prints this message and exits.'));
    options.add(TGrf2HtmlOptionString .create(iniName              , '--ini'     , ''        , ''          , 'Inifile'    , s                      , '<file>' , 'Reads default values from <file>. Default "' + extractFileName(s) + '".'));
    options.add(TGrf2HtmlOptionSetOnly.create(settings.suppressData, '--nodata'  , ''        , ''          , 'Skip data'                           , ''       , 'Skip generation of non-html data files'#13#10'(images, binary included data, ...).'));
-   options.add(TGrf2HtmlOptionString .create(settings.outputPath  , '-o'        , 'Grf2Html', 'OutputPath', 'Output path', ''                     , '<path>' , 'Output files to <path>' + directorySeparator + '<file>' + directorySeparator + '...'#13#10'If empty use path of the inputfile.'));
+   options.add(TGrf2HtmlOptionString .create(settings.outputPath  , '-o'        , 'Grf2Html', 'OutputPath', 'Output path', ''                     , '<path>' , 'Output files to <path>' + directorySeparator + '<inputfile>' + directorySeparator + '...'#13#10'If empty use path of the inputfile.'));
    options.add(TGrf2HtmlOptionPalette.create(settings.palette));
    options.add(TGrf2HtmlOptionRange  .create(settings.range[0], settings.range[1], '-r', '' , ''          , 'Range'      , 0, high(integer)       , '<first>:<last>', 'Only generate output for a range of spritenumbers.'));
    options.add(TGrf2HtmlOptionRange  .create(settings.update[0], settings.update[1], '-u', '' , ''        , 'Updaterange', 0, high(integer)       , '<first>:<last>', 'Only generate non-html data files in a range of sprites.'#13#10'Behaves like ''--nodata'' for sprites outside of the range.'));
@@ -588,14 +624,18 @@ begin
    while nr <= paramCount do
    begin
       s := paramStr(nr);
-      inc(nr);
+      if s = '' then
+      begin
+         inc(nr);
+         continue;
+      end;
       if s[1] = '-' then
       begin
          cnt := -1;
          for i := 0 to options.count - 1 do
          begin
             o := options[i] as TGrf2HtmlOption;
-            if compareText(o.commandLineName, s) = 0 then
+            if o.isCommandLine(nr) then
             begin
                cnt := o.readFromCommandLine(nr);
                if cnt < 0 then halt;
@@ -608,13 +648,17 @@ begin
             halt;
          end;
          nr := nr + cnt;
-      end else result.add(s);
+      end else
+      begin
+         result.add(s);
+         inc(nr);
+      end;
    end;
 
    if printUsage or ((result.count = 0) and not writeIni and not verbose) then
    begin
       writeln('Usage: ', extractFilename(paramStr(0)), ' [options] <inputfiles ...>');
-      writeln(' <inputfile ...>   Grfs to decode. Important: Encoded .grf (not .nfo).');
+      writeln(' <inputfiles ...>  Grfs to decode. Important: Encoded .grf (not .nfo).');
       writeln;
       writeln('Options:');
       for i := 0 to options.count - 1 do (options[i] as TGrf2HtmlOption).printUsage;
