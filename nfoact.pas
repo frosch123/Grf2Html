@@ -31,16 +31,15 @@ type
       function getNumStrings: integer;
       function getTextID(i: integer): integer;
       function getText(i: integer): string;
-      function getAssociatedID(i: integer): integer;
    public
       constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
       procedure secondPass; override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      function getAssociatedID(i: integer; out f: TFeature): integer; // Returns the "normal" feature-ID the text belongs to (e.g. vehicle text xx -> vehicle xx, station text C5xx -> station xx). -1 if none.
       property feature: TFeature read fFeature;
       property langID: byte read fLangID;
       property genericStrings: boolean read fGenericStrings;
       property numStrings: integer read getNumStrings;
-      property associatedID[i: integer]: integer read getAssociatedID; // Returns the "normal" feature-ID the text belongs to (e.g. vehicle text xx -> vehicle xx, station text C5xx -> station xx). -1 if none.
       property textID[i: integer]: integer read getTextID;
       property text[i: integer]: string read getText;
    end;
@@ -309,6 +308,7 @@ end;
 constructor TAction4.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
 var
    i, associated                        : integer;
+   f                                    : TFeature;
 begin
    inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $04);
@@ -324,8 +324,9 @@ begin
 
    for i := 0 to length(fStrings) - 1 do
    begin
-      associated := associatedID[i];
-      if associated >= 0 then newGrfFile.registerEntity(fFeature, associated, self);
+      associated := getAssociatedID(i, f);
+      if f <> fFeature then error('TextID 0x' + intToHex(textID[i], 4) + ' belongs to "' + TableFeature[f] + '". Ignoring given feature.');
+      if associated >= 0 then newGrfFile.registerEntity(f, associated, self);
    end;
 end;
 
@@ -344,22 +345,19 @@ begin
    if (i >= 0) and (i < length(fStrings)) then result := fStrings[i] else result := '';
 end;
 
-function TAction4.getAssociatedID(i: integer): integer;
+function TAction4.getAssociatedID(i: integer; var f: TFeature): integer;
 begin
+   f := fFeature;
    result := getTextID(i);
    if not fGenericStrings then exit;
 
-   case fFeature of
-      FStation: case result and $FF00 of
-                   $C500: result := result and $FF; // Station Name // TODO: Does Station Class Name 0xC4xx fit here?
-                   else   result := -1;
-                end;
-      FHouse:   if result and $FF00 = $C900 then result := result and $FF else result := -1;
-      FAirport: case result and $FF00 of
-                   $CE00: result := result and $FF; // Airport Name // TODO: Does Airport Class Name 0xCDxx fit here?
-                   else   result := -1;
-                end;
-      else      result := -1;
+   case result and $FF00 of
+      $C400: result := -1; // Station Class Name
+      $C500: begin f := FStation; result := result and $FF; end; // Station Name
+      $C900: begin f := FHouse;   result := result and $FF; end; // House Name
+      $CD00: result := -1; // Airport Class Name
+      $CE00: begin f := FAirport; result := result and $FF; end; // Airport Name
+      else   result := -1;
    end;
 end;
 
@@ -373,6 +371,7 @@ procedure TAction4.printHtml(var t: textFile; path: string; const settings: TGrf
 var
    s                                    : string;
    i, associated                        : integer;
+   f                                    : TFeature;
    a8                                   : TAction8;
 begin
    inherited printHtml(t, path, settings);
@@ -384,10 +383,10 @@ begin
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    for i := 0 to length(fStrings) - 1 do
    begin
-      associated := associatedID[i];
+      associated := getAssociatedID(i, f);
       if fGenericStrings then s := '0x' + intToHex(textID[i], 4) else s := '0x' + intToHex(textID[i], 2);
-      if (associated >= 0) and (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, associated] <> nil) then
-         s := newGrfFile.printEntityLinkBegin('content', fFeature, associated) + s +  '</a>';
+      if (associated >= 0) and (settings.entityFrame = boolYes) and (newGrfFile.entity[f, associated] <> nil) then
+         s := newGrfFile.printEntityLinkBegin('content', f, associated) + s +  '</a>';
       writeln(t, '<tr><th align="left">Text ', s, '</th><td>', formatTextPrintable(fStrings[i], true), '</td></tr>');
    end;
    writeln(t, '</table>');
