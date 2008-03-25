@@ -345,7 +345,7 @@ begin
    if (i >= 0) and (i < length(fStrings)) then result := fStrings[i] else result := '';
 end;
 
-function TAction4.getAssociatedID(i: integer; var f: TFeature): integer;
+function TAction4.getAssociatedID(i: integer; out f: TFeature): integer;
 begin
    f := fFeature;
    result := getTextID(i);

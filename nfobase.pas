@@ -837,7 +837,7 @@ begin
       if fSprites[p] <> s then fSprites.insert(p,s);
 end;
 
-procedure TSpriteSet.printHtml(srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings; singleLine: boolean);
+procedure TSpriteSet.printHtml(const srcFrame: string; var t: textFile; path: string; const settings: TGrf2HtmlSettings; singleLine: boolean);
 var
    i                                    : integer;
 begin
