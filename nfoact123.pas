@@ -150,7 +150,8 @@ type
 
    TRandomAction2 = class(TAction2)
    private
-      fRelated    : boolean;
+      fType       : (current, related, vehicleBackwards, vehicleForwards, vehicleAbsolute, vehicleChain);
+      fVehiclePos : byte; // only valid for vehicle*-type; 0 means register 0x100
       fTriggers   : byte;
       fAllTriggers: boolean;
       fRandBit    : integer;
@@ -161,7 +162,6 @@ type
    public
       constructor create(feature: TFeature; cargoID: integer; aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader; const action2Table: TAction2Table);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
-      property useRelated: boolean read fRelated;
       property allTriggersNeeded: boolean read fAllTriggers;
       property firstRandomBit: integer read fRandBit;
       property numRandomBits: integer read fRandCount;
@@ -396,7 +396,7 @@ begin
    feature := ps.getByte;
    ID := ps.getByte;
    case ps.peekByte of
-      $80, $83                    : result := TRandomAction2.create(feature, ID, aNewGrfFile, ps, action2Table);
+      $80, $83, $84               : result := TRandomAction2.create(feature, ID, aNewGrfFile, ps, action2Table);
       $81, $82, $85, $86, $89, $8A: result := TVarAction2.create(feature, ID, aNewGrfFile, ps, action2Table);
       else                          case feature of
                                        FHouse, FIndTile: result := THouseIndTileAction2.create(feature, ID, aNewGrfFile, ps, action1);
@@ -881,7 +881,21 @@ var
    i                                    : integer;
 begin
    inherited create(aNewGrfFile, ps.spriteNr, feature, cargoID);
-   fRelated := ps.getByte = $83;
+   case ps.getByte of
+      $80: fType := current;
+      $83: fType := related;
+      $84: begin
+              if (feature < FTrain) or (feature > FAircraft) then error('RandomAction2 type 0x84 is only valid for vehicles.');
+              case ps.peekByte and $C0 of
+                 $00: fType := vehicleBackwards;
+                 $40: fType := vehicleForwards;
+                 $80: fType := vehicleAbsolute;
+                 $C0: fType := vehicleChain;
+              end;
+              fVehiclePos := ps.getByte and $0F;
+           end;
+      else assert(false);
+   end;
    fAllTriggers := (ps.peekByte and $80) <> 0;
    fTriggers := ps.getByte and $7F;
    fRandBit := ps.getByte;
@@ -924,14 +938,28 @@ begin
    printLinkedFrom(t, path, settings);
    writeln(t, '<table summary="Properties"><tr><th align="left">Feature</th><td>0x', intToHex(fFeature, 2), ' "', TableFeature[fFeature], '"</td></tr>');
    writeln(t, '<tr><th align="left">CargoID</th><td>0x', intToHex(cargoID, 2), '</td></tr>');
-   if (fFeature >= low(TableAction0Features)) and (fFeature <= high(TableAction0Features)) then
-   begin
-      if fRelated then s := '0x83 "' + TableRelatedObject[fFeature] + '"' else
-                       s := '0x80 "' + TablePrimaryObject[fFeature] + '"';
-   end else
-   begin
-      if fRelated then s := '0x83 "related object"' else
-                       s := '0x80 "current object"';
+   case fType of
+      current: begin
+                  s := '0x80 "';
+                  if (fFeature >= low(TableAction0Features)) and
+                     (fFeature <= high(TableAction0Features)) then s := s + TablePrimaryObject[fFeature] + '"' else
+                                                                   s := s + 'current object"';
+               end;
+      related: begin
+                  s := '0x83 "';
+                  if (fFeature >= low(TableAction0Features)) and
+                     (fFeature <= high(TableAction0Features)) then s := s + TableRelatedObject[fFeature] + '"' else
+                                                                   s := s + 'related object"';
+               end;
+      else     begin
+                  if fVehiclePos = 0 then s := '<register 0x100>' else s := intToStr(fVehiclePos);
+                  case fType of
+                     vehicleBackwards: s := '0x84 0x' + intToHex(fVehiclePos      , 2) + ' "vehicle at position ' + s + ' after current vehicle"';
+                     vehicleForwards:  s := '0x84 0x' + intToHex(fVehiclePos + $40, 2) + ' "vehicle at position ' + s + ' before current vehicle"';
+                     vehicleAbsolute:  s := '0x84 0x' + intToHex(fVehiclePos + $80, 2) + ' "vehicle at position ' + s + ' from front"';
+                     vehicleChain:     s := '0x84 0x' + intToHex(fVehiclePos + $C0, 2) + ' "vehicle at position ' + s + ' after first vehicle in current chain of vehicles with same ID"';
+                  end;
+               end;
    end;
    writeln(t, '<tr><th align="left">Trigger source </th><td>', s, '</td></tr>');
    if fAllTriggers then s := 'All of' else s := 'Any of';

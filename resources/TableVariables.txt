@@ -31,6 +31,7 @@
 1F=Locale-dependent settings
 20=snow line height
 21=OpenTTD version
+22=Difficulty level
 5F=Feature-specific random triggers
 7C=PersistentStorage
 7D=TemporalStorage
