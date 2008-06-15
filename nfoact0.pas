@@ -142,6 +142,19 @@ type
       tile             : word;
    end;
 
+   TAction0GrfIDOverrideForEngines = class(TAction0SpecialProperty)
+   private
+      fSrc, fDest                 : longword;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader);
+      procedure printHtmlBegin(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; numIDs: integer); override;
+      procedure printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      procedure printHtmlEnd(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      property SrcID: longword read fSrc;
+      property DestID: longword read fDest;
+   end;
+
    TAction0IndustryLayout = class(TAction0SpecialPropertyArrayItem)
    private
       fTiles              : array of TIndustryLayoutTile;
@@ -617,6 +630,35 @@ begin
    end;
    writeln(t, '</table>');
 end;
+
+
+constructor TAction0GrfIDOverrideForEngines.create(action0: TAction0; ps: TPseudoSpriteReader);
+begin
+   inherited create(action0);
+   fSrc := ps.getDWord;
+   fDest := ps.getDWord;
+end;
+
+procedure TAction0GrfIDOverrideForEngines.printHtmlBegin(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; numIDs: integer);
+begin
+   writeln(t, '<br><b>', propName, '</b><table border="1" rules="all"><tr><th>Engines from</th><th>override engines in</th></tr>');
+end;
+
+procedure TAction0GrfIDOverrideForEngines.printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string);
+begin
+   // nothing
+end;
+
+procedure TAction0GrfIDOverrideForEngines.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   writeln(t, '<tr><td>', grfID2Str(fSrc), '</td><td>', grfID2Str(fDest), '</td></tr>');
+end;
+
+procedure TAction0GrfIDOverrideForEngines.printHtmlEnd(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   writeln(t, '</table>');
+end;
+
 
 constructor TAction0IndustryLayout.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
 var
@@ -1114,11 +1156,14 @@ begin
                              // Houses, cargo acceptance watch list
                              fData[i, j].special := TAction0ByteArray.create(self, ps);
                           end else assert(false, 'TableAction0Houses corrupted');
-               FGlobal  : if prop = $10 then
-                          begin
-                             if fFirstID + j <> 0 then error('Snow line height table is only valid for ID 0');
-                             fData[i, j].special := TAction0SnowlineHeight.create(self, ps);
-                          end else assert(false, 'TableAction0Global corrupted');
+               FGlobal  : case prop of
+                             $10: begin
+                                     if fFirstID + j <> 0 then error('Snow line height table is only valid for ID 0');
+                                     fData[i, j].special := TAction0SnowlineHeight.create(self, ps);
+                                  end;
+                             $11: fData[i, j].special := TAction0GrfIDOverrideForEngines.create(self, ps);
+                             else assert(false, 'TableAction0Global corrupted');
+                          end;
                FIndustry: case prop of
                              $0A: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstID + j, TAction0IndustryLayout);
                              $15: fData[i, j].special := TAction0ByteArray.create(self, ps); // Industry, random sound effects
