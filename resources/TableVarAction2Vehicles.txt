@@ -7,6 +7,7 @@
 46=Motion counter
 47=Vehicle cargo info
 48=Vehicle type information
+49=Year of construction (long format)
 60=Count Veh.ID occurence
 80=Vehicle class
 81=Vehicle subclass

@@ -3,6 +3,8 @@
 42=Waiting cargo #3
 43=Manhattan distance of closest dry/land tile
 44=Layout number
+45=Player info
+46=Date when industry was built (long format)
 60=Get industry tile ID at offset
 61=Get random tile bits at offset
 62=Land info of nearby tiles

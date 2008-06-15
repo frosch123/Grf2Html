@@ -318,7 +318,12 @@ begin
    fGenericStrings := (fLangID and $80) <> 0;
    fLangID := fLangID and $7F;
    setLength(fStrings, ps.getByte);
-   if fGenericStrings then fFirstString := ps.getWord else fFirstString := ps.getByte;
+   if fGenericStrings then fFirstString := ps.getWord else
+   begin
+      if (fFeature >= FTrain) and (fFeature <= FAircraft) then fFirstString := ps.getExtByte else
+                                                               fFirstString := ps.getByte;
+   end;
+
    for i := 0 to length(fStrings) - 1 do fStrings[i] := ps.getString;
    testSpriteEnd(ps);
 
@@ -384,7 +389,8 @@ begin
    for i := 0 to length(fStrings) - 1 do
    begin
       associated := getAssociatedID(i, f);
-      if fGenericStrings then s := '0x' + intToHex(textID[i], 4) else s := '0x' + intToHex(textID[i], 2);
+      if fGenericStrings or ((fFeature >= FTrain) and (fFeature <= FAircraft)) then s := '0x' + intToHex(textID[i], 4) else
+                                                                                    s := '0x' + intToHex(textID[i], 2);
       if (associated >= 0) and (settings.entityFrame = boolYes) and (newGrfFile.entity[f, associated] <> nil) then
          s := newGrfFile.printEntityLinkBegin('content', f, associated) + s +  '</a>';
       writeln(t, '<tr><th align="left">Text ', s, '</th><td>', formatTextPrintable(fStrings[i], true), '</td></tr>');

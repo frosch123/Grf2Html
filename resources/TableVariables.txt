@@ -32,6 +32,8 @@
 20=snow line height
 21=OpenTTD version
 22=Difficulty level
+23=Current date (long format)
+24=Current year (long format)
 5F=Feature-specific random triggers
 7C=PersistentStorage
 7D=TemporalStorage

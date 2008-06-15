@@ -23,4 +23,5 @@
 1E=4H@Accepted cargo types
 1F=1@Minimum life span
 20=*@Cargo acceptance watch list
-
+21=2@Year (long format) of minimum appearance
+22=2@Year (long format) of maximum appearance

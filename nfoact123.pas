@@ -172,7 +172,7 @@ type
    TAction3 = class(TNewGrfSprite)
    private
       fFeature   : TFeature;
-      fFeatID    : array of byte;
+      fFeatID    : array of integer;
       fCargoBit  : array of byte;
       fDest      : array of TAction2Dest;
       fDefault   : TAction2Dest;
@@ -998,7 +998,13 @@ begin
    tmp := ps.getByte;
    fLivery := (tmp and $80) <> 0;
    setLength(fFeatID, tmp and $7F);
-   for i := 0 to length(fFeatID) - 1 do fFeatID[i] := ps.getByte;
+   if (fFeature >= FTrain) and (fFeature <= FAircraft) then
+   begin
+      for i := 0 to length(fFeatID) - 1 do fFeatID[i] := ps.getExtByte;
+   end else
+   begin
+      for i := 0 to length(fFeatID) - 1 do fFeatID[i] := ps.getByte;
+   end;
    tmp := ps.getByte;
    setLength(fCargoBit, tmp);
    setLength(fDest, tmp);
@@ -1060,7 +1066,13 @@ begin
       s := '';
       for i := 0 to length(fFeatID) - 1 do
       begin
-         s2 := '0x' + intToHex(fFeatID[i], 2);
+         if (fFeature >= FTrain) and (fFeature <= FAircraft) then
+         begin
+            s2 := '0x' + intToHex(fFeatID[i], 4);
+         end else
+         begin
+            s2 := '0x' + intToHex(fFeatID[i], 2);
+         end;
          if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, fFeatID[i]] <> nil) then s2 := newGrfFile.printEntityLinkBegin('content', fFeature, fFeatID[i]) + s2 + '</a> ';
          s := s + s2;
       end;
