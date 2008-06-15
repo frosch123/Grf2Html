@@ -1,5 +1,5 @@
 (* This file is part of Grf2Html.
- * Copyright 2007 by Christoph Elsenhans.
+ * Copyright 2007-2008 by Christoph Elsenhans.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,11 @@ type
       fAction0             : TAction0;
    public
       constructor create(action0: TAction0);
+      procedure printHtmlBegin(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; numIDs: integer); virtual;
+      procedure printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string); virtual;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual; abstract;
+      procedure printHtmlPost(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual;
+      procedure printHtmlEnd(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual;
    end;
 
    TAction0SpecialPropertyArrayItem = class(TAction0SpecialProperty)
@@ -63,6 +67,7 @@ type
       function getSnowline(month, day: integer): byte;
    public
       constructor create(action0: TAction0; ps: TPseudoSpriteReader);
+      procedure printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       property snowline[month, day: integer]: byte read getSnowline; // month and day start with 0
    end;
@@ -254,6 +259,26 @@ begin
    fAction0 := action0;
 end;
 
+procedure TAction0SpecialProperty.printHtmlBegin(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; numIDs: integer);
+begin
+   // nothing
+end;
+
+procedure TAction0SpecialProperty.printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string);
+begin
+   writeln(t, '<br><b>', propName, ' - ', ID, '</b><br>');
+end;
+
+procedure TAction0SpecialProperty.printHtmlPost(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   // nothing
+end;
+
+procedure TAction0SpecialProperty.printHtmlEnd(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   // nothing
+end;
+
 constructor TAction0SpecialPropertyArrayItem.create(action0: TAction0; ps: TPseudoSpriteReader; ID, nr: integer);
 begin
    inherited create(action0);
@@ -333,6 +358,11 @@ begin
    result := fSnowline[month, day];
 end;
 
+procedure TAction0SnowlineHeight.printHtmlPre(var t: textFile; path: string; const settings: TGrf2HtmlSettings; const propName: string; const ID: string);
+begin
+   // nothing
+end;
+
 procedure TAction0SnowlineHeight.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
 const
    months                               : array[0..11] of string = ('January', 'February', 'March',
@@ -344,7 +374,7 @@ var
    i, j                                 : integer;
 begin
    // TODO this breaks all tables
-   write(t, '<b>SnowLineHeight Table</b><table summary="Property value" border="1" rules="all"><tr><th>Month</th>');
+   write(t, '<br><b>SnowLineHeight Table</b><table summary="Property value" border="1" rules="all"><tr><th>Month</th>');
    for i := 0 to 31 do write(t, '<th>', i + 1, '.</th>');
    writeln(t, '</tr>');
    for i := 0 to 11 do
@@ -561,7 +591,7 @@ var
    i, j, k                              : integer;
    s                                    : string;
 begin
-   writeln(t, '<b>BridgeLayout:</b><table summary="Property value" width="100%" rules="none">');
+   writeln(t, '<table summary="Property value" width="100%" rules="none">');
    for i := 0 to length(fTables) - 1 do
    begin
       if tableNr[i] in [0..6] then s := tableNames[tableNr[i]] else s := 'TableNr out of range';
@@ -1262,13 +1292,16 @@ begin
          if fData[j, 0].typ = a0special then
          begin
             s := getPropFromTable(fProps[j], s2);
+            fData[j, 0].special.printHtmlBegin(t, path, settings, s, fNumIDs);
             for i := 0 to fNumIDs - 1 do
             begin
                s2 := 'ID 0x' + intToHex(fFirstID + i, len) + ' (' + intToStr(fFirstID + i) + ')';
                if (settings.entityFrame = boolYes) and (newGrfFile.entity[fFeature, fFirstId + i] <> nil) then s2 := newGrfFile.printEntityLinkBegin('content', fFeature, fFirstId + i) + s2 + '</a>';
-               writeln(t, '<br><b>', s, ' - ', s2, '</b><br>');
+               fData[j, i].special.printHtmlPre(t, path, settings, s, s2);
                fData[j, i].special.printHtml(t, path, settings);
+               fData[j, i].special.printHtmlPost(t, path, settings);
             end;
+            fData[j, 0].special.printHtmlEnd(t, path, settings);
          end;
       end;
    end;
