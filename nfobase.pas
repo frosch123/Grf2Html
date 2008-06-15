@@ -1,5 +1,5 @@
 (* This file is part of Grf2Html.
- * Copyright 2007 by Christoph Elsenhans.
+ * Copyright 2007-2008 by Christoph Elsenhans.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.5';
-   dataVersion                          : string = '26th March 2008';
+   dataVersion                          : string = '12th June 2008';
 
    FTrain                               = $00;
    FRoadVeh                             = $01;
