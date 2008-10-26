@@ -632,14 +632,26 @@ begin
    if fDuringInit then s := 'yes' else s := 'no';
    writeln(t, '<tr><th align="left">Process during initialization</th><td>', s, '</td></tr>');
    s := TableActionBSeverity[fSeverity, 0];
-   s2 := TableActionBSeverity[fSeverity, 1];
+   s3 := TableActionBSeverity[fSeverity, 1];
    writeln(t, '<tr><th align="left">Severity</th><td>0x', intToHex(fSeverity, 2), ' "', s, '"</td></tr>');
    if newGrfFile = nil then a8 := nil else a8 := newGrfFile.action8;
    writeln(t, '<tr><th align="left">Language</th><td>0x', intToHex(fLangID, 2), getLanguageName(a8, fLangID), '</td></tr>');
    if fMsgID = $FF then s := ' "custom message"' else s := ' "built-in message"';
    writeln(t, '<tr><th align="left">MessageID</th><td>0x', intToHex(fMsgID, 2), s, '</td></tr>');
-   s2 := s2 + ' ' + fMsg;
-   s2 := formatTextPrintable(s2, true);
+
+   s2 := formatTextPrintable(fMsg, true);
+   if s3 <> '' then
+   begin
+      // TODO: s2 may start with "<UTF-8>".
+      //       Though unicode is applied correctly to the single string parts,
+      //       the unicode control code looks a bit missplaced in the output.
+      //       What to do with it?
+
+      // concatenate strings s3 + s2, but do not double "
+      s3 := '"' + s3 + ' ';
+      if (length(s2) = 0) or (s2[1] <> '"') then s3 := s3 + '" ' else delete(s2, 1, 1);
+      s2 := s3 + s2;
+   end;
 
    // Insert <filename> field
    s2 := stringReplace(s2, '&lt;0x80 ' + TableStringCode[$80] + '&gt;', '&lt;filename&gt;', []);
