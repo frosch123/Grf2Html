@@ -10,3 +10,4 @@
 62=Land info for nearby tiles
 63=Current animation frame of nearby house tiles
 64=Cargo acceptance history of nearby stations
+65=Distance of nearest house matching a given criteria

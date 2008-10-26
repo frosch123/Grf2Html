@@ -149,8 +149,8 @@ const
       (name:'TableVarAction2Canals'       ; typ:TSingleColumnTable; table:@TableVarAction2Features[FCanal]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FCanal]),
 
-      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FBridge]),
-      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FBridge]),
+      (name:'TableVarAction2Bridges'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FBridge]),
+      (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FBridge]),
 
       (name:'TableVarAction2Houses'       ; typ:TSingleColumnTable; table:@TableVarAction2Features[FHouse]),
       (name:'TableVarAction2Towns'        ; typ:TSingleColumnTable; table:@TableVarAction2Related[FHouse]),
@@ -176,7 +176,7 @@ const
       (name:'TableVarAction2Signals'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FSignal]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FSignal]),
 
-      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Features[FObject]),
+      (name:'TableVarAction2Objects'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FObject]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FObject]),
 
       (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FTrain]),

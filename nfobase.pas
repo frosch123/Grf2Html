@@ -22,7 +22,7 @@ uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.5';
-   dataVersion                          : string = '12th June 2008';
+   dataVersion                          : string = '25th October 2008';
 
    FTrain                               = $00;
    FRoadVeh                             = $01;
@@ -1098,6 +1098,9 @@ begin
                                           if i + 2 <= length(s) then tmp2 := ord(s[i + 2]) else tmp2 := 0;
                                           result := result + ' unprint ' + intToStr(tmp2) + ' characters&gt;';
                                        end;
+                                  $06: result := result + ' byte [hex]&gt;';
+                                  $07: result := result + ' word [hex]&gt;';
+                                  $08: result := result + ' dword [hex]&gt;';
                              else      result := result + ' unknown&gt;';
                           end;
                        end;

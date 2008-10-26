@@ -1,4 +1,9 @@
 08=4S@Class ID
 09=2H@Text ID for class
 0A=2H@Text ID for this object
-
+0B=1H@Climate availability
+0C=1H@X and Y extent
+0D=1@Cost factor
+0E=4@Introduction date
+0F=4@End date of availability
+10=2H@Object flags

@@ -1,7 +1,8 @@
+00=1H@Fallback original bridge type
 08=1@Year of availability
 09=1@Minimum length
 0A=1@Maximum length
-0B=1@Cost factor
+0B=1@Cost factor (byte access)
 0C=2@Max. speed
 0D=*@Sprite layout
 0E=1H@Various flags
@@ -9,3 +10,4 @@
 10=2H@Purchase text
 11=2H@Description of rail bridge
 12=2H@Description of road bridge
+13=2@Cost factor (word access)

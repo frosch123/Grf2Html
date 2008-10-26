@@ -1,0 +1,2 @@
+40=Age of the bridge in years
+41=Terrain type

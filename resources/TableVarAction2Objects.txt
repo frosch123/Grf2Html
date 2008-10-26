@@ -1,0 +1,4 @@
+40=Relative position of tile
+41=Terrain Type
+42=Construction year
+43=Animation Counter

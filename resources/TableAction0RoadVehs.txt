@@ -19,4 +19,4 @@
 1D=2H@Refittable cargo classes
 1E=2H@Non-refittable cargo classes
 1F=4@Long format introduction date
-
+20=1+@sort the purchase list

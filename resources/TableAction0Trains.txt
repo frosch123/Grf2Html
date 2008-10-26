@@ -12,7 +12,7 @@
 17=1@Cost factor
 18=1@Engine rank for the AI
 19=1@Engine traction type
-1A=1@sort the purchase list
+1A=1+@sort the purchase list
 1B=2@Power added by each wagon connected to this engine
 1C=1@Refit cost
 1D=4H@Bit mask of cargo types available for refitting

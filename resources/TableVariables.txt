@@ -1,6 +1,6 @@
 00=current date
 01=current year
-02=current month
+02=current month, day of month, leap year, day of year
 03=current climate
 04=GRF loading stage
 05=TTDPatch flags
@@ -34,7 +34,7 @@
 22=Difficulty level
 23=Current date (long format)
 24=Current year (long format)
-5F=Feature-specific random triggers
+5F=Feature-specific random triggers and bits
 7C=PersistentStorage
 7D=TemporalStorage
 7F=GrfParameter
