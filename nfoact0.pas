@@ -1093,6 +1093,7 @@ var
    size                                 : integer;
    typ                                  : TAction0DataType;
    s                                    : string;
+   extendedByte                         : boolean;
 begin
    inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $00);
@@ -1134,12 +1135,21 @@ begin
          delete(s, tmp, 1);
       end;
 
+      extendedByte := false;
+      tmp := pos('+', s);
+      if tmp <> 0 then 
+      begin
+         extendedByte := true;
+         delete(s, tmp, 1);
+      end;
+
       size := strToIntDef(s, -1);
       if size = -1 then typ := a0special;
       for j := 0 to fNumIDs - 1 do
       begin
          if (size = -1) or (size > 4) then
          begin
+            assert(not extendedByte);
             fData[i, j].size := -1;
             fData[i, j].typ := a0special;
             // Have to hardcode these :(
@@ -1183,6 +1193,12 @@ begin
             end;
          end else
          begin
+            assert((not extendedByte) or (size = 1));
+            if extendedByte and (ps.peekByte = $FF) then
+            begin
+               ps.getByte;
+               size := 2;
+            end;
             fData[i, j].size := size;
             fData[i, j].typ := typ;
             fData[i, j].plainunsigned := 0;
