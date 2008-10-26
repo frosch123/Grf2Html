@@ -272,7 +272,7 @@ var
    decomp                               : array[word] of byte;
    decompPos                            : integer;
 
-   xDim, ydim                           : integer;
+   xDim, yDim                           : integer;
    xRel, yRel                           : smallint;
 
    tilePos                              : integer;
@@ -316,11 +316,17 @@ begin
       end else
       begin
          // real sprite
-         ydim := readBuf[readPos];
+         yDim := readBuf[readPos];
          xDim := readBuf[readPos + 2] shl 8 or readBuf[readPos + 1];
          xRel := readBuf[readPos + 4] shl 8 or readBuf[readPos + 3]; // result is smallint (16bit signed)
          yRel := readBuf[readPos + 6] shl 8 or readBuf[readPos + 5]; // result is smallint (16bit signed)
          readPos := readPos + 7;
+
+         if xDim * yDim > $10000 then
+         begin
+            writeln('Error: Sprite ', result.count, ' defines more than 65536 pixels. Cropping.');
+            yDim := size div xDim;
+         end;
 
          if info and scStoreCompressed <> 0 then
          begin
@@ -359,7 +365,7 @@ begin
          end;
          if decompPos > size then
          begin
-            // error
+            writeln('Fatal error while decoding sprite ', result.count, '. Decompression read over end of sprite data.');
             result.free;
             result := nil;
             exit;
@@ -369,20 +375,22 @@ begin
          if info and scTileCompression = 0 then
          begin
             // raw data
-            if size <> xDim * ydim then
+            if size > xDim * yDim then
             begin
-               // error
-               result.free;
-               result := nil;
-               exit;
+               writeln('Warning: Sprite ', result.count, ' has a decompressed size of ', size, ' bytes, but only ', xDim * yDim, ' pixels. Ignoring ', size - xDim * yDim, ' bytes.');
+            end else
+            if size <> xDim * yDim then
+            begin
+               writeln('Error: Sprite ', result.count, ' has a decompressed size of ', size, ' bytes, but shall contain ', xDim * yDim, ' pixels. Filling with zeros.');
+               fillchar(decomp[size], xDim * yDim - size, 0);
+               size := xDim * yDim;
             end;
-            result.add(TRealSprite.create(result.count, xDim, ydim, decomp[0], info, xRel, yRel, useWinPalette));
+            result.add(TRealSprite.create(result.count, xDim, yDim, decomp[0], info, xRel, yRel, useWinPalette));
          end else
          begin
             // "tile compression"
-            assert(xDim * ydim < sizeof(tile)); // don't know if this assumption is valid
-            fillChar(tile, xDim * ydim, 0); // initialize with transparent (0)
-            for y := 0 to ydim - 1 do
+            fillChar(tile, xDim * yDim, 0); // initialize with transparent (0)
+            for y := 0 to yDim - 1 do
             begin
                tilePos := decomp[y * 2 + 1] shl 8 + decomp[y * 2];
                repeat
@@ -390,9 +398,16 @@ begin
                   tmp2 := decomp[tilePos + 1];
                   cnt := tmp1 and $7F;
                   // copy cnt pixels to (tmp2,y)
-                  if (tmp2 + cnt > xDim) or (tilePos + 2 + cnt > size) then
+                  if tmp2 + cnt > xDim then
                   begin
-                     // error
+                     writeln('Fatal error: Tile-compressed sprite ', result.count, ' writes past right border of image.');
+                     result.free;
+                     result := nil;
+                     exit;
+                  end;
+                  if tilePos + 2 + cnt > size then
+                  begin
+                     writeln('Fatal error: Tile-compressed sprite ', result.count, ' read over end of sprite data.');
                      result.free;
                      result := nil;
                      exit;
@@ -401,16 +416,13 @@ begin
                   tilePos := tilePos + 2 + cnt;
                until tmp1 and $80 <> 0;
             end;
-            result.add(TRealSprite.create(result.count, xDim, ydim, tile[0], info, xRel, yRel, useWinPalette));
+            result.add(TRealSprite.create(result.count, xDim, yDim, tile[0], info, xRel, yRel, useWinPalette));
          end;
       end;
    until stream.position - readSize + readPos >= stream.size;
    if stream.position - readSize + readPos <> stream.size - 4 then
    begin
-      // error
-      result.free;
-      result := nil;
-      exit;
+      writeln('Error: Unexpected end of file. ', stream.position - readSize + readPos - (stream.size - 4), ' bytes too few.');
    end;
 end;
 
