@@ -1,3 +1,26 @@
+Version 0.5.1 - 27. Oct. 2008
+ - Update to match NewGrfSpecs as of 25th October 2008:
+     Add string codes 0x9A 0x06, 0x9A 0x07 and 0x9A 0x08.
+     Add RandomAction2 type 0x84.
+     Vehicle IDs of Action3 and 4 are extended bytes now.
+     Add variables 0x22/0xA2, 0x23/0xA3 and 0x24/0xA4.
+     Update variables 0x02/0x82 and 0x5F.
+     Update train property 0x1A.
+     Add road vehicle property 0x20.
+     Add ship property 0x1B.
+     Add aircraft property 0x1B.
+     Add vehicle variable 0x49.
+     Add bridge properties 0x00 and 0x13.
+     Add bridge variables 0x40 and 0x41.
+     Add house properties 0x21 and 0x22.
+     Add house variable 0x65.
+     Add global property 0x11.
+     Add industry variables 0x45 (not new, but missing) and 0x46.
+     Add object properties 0x0B, 0x0C, 0x0D, 0x0E, 0x0F and 0x10.
+     Add object variables 0x40, 0x41, 0x42 and 0x43.
+ - Fix/Feature: Make grf decoding more verbose when encountering errors. Also do not treat every error as fatal error. This allows decoding of certain 'invalid' grfs out there.
+ - Fix: UTF-8 handling was wrong for custom ActionB messages. (glx)
+
 Version 0.5 - 25. Mar. 2008
  - Update to current NewGrfSpecs:
      Add PatchVariables 0x12 and 0x13.

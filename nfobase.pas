@@ -21,7 +21,7 @@ interface
 uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
-   grf2HtmlVersion                      : string = 'Grf2Html 0.5';
+   grf2HtmlVersion                      : string = 'Grf2Html 0.5.1';
    dataVersion                          : string = '25th October 2008';
 
    FTrain                               = $00;
