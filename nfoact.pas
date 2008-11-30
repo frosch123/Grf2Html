@@ -213,7 +213,8 @@ type
    end;
    TWaveFile = class(TNewGrfSprite)
    private
-      fName        : string;
+      fFullName    : string;
+      fFileName    : string;
       fData        : array of byte;
       fFormat      : TWaveFormat;
       fSoundStart  : integer;
@@ -224,7 +225,8 @@ type
    public
       constructor create(aNewGrfFile: TNewGrfFile; bin: TBinaryIncludeSprite);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
-      property name: string read fName write fName;
+      property fullName: string read fFullName write fFullName;
+      property fileName: string read fFileName write fFileName;
 
       property size: integer read getSize; {raw file data}
       property data: pointer read getData;
@@ -1029,7 +1031,8 @@ var
    w                                    : word;
 begin
    inherited create(aNewGrfFile, bin.spriteNr);
-   fName := bin.name;
+   fFullName := bin.fullName;
+   fFileName := bin.fileName;
    size := bin.size;
    setLength(fData, size);
    move(bin.data^, fData[0], size);
@@ -1116,9 +1119,14 @@ var
    f                                    : file;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, '<b>Wave data</b><table summary="Properties"><tr><th align="left">File</th><td><a href="data/', fName, '">', fName, '</a></td></tr>');
-   assignFile(f, path + 'data' + directorySeparator + fName);
-   rewrite(f, 1);
+   writeln(t, '<b>Wave data</b><table summary="Properties"><tr><th align="left">File</th><td><a href="data/', fFileName, '">', fFullName, '</a></td></tr>');
+   try
+      assignFile(f, path + 'data' + directorySeparator + fFileName);
+      rewrite(f, 1);
+   except
+      writeln(t,' Error: Could not create file "', fFilename, '".');
+      exit;
+   end;
    blockWrite(f, data^, size);
    closeFile(f);
    write(t, '<tr><th align="left">Format</th><td>', fFormat.sampleRate, ' Hz, ', fFormat.resolution * 8, ' bit, ');

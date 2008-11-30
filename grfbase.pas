@@ -77,7 +77,8 @@ type
    end;
    TBinaryIncludeSprite = class(TSprite)
    private
-      fName             : string;
+      fFullName         : string;
+      fFileName         : string;
       fData             : array of byte;
       function getSize: integer;
       function getData: pointer;
@@ -85,7 +86,8 @@ type
       constructor create(spriteNr: integer; aName: string; aSize: integer; var data);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
       function getShortDesc: string; override;
-      property name: string read fName write fName;
+      property fullName: string read fFullName write fFullName;
+      property fileName: string read fFileName write fFileName;
       property size: integer read getSize;
       property data: pointer read getData;
    end;
@@ -209,9 +211,30 @@ end;
 
 
 constructor TBinaryIncludeSprite.create(spriteNr: integer; aName: string; aSize: integer; var data);
+var
+   i                                    : integer;
 begin
    inherited create(spriteNr);
-   fName := aName;
+   fFullName := aName;
+   fFileName := aName;
+
+   // Sanitize the filename, note that is also a security constraint. (Think of a grf defining '~/.profile')
+   while pos('/', fFileName) <> 0 do
+   begin
+      delete(fFileName, 1, pos('/', fFileName));
+   end;
+   while pos('\', fFileName) <> 0 do
+   begin
+      delete(fFileName, 1, pos('\', fFileName));
+   end;
+   for i := length(fFileName) downto 1 do
+   begin
+      if not (fFileName[i] in ['0'..'9', 'A'..'Z', 'a'..'z', '_', '-', '.']) then delete(fFileName, i, 1);
+   end;
+
+   // To make it unique, prefix it with the sprite :) This also deals with '.', '..' and such
+   fFileName := 'sprite' + intToStr(spriteNr) + 'data_' + fFilename;
+
    setLength(fData, aSize);
    move(data, fData[0], aSize);
 end;
@@ -231,14 +254,14 @@ var
    f                                    : file;
 begin
    inherited printHtml(t, path, settings);
-   writeln(t, 'Binary Include Sprite: <a href="data/', fName, '">', fName, '</a>');
-   if (not suppressDataForSprite(settings, spriteNr)) and (fName <> '') then
+   writeln(t, 'Binary Include Sprite: <a href="data/', fFileName, '">', fFullName, '</a>');
+   if (not suppressDataForSprite(settings, spriteNr)) then
    begin
       try
-         assignFile(f, path + 'data' + directorySeparator + fName);
+         assignFile(f, path + 'data' + directorySeparator + fFileName);
          rewrite(f, 1);
       except
-         writeln(t,' Error: Could not create file');
+         writeln(t,' Error: Could not create file "', fFilename, '".');
          exit;
       end;
       blockWrite(f, data^, size);
