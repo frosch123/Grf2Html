@@ -22,7 +22,7 @@ uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.5.1';
-   dataVersion                          : string = '25th October 2008';
+   dataVersion                          : string = '20th March 2009';
 
    FTrain                               = $00;
    FRoadVeh                             = $01;

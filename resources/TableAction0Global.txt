@@ -8,3 +8,4 @@
 0F=2@Euro introduction dates
 10=*@Snow line height table
 11=*@GrfID overrides for engines
+12=4S@Rail type translation table

@@ -4,7 +4,13 @@
 03=French
 04=Spanish
 05=Esperanto
+06=Ido
 07=Russian
+0C=Chinese (Traditional)
+0D=Serbian
+0E=Norwegian (Nynorsk)
+0F=Welsh
+14=Arabic (Egypt)
 15=Czech
 16=Slovak
 18=Bulgarian
@@ -12,7 +18,9 @@
 1E=Greek
 1F=Dutch
 22=Catalan
+23=Luxembourgish
 24=Hungarian
+26=Macedonian
 27=Italian
 28=Romanian
 29=Icelandic
@@ -21,7 +29,7 @@
 2C=Slovenian
 2D=Danish
 2E=Swedish
-2F=Norwegian
+2F=Norwegian (Bokmal)
 30=Polish
 31=Galician
 32=Frisian
@@ -33,5 +41,12 @@
 38=Croatian
 39=Japanese
 3A=Korean
+3C=Malay
 3E=Turkish
+42=Thai
+56=Chinese (Simplified)
+5A=Indonesian
+5C=Urdu
+61=Hebrew
+62=Persian
 7F=any

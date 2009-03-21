@@ -11,3 +11,5 @@
 0A=GRF ID is not nor will it be active
 0B=Cargo type is not available
 0C=Cargo type is available
+0D=Rail type is not defined
+0E=Rail type is defined

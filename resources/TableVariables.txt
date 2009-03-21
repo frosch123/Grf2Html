@@ -34,6 +34,7 @@
 22=Difficulty level
 23=Current date (long format)
 24=Current year (long format)
+25=GrfID of entity
 5F=Feature-specific random triggers and bits
 7C=PersistentStorage
 7D=TemporalStorage
