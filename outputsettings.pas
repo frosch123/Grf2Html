@@ -645,7 +645,9 @@ begin
          if cnt < 0 then
          begin
             writeln('Unknown command-line option: ', s);
-            halt;
+            writeln;
+            printUsage := true;
+            break;
          end;
          nr := nr + cnt;
       end else
