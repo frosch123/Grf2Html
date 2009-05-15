@@ -353,10 +353,12 @@ begin
 
          if info and scStoreCompressed <> 0 then
          begin
-            sizeInFile := size + 1;
+            // Grf tells size of compressed data plus 8 byte header
+            sizeInFile := readPos + size - 8;
             size := $10000;
          end else
          begin
+            // Grf tells size of decompressed data plus 8 byte header
             size := size - 8;
             sizeInFile := $10000;
          end;
