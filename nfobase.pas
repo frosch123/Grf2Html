@@ -1,5 +1,5 @@
 (* This file is part of Grf2Html.
- * Copyright 2007-2008 by Christoph Elsenhans.
+ * Copyright 2007-2010 by Christoph Elsenhans.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ interface
 uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
-   grf2HtmlVersion                      : string = 'Grf2Html 0.5.1';
+   grf2HtmlVersion                      : string = 'Grf2Html 0.5.2';
    dataVersion                          : string = '2010-05-02';
 
    FFirst                               = $00;
@@ -1157,13 +1157,13 @@ end;
 procedure printAbout;
 begin
    writeln(grf2HtmlVersion);
-   writeln('Copyright 2007-2008 by Christoph Elsenhans.');
+   writeln('Copyright 2007-2010 by Christoph Elsenhans.');
    writeln;
    writeln('This program comes with ABSOLUTELY NO WARRANTY.');
    writeln('This is free software, and you are welcome to redistribute it');
    writeln('under certain conditions; see "COPYING.txt" for details.');
    writeln;
-   writeln('Based on TTDPatch documentation and NewGraphicsSpecs from ', dataVersion); // they have written all the texts :)
+   writeln('Based on TTDPatch documentation and NewGraphicsSpecs as of ', dataVersion); // they have written all the texts :)
    writeln('Visit http://wiki.ttdpatch.net/tiki-index.php?page=NewGraphicsSpecs');
    writeln;
    {$IFNDEF FPC}

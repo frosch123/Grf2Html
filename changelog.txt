@@ -1,5 +1,20 @@
-Version 0.5.1 - 27. Oct. 2008
- - Update to match NewGrfSpecs as of 25th October 2008:
+Version 0.5.2 - 2010-05-02
+ - Update to current NewGrfSpecs:
+     Add variable 0x25.
+     Add global property 0x12.
+     Add house variables 47, 66 and 67.
+     Add railtype properties and variables.
+     Add airport tile properties and variables.
+     Add action7/9 conditions 0x0D and 0x0E.
+     Add lots of new languages to Action4.
+     Add support for additional groundsprites in spritelayouts.
+ - Remove: Old 'new airports'.
+ - Change: Print usage on invalid command-line options.
+ - Fix: Do not store binary included files using the unmodified filename from the grf. Instead make it valid and unique.
+ - Fix: Off-by-one error in decoding of scStoreCompressed sprites. Though it worked in most cases :)
+
+Version 0.5.1 - 2008-10-27
+ - Update to match NewGrfSpecs as of 2008-10-25
      Add string codes 0x9A 0x06, 0x9A 0x07 and 0x9A 0x08.
      Add RandomAction2 type 0x84.
      Vehicle IDs of Action3 and 4 are extended bytes now.
@@ -21,7 +36,7 @@ Version 0.5.1 - 27. Oct. 2008
  - Fix/Feature: Make grf decoding more verbose when encountering errors. Also do not treat every error as fatal error. This allows decoding of certain 'invalid' grfs out there.
  - Fix: UTF-8 handling was wrong for custom ActionB messages. (glx)
 
-Version 0.5 - 25. Mar. 2008
+Version 0.5 - 2008-03-25
  - Update to current NewGrfSpecs:
      Add PatchVariables 0x12 and 0x13.
      Add bridge properties 0x10, 0x11 and 0x12.
@@ -50,7 +65,7 @@ Version 0.5 - 25. Mar. 2008
  - Fix: Industry layout table row/column headers were wrong in some cases.
  - Fix: General variables in VarAction2 and in Action7/9/D are the same.
 
-Version 0.4 - 16. Nov. 2007
+Version 0.4 - 2007-11-16
  - Port to Free Pascal to enable compiling for Linux. (Thanks TrueLight for helping)
  - Update to current NewGrfSpecs:
      Action0 IndustryProperties 23 and 24.
@@ -70,13 +85,13 @@ Version 0.4 - 16. Nov. 2007
  - Fix: ActionB <data> field now handles UTF-8 correctly. (Though the <UTF-8> control code looks a bit missplaced in the output).
  - Fix: Creation of images crashed on older windows versions.
 
-Version 0.3.1 - 11. Oct. 2007
+Version 0.3.1 - 2007-10-11
  - Fix: The first sprite is never a BinaryIncludeSprite. (boekabart)
  - Fix: Do not try to save binary included files with invalid filenames.
  - Fix: Test for end of Station Custom Layout was logically inverted. (boekabart)
  - Fix: Typos and mistakes in resources (PatchVars 99, 9A; GRM Mark operation).
 
-Version 0.3 - 4. Oct. 2007
+Version 0.3 - 2007-10-04
  - Feature: UTF-8 support for texts.
  - Feature: Most 80+x variables of vehicles, stations, towns and industries are known. (Extracted from TTDP source documentation)
  - Fix: Text after </body> tag. (gmyx)
@@ -85,7 +100,7 @@ Version 0.3 - 4. Oct. 2007
  - Fix: Access violation, if industry layout did not start at (0,0). (belugas)
  - Fix: ActionB did not knew of "do not ignore during initialization".
 
-Version 0.2 - 2. Oct. 2007
+Version 0.2 - 2007-10-02
  - First public release.
  - Support for Actions 0 to 13 as of current NewGraphicsSpecs.
  - Actions 12 and 13 untested due to a lack of NewGrfs for testing.
