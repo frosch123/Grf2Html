@@ -362,8 +362,6 @@ begin
       $C400: result := -1; // Station Class Name
       $C500: begin f := FStation; result := result and $FF; end; // Station Name
       $C900: begin f := FHouse;   result := result and $FF; end; // House Name
-      $CD00: result := -1; // Airport Class Name
-      $CE00: begin f := FAirport; result := result and $FF; end; // Airport Name
       else   result := -1;
    end;
 end;
