@@ -14,3 +14,5 @@
 0D=Airports
 0E=Signals
 0F=Newobjects
+10=Railtypes
+11=Airport tiles

@@ -81,6 +81,19 @@ type
       property data[i: integer]: byte read getData;
    end;
 
+   // Used for Compatible and Powered RailType Labels
+   TAction0LabelArray = class(TAction0SpecialProperty)
+   private
+      fData          : array of longword;
+      function getCount: integer;
+      function getData(i: integer): longword;
+   public
+      constructor create(action0: TAction0; ps: TPseudoSpriteReader);
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+      property count: integer read getCount;
+      property data[i: integer]: longword read getData;
+   end;
+
    TAction0StationSpriteLayout = class(TAction0SpecialPropertyArrayItem)
    private
       fTTDLayout               : boolean;
@@ -366,6 +379,44 @@ begin
    begin
       if i = 0 then write(t, '0x', intToHex(fData[i], 2)) else
                     write(t, ', 0x', intToHex(fData[i], 2));
+   end;
+   writeln(t, '<br>');
+end;
+
+constructor TAction0LabelArray.create(action0: TAction0; ps: TPseudoSpriteReader);
+var
+   i                                    : integer;
+begin
+   inherited create(action0);
+   setLength(fData, ps.getByte);
+   for i := 0 to length(fData) - 1 do fData[i] := ps.getDWord;
+end;
+
+function TAction0LabelArray.getCount: integer;
+begin
+   result := length(fData);
+end;
+
+function TAction0LabelArray.getData(i: integer): longword;
+begin
+   result := fData[i];
+end;
+
+procedure TAction0LabelArray.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i                                    : integer;
+   s                                    : string[4];
+begin
+   write(t, length(fData), ' entries: ');
+   for i := 0 to length(fData) - 1 do
+   begin
+      setLength(s, 4);
+      s[1] := char(fData[i]);
+      s[2] := char(fData[i] shr 8);
+      s[3] := char(fData[i] shr 16);
+      s[4] := char(fData[i] shr 24);
+      if i = 0 then write(t, formatTextPrintable(s, false)) else
+                    write(t, ', ', formatTextPrintable(s, false));
    end;
    writeln(t, '<br>');
 end;
@@ -808,6 +859,10 @@ begin
                              $0A: fData[i, j].special := TAction0SpecialPropertyArray.create(self, ps, fFirstID + j, TAction0IndustryLayout);
                              $15: fData[i, j].special := TAction0ByteArray.create(self, ps); // Industry, random sound effects
                              else assert(false, 'TableAction0Industries corrupted');
+                          end;
+               FRailType: case prop of
+                             $0E, $0F: fData[i, j].special := TAction0LabelArray.create(self, ps); // Compatible and powered rail types
+                             else assert(false, 'TableAction0RailTypes corrupted');
                           end;
                else       assert(false, 'TableAction0xxx corrupted');
             end;

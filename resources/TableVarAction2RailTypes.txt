@@ -1,0 +1,3 @@
+40=Terrain type
+41=Track above (enhanced tunnels)
+42=Level crossing closed

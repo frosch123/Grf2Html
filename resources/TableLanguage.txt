@@ -6,6 +6,8 @@
 05=Esperanto
 06=Ido
 07=Russian
+08=Irish
+09=Maltese
 0C=Chinese (Traditional)
 0D=Serbian
 0E=Norwegian (Nynorsk)
@@ -44,6 +46,7 @@
 3C=Malay
 3E=Turkish
 42=Thai
+54=Vietnamese
 56=Chinese (Simplified)
 5A=Indonesian
 5C=Urdu

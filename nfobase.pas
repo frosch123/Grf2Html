@@ -22,7 +22,9 @@ uses sysutils, classes, contnrs, grfbase, htmlwriter, outputsettings;
 
 const
    grf2HtmlVersion                      : string = 'Grf2Html 0.5.1';
-   dataVersion                          : string = '20th March 2009';
+   dataVersion                          : string = '2010-05-02';
+
+   FFirst                               = $00;
 
    FTrain                               = $00;
    FRoadVeh                             = $01;
@@ -40,6 +42,10 @@ const
    FAirport                             = $0D;
    FSignal                              = $0E;
    FObject                              = $0F;
+   FRailType                            = $10;
+   FAirTile                             = $11;
+
+   FLast                                = $11;
 
 type
    TFeature = byte;
@@ -1101,6 +1107,8 @@ begin
                                   $06: result := result + ' byte [hex]&gt;';
                                   $07: result := result + ' word [hex]&gt;';
                                   $08: result := result + ' dword [hex]&gt;';
+                                  $0B: result := result + ' qword [hex]&gt;';
+                                  $0C: result := result + ' station&gt;';
                              else      result := result + ' unknown&gt;';
                           end;
                        end;

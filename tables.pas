@@ -63,15 +63,15 @@ var
    TableStringCode                      : TSingleColumnTable;
 
    TableAction0General                  : TTable;
-   TableAction0Features                 : array[FTrain..FObject] of TTable;
+   TableAction0Features                 : array[FFirst..FLast] of TTable;
 
    TableVariables                       : TSingleColumnTable; // Variables in VarAction2 (non-feature specific) and Action 7/9/D (minus 0x80).
 
    TableVarAction2Operator              : TSingleColumnTable;
-   TableVarAction2Features              : array[FTrain..FObject] of TSingleColumnTable;
-   TableVarAction2Related               : array[FTrain..FObject] of TSingleColumnTable;
+   TableVarAction2Features              : array[FFirst..FLast] of TSingleColumnTable;
+   TableVarAction2Related               : array[FFirst..FLast] of TSingleColumnTable;
 
-   TableRandomAction2Features           : array[FTrain..FObject] of TSingleColumnTable;
+   TableRandomAction2Features           : array[FFirst..FLast] of TSingleColumnTable;
 
    TableAction5Type                     : TSingleColumnTable;
 
@@ -99,7 +99,7 @@ type
    end;
 
 const
-   TableList : array[0..(16 + 4 * 16) - 1] of TTableList = (
+   TableList : array[0..(16 + 4 * (FLast + 1)) - 1] of TTableList = (
       (name:'TableFeature'                ; typ:TSingleColumnTable; table:@TableFeature),
       (name:'TablePrimaryObject'          ; typ:TSingleColumnTable; table:@TablePrimaryObject),
       (name:'TableRelatedObject'          ; typ:TSingleColumnTable; table:@TableRelatedObject),
@@ -123,6 +123,8 @@ const
       (name:''                            ; typ:TTable            ; table:@TableAction0Features[FAirport]),
       (name:''                            ; typ:TTable            ; table:@TableAction0Features[FSignal]),
       (name:'TableAction0Objects'         ; typ:TTable            ; table:@TableAction0Features[FObject]),
+      (name:'TableAction0Railtypes'       ; typ:TTable            ; table:@TableAction0Features[FRailType]),
+      (name:'TableAction0AirTiles'        ; typ:TTable            ; table:@TableAction0Features[FAirTile]),
 
       (name:'TableVariables'              ; typ:TSingleColumnTable; table:@TableVariables),
 
@@ -173,6 +175,12 @@ const
       (name:'TableVarAction2Objects'      ; typ:TSingleColumnTable; table:@TableVarAction2Features[FObject]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FObject]),
 
+      (name:'TableVarAction2RailTypes'    ; typ:TSingleColumnTable; table:@TableVarAction2Features[FRailType]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FRailType]),
+
+      (name:'TableVarAction2AirTiles'     ; typ:TSingleColumnTable; table:@TableVarAction2Features[FAirTile]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableVarAction2Related[FAirTile]),
+
       (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FTrain]),
       (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FRoadVeh]),
       (name:'TableRandomAction2Vehicles'  ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FShip]),
@@ -189,6 +197,8 @@ const
       (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FAirport]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FSignal]),
       (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FObject]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FRailType]),
+      (name:''                            ; typ:TSingleColumnTable; table:@TableRandomAction2Features[FAirTile]),
 
       (name:'TableAction5Type'            ; typ:TSingleColumnTable; table:@TableAction5Type),
 

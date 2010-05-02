@@ -1,0 +1,6 @@
+08=1H@Substitute airport tile type
+09=1H@Airport tile override
+0E=1H@Callback flags
+0F=2H@Animation information
+10=1@Animation speed.
+11=1H@Animation triggers

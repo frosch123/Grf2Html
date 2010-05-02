@@ -5,9 +5,12 @@
 44=Building counts
 45=Town expansion bits
 46=Current animation frame
+47=Map coordinate of the building
 60=Other building counts
 61=Other building counts
 62=Land info for nearby tiles
 63=Current animation frame of nearby house tiles
 64=Cargo acceptance history of nearby stations
 65=Distance of nearest house matching a given criteria
+66=Class and ID of nearby house tile
+67=GRFID of nearby house tile

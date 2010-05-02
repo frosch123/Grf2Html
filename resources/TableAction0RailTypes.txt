@@ -1,0 +1,15 @@
+08=4S@Rail type label
+09=2H@TextID of rail type name
+0A=2H@TextID of menu text
+0B=2H@TextID of construction window caption
+0C=2H@TextID of rail type name in autoreplace window
+0D=2H@TextID of rail type name wrt. introduction of new engines
+0E=*@Compatible rail type list
+0F=*@Powered rail type list
+10=1H@Rail type flags
+11=1@Curve speed advantage multiplier
+12=1@Default station graphics
+13=2@Construction cost
+14=2@Speed limit
+15=1@Acceleration model
+16=1H@Minimap colour
