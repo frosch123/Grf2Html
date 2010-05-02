@@ -555,7 +555,7 @@ begin
          if ps.peekByte = $80 then
          begin
             ps.getByte;
-            if not fSpriteLayout.addChildSprite(x, y, desc) then error('HouseIndustrySpriteLayout: First Sprite in a layout must not be a ChildSprite.');
+            fSpriteLayout.addChildSprite(x, y, desc);
          end else
          begin
             z := ps.getByte;

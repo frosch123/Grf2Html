@@ -63,6 +63,7 @@ type
    private
       fParent       : TNewGrfSprite;
       fName         : string;
+      fGroundSprites: array of TChildSprite;
       fParentSprites: array of TParentSprite;
       function getParentSpriteCount: integer;
       function getParentSprite(i: integer): TParentSprite;
@@ -70,7 +71,7 @@ type
       constructor create(parent:TNewGrfSprite; name: string); // name used for preview image
       destructor destroy; override;
       procedure addParentSprite(x, y, z: integer; w, h, dz: integer; aSprite: TTTDPSprite);
-      function addChildSprite(x, y: integer; aSprite: TTTDPSprite): boolean; // false if no parentsprite present
+      procedure addChildSprite(x, y: integer; aSprite: TTTDPSprite);
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
       property parentSpriteCount: integer read getParentSpriteCount;
       property parentSprites[i: integer]: TParentSprite read getParentSprite;
@@ -153,6 +154,7 @@ constructor TSpriteLayout.create(parent: TNewGrfSprite; name: string);
 begin
    inherited create;
    fParent := parent;
+   setLength(fGroundSprites, 0);
    setLength(fParentSprites, 0);
    fName := name;
 end;
@@ -161,13 +163,18 @@ destructor TSpriteLayout.destroy;
 var
    i, j                                 : integer;
 begin
+   for i := 0 to length(fGroundSprites) - 1 do
+   begin
+      fGroundSprites[i].sprite.free;
+   end;
+   setLength(fGroundSprites, 0);
    for i := 0 to length(fParentSprites) - 1 do
    begin
       fParentSprites[i].sprite.free;
       for j := 0 to length(fParentSprites[i].childs) - 1 do fParentSprites[i].childs[j].sprite.free;
-      setlength(fParentSprites[i].childs, 0);
+      setLength(fParentSprites[i].childs, 0);
    end;
-   setlength(fParentSprites, 0);
+   setLength(fParentSprites, 0);
    inherited destroy;
 end;
 
@@ -190,17 +197,26 @@ begin
    end;
 end;
 
-function TSpriteLayout.addChildSprite(x, y: integer; aSprite: TTTDPSprite): boolean;
+procedure TSpriteLayout.addChildSprite(x, y: integer; aSprite: TTTDPSprite);
 var
    p, c                                 : integer;
 begin
    p := length(fParentSprites) - 1;
-   result := p >= 0;
-   if result then
+   if p >= 0 then
    begin
       c := length(fParentSprites[p].childs);
       setLength(fParentSprites[p].childs, c + 1);
       with fParentSprites[p].childs[c] do
+      begin
+         position[0] := x;
+         position[1] := y;
+         sprite := aSprite;
+      end;
+   end else
+   begin
+      c := length(fGroundSprites);
+      setLength(fGroundSprites, c + 1);
+      with fGroundSprites[c] do
       begin
          position[0] := x;
          position[1] := y;
@@ -322,6 +338,18 @@ begin
    end;
 
    writeln(t, '<table summary="SpriteLayout" border="1" rules="all"><tr><th>ParentSprite</th><th>Position</th><th>Extent<th>ChildSprite</th><th>Position</th></tr>');
+   if length(fGroundSprites) > 0 then
+   begin
+      writeln(t, '<tr valign="top"><td colspan="3" rowspan="', length(fGroundSprites), '">Additional Ground Sprites</td>');
+      for i := 0 to length(fGroundSprites) - 1 do
+         with fGroundSprites[i] do
+         begin
+            if i <> 0 then write(t, '<tr>');
+            writeln(t, '<td>');
+            sprite.printHtml(t, path, settings);
+            writeln(t, '</td><td> &lt; ', position[0], ',', position[1], ' &gt;</td></tr>');
+         end;
+   end;
    for i := 0 to length(fParentSprites) - 1 do
       with fParentSprites[i] do
       begin

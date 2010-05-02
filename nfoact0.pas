@@ -406,7 +406,7 @@ begin
                ps.getByte; // y ext
                ps.getByte; // z ext
                spr := ps.getDWord;
-               if not fSpriteLayout.addChildSprite(x, y, TTTDPStationSprite.create(action0, spr, false)) then fAction0.error('StationSpriteLayout: First Sprite in a layout must not be a ChildSprite.');
+               fSpriteLayout.addChildSprite(x, y, TTTDPStationSprite.create(action0, spr, false));
             end;
          end;
       until (tmp = $80) or (ps.bytesLeft < 0);
