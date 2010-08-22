@@ -280,20 +280,23 @@ type
       property text[i: integer]: string read getText;
    end;
 
+   TAction14 = class;
+   TIDPath = array of longword;
+
    TAction14Node = class
    protected
       fId       : longword;
    public
-      constructor create(aId: longword; ps: TPseudoSpriteReader); virtual;
+      constructor create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader); virtual;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual; abstract;
-      class function readChunk(ps: TPseudoSpriteReader) : TAction14Node;
+      class function readChunk(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader) : TAction14Node;
    end;
 
    TAction14Choice = class(TAction14Node)
    protected
       fSubNodes : array of TAction14Node;
    public
-      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      constructor create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
 
@@ -301,7 +304,7 @@ type
    protected
       fData     : array of byte;
    public
-      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      constructor create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
 
@@ -310,7 +313,7 @@ type
       fLangID   : byte;
       fText     : string;
    public
-      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      constructor create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader); override;
       procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
    end;
 
@@ -1307,13 +1310,17 @@ begin
 end;
 
 
-constructor TAction14Node.create(aId: longword; ps: TPseudoSpriteReader);
+constructor TAction14Node.create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader);
 begin
-   fId := aId;
+   if length(idPath) > 0 then fId := idPath[length(idPath) - 1] else fId := 0;
 end;
 
-class function TAction14Node.readChunk(ps: TPseudoSpriteReader) : TAction14Node;
+class function TAction14Node.readChunk(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader) : TAction14Node;
+var
+   len                                  : integer;
 begin
+   len := length(idPath);
+   setLength(idPath, len + 1);
    case char(ps.peekByte) of
        #0: begin
               ps.getByte();
@@ -1321,27 +1328,31 @@ begin
            end;
       'C': begin
               ps.getByte();
-              result := TAction14Choice.create(ps.getDWord, ps);
+              idPath[len] := ps.getDWord;
+              result := TAction14Choice.create(aNewGrfFile, aAction14, idPath, ps);
            end;
       'B': begin
               ps.getByte();
-              result := TAction14Binary.create(ps.getDWord, ps);
+              idPath[len] := ps.getDWord;
+              result := TAction14Binary.create(aNewGrfFile, aAction14, idPath, ps);
            end;
       'T': begin
               ps.getByte();
-              result := TAction14Text.create(ps.getDWord, ps);
+              idPath[len] := ps.getDWord;
+              result := TAction14Text.create(aNewGrfFile, aAction14, idPath, ps);
            end;
       else result := nil; // we do not read the byte, so the parent chunk will also fail.
    end;
+   setLength(idPath, len);
 end;
 
-constructor TAction14Choice.create(aId: longword; ps: TPseudoSpriteReader);
+constructor TAction14Choice.create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader);
 var
    n                                    : TAction14Node;
 begin
-   inherited create(aID, ps);
+   inherited create(aNewGrfFile, aAction14, idPath, ps);
    repeat
-      n := readChunk(ps);
+      n := readChunk(aNewGrfFile, aAction14, idPath, ps);
       if n <> nil then
       begin
          setLength(fSubNodes, length(fSubNodes) + 1);
@@ -1381,14 +1392,27 @@ begin
    writeln(t, '</ul>');
 end;
 
-constructor TAction14Binary.create(aId: longword; ps: TPseudoSpriteReader);
+constructor TAction14Binary.create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader);
+const
+   idINFO                               = ord('I') or (ord('N') shl 8) or (ord('F') shl 16) or (ord('O') shl 24);
+   idPALS                               = ord('P') or (ord('A') shl 8) or (ord('L') shl 16) or (ord('S') shl 24);
 var
    i, l                                 : integer;
 begin
-   inherited create(aID, ps);
+   inherited create(aNewGrfFile, aAction14, idPath, ps);
    l := ps.getWord;
    setLength(fData, l);
    for i := 0 to l - 1 do fData[i] := ps.getByte;
+
+   // Handle Palette information
+   if (length(idPath) = 2) and (l >= 1) and (idPath[0] = idINFO) and (idPath[1] = idPALS) then
+   begin
+      case char(fData[0]) of
+         'D': aNewGrfFile.palette := palDos;
+         'W': aNewGrfFile.palette := palWin;
+         else aNewGrfFile.palette := -1;
+      end;
+   end;
 end;
 
 procedure TAction14Binary.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
@@ -1405,9 +1429,9 @@ begin
    writeln(t);
 end;
 
-constructor TAction14Text.create(aId: longword; ps: TPseudoSpriteReader);
+constructor TAction14Text.create(aNewGrfFile: TNewGrfFile; aAction14: TAction14; var idPath: TIDPath; ps: TPseudoSpriteReader);
 begin
-   inherited create(aID, ps);
+   inherited create(aNewGrfFile, aAction14, idPath, ps);
    fLangID := ps.getByte;
    fText := ps.getString;
 end;
@@ -1418,11 +1442,13 @@ begin
 end;
 
 constructor TAction14.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
+var
+   idPath                               : TIDPath;
 begin
    inherited create(aNewGrfFile, ps.spriteNr);
    assert(ps.peekByte = $14);
    ps.getByte;
-   fRoot := TAction14Choice.create(0, ps);
+   fRoot := TAction14Choice.create(aNewGrfFile, self, idPath, ps);
    testSpriteEnd(ps);
 end;
 

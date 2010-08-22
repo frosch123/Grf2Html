@@ -85,6 +85,7 @@ type
       fSprites     : TObjectList;
       fAction8     : TAction8;
       fEntity      : array[TFeature] of TEntityList;
+      fPalette     : integer; // Palette from Action14; < 0 if none
       function getEntity(f: TFeature; id: integer): TSpriteSet;
    public
       constructor create(aGrfName: string; grfFile: TObjectList);
@@ -96,6 +97,7 @@ type
       property sprites: TObjectList read fSprites;
       property action8: TAction8 read fAction8;
       property entity[f: TFeature; id: integer]: TSpriteSet read getEntity;
+      property palette: integer read fPalette write fPalette;
    end;
 
    TPseudoSpriteReader = class
@@ -231,6 +233,7 @@ begin
    fGrfName := aGrfName;
    fAction8 := nil;
    for i := low(TFeature) to high(TFeature) do fEntity[i] := TEntityList.create;
+   fPalette := -1;
 
    grfFile.ownsObjects := false;
    fSprites := TObjectList.create(true);
@@ -320,7 +323,7 @@ begin
    end;
    if ssCnt > 0 then msa.error('Unexpected end of file: ' + intToStr(ssCnt - ssNr) + ' more sprites expected.');
 
-   // Set up Action7/9 destinations and Action8 links
+   // Set up Action7/9 destinations, Action8 links and propagate Action14 palette
    for i := 0 to fSprites.count - 1 do
    begin
       if fSprites[i] is TAction79 then
@@ -346,6 +349,7 @@ begin
             end;
          end;
       if fSprites[i] is TNewGrfSprite then (fSprites[i] as TNewGrfSprite).secondPass;
+      if (fPalette >= 0) and (fSprites[i] is TRealSprite) then (fSprites[i] as TRealSprite).winPalette := (fPalette = palWin);
    end;
    grfFile.free;
 end;

@@ -61,7 +61,7 @@ type
       property height: integer read fheight;
       property compression: TSpriteCompression read fCompression write fCompression;
       property relPos: TPoint read fRelPos write fRelPos;
-      property winPalette: boolean read fWinPalette;
+      property winPalette: boolean read fWinPalette write fWinPalette;
    end;
    TPseudoSprite = class(TSprite)
    private
