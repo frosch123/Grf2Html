@@ -818,7 +818,7 @@ begin
 
       extendedByte := false;
       tmp := pos('+', s);
-      if tmp <> 0 then 
+      if tmp <> 0 then
       begin
          extendedByte := true;
          delete(s, tmp, 1);

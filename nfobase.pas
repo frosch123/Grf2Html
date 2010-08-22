@@ -301,6 +301,7 @@ begin
                $11: dst := TAction11.create(self, psr);
                $12: dst := TAction12.create(self, psr);
                $13: dst := TAction13.create(self, psr);
+               $14: dst := TAction14.create(self, psr);
                else dst := src;
             end;
          end;

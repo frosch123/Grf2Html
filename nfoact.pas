@@ -280,6 +280,48 @@ type
       property text[i: integer]: string read getText;
    end;
 
+   TAction14Node = class
+   protected
+      fId       : longword;
+   public
+      constructor create(aId: longword; ps: TPseudoSpriteReader); virtual;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); virtual; abstract;
+      class function readChunk(ps: TPseudoSpriteReader) : TAction14Node;
+   end;
+
+   TAction14Choice = class(TAction14Node)
+   protected
+      fSubNodes : array of TAction14Node;
+   public
+      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+   end;
+
+   TAction14Binary = class(TAction14Node)
+   protected
+      fData     : array of byte;
+   public
+      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+   end;
+
+   TAction14Text = class(TAction14Node)
+   protected
+      fLangID   : byte;
+      fText     : string;
+   public
+      constructor create(aId: longword; ps: TPseudoSpriteReader); override;
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+   end;
+
+   TAction14 = class(TNewGrfSprite)
+   private
+      fRoot     : TAction14Choice;
+   public
+      constructor create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
+      procedure printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings); override;
+   end;
+
 implementation
 
 function getLanguageName(act8: TAction8; langID: byte): string;
@@ -1262,6 +1304,133 @@ begin
       writeln(t, '<tr><th align="left">Text ID 0x', intToHex(textID[i], 4), '</th><td>', formatTextPrintable(fTexts[i], true), '</td></tr>');
    end;
    writeln(t, '</table>');
+end;
+
+
+constructor TAction14Node.create(aId: longword; ps: TPseudoSpriteReader);
+begin
+   fId := aId;
+end;
+
+class function TAction14Node.readChunk(ps: TPseudoSpriteReader) : TAction14Node;
+begin
+   case char(ps.peekByte) of
+       #0: begin
+              ps.getByte();
+              result := nil;
+           end;
+      'C': begin
+              ps.getByte();
+              result := TAction14Choice.create(ps.getDWord, ps);
+           end;
+      'B': begin
+              ps.getByte();
+              result := TAction14Binary.create(ps.getDWord, ps);
+           end;
+      'T': begin
+              ps.getByte();
+              result := TAction14Text.create(ps.getDWord, ps);
+           end;
+      else result := nil; // we do not read the byte, so the parent chunk will also fail.
+   end;
+end;
+
+constructor TAction14Choice.create(aId: longword; ps: TPseudoSpriteReader);
+var
+   n                                    : TAction14Node;
+begin
+   inherited create(aID, ps);
+   repeat
+      n := readChunk(ps);
+      if n <> nil then
+      begin
+         setLength(fSubNodes, length(fSubNodes) + 1);
+         fSubNodes[length(fSubNodes) - 1] := n;
+      end;
+   until n = nil;
+end;
+
+procedure TAction14Choice.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i                                    : integer;
+   n                                    : TAction14Node;
+   key                                  : string;
+begin
+   writeln(t, '<ul>');
+   for i := 0 to length(fSubNodes) - 1 do
+   begin
+      n := fSubNodes[i];
+      if n.fID shr 16 = 0 then
+      begin
+         // High word is zero -> Most likely the key is an integer.
+         key := intToStr(n.fID);
+      end else
+      begin
+         // Pure text, or mixed.
+         setLength(key, 4);
+         key[1] := char(n.fID and $FF);
+         key[2] := char((n.fID shr 8) and $FF);
+         key[3] := char((n.fID shr 16) and $FF);
+         key[4] := char((n.fID shr 24) and $FF);
+         key := formatTextPrintable(key, false)
+      end;
+      writeln(t, '<li><b>', key, '</b>');
+      n.printHtml(t, path, settings);
+      writeln(t, '</li>');
+   end;
+   writeln(t, '</ul>');
+end;
+
+constructor TAction14Binary.create(aId: longword; ps: TPseudoSpriteReader);
+var
+   i, l                                 : integer;
+begin
+   inherited create(aID, ps);
+   l := ps.getWord;
+   setLength(fData, l);
+   for i := 0 to l - 1 do fData[i] := ps.getByte;
+end;
+
+procedure TAction14Binary.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+var
+   i, l                                 : integer;
+begin
+   l := length(fData);
+   writeln(t, '(', l, ' bytes):');
+   for i := 0 to l - 1 do
+   begin
+      if (i mod 32 = 0) and (l > 32) then writeln(t, '<br>');
+      write(t, ' ', intToHex(fData[i], 2));
+   end;
+   writeln(t);
+end;
+
+constructor TAction14Text.create(aId: longword; ps: TPseudoSpriteReader);
+begin
+   inherited create(aID, ps);
+   fLangID := ps.getByte;
+   fText := ps.getString;
+end;
+
+procedure TAction14Text.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   writeln(t, '(0x', intToHex(fLangID, 2), ' ', TableLanguage[fLangID], '): ', formatTextPrintable(fText, true));
+end;
+
+constructor TAction14.create(aNewGrfFile: TNewGrfFile; ps: TPseudoSpriteReader);
+begin
+   inherited create(aNewGrfFile, ps.spriteNr);
+   assert(ps.peekByte = $14);
+   ps.getByte;
+   fRoot := TAction14Choice.create(0, ps);
+   testSpriteEnd(ps);
+end;
+
+procedure TAction14.printHtml(var t: textFile; path: string; const settings: TGrf2HtmlSettings);
+begin
+   inherited printHtml(t, path, settings);
+   writeln(t, '<b>Action14</b> - Static NewGRF Information');
+   if fRoot <> nil then fRoot.printHtml(t, path, settings);
 end;
 
 end.
