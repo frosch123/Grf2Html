@@ -3,7 +3,18 @@ unit osspecific;
 interface
 
 {$IFDEF FPC}
-   uses classes, libc, png, fpimage, fpimgcanv, fpwritepng;
+   uses classes, png, fpimage, fpimgcanv, fpwritepng;
+
+(* Somehow there is no default unit which supplies fopen() and fclose(), which are needed to
+ * interace libpng.
+ * On 32bit systems there is a libc unit supplying them, but it is deprecated and not ported to x64.
+ *)
+type
+   PFILE = pointer;
+
+function fopen(filename, rights: pchar): PFile; cdecl; external {$IFDEF DYNLINK}clib{$ENDIF};
+procedure fclose(f: PFile); cdecl; external {$IFDEF DYNLINK}clib{$ENDIF};
+
 {$ELSE}
    uses classes, windows, graphics, pngimage;
 {$ENDIF}
