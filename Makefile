@@ -1,14 +1,24 @@
+MAKEFILELOCAL = Makefile.local
+
+# Default settings
 FPC = fpc
 FPRCP = fprcp
-WINDRES = windres
+WINDRES = i586-mingw32msvc-windres
 
 FPCFLAGS = -Sd -Sa
-#FPCFLAGS = -Sd -Sa -pg
+
+-include ${MAKEFILELOCAL}
 
 PAS = *.pas
 TXT = resources/*.txt
 
 all: grf2html
+
+${MAKEFILELOCAL}:
+	echo ""
+	echo "!!! ${MAKEFILELOCAL} does not exists, creating from defaults. Please edit it if compilation fails."
+	echo ""
+	cp ${MAKEFILELOCAL}.sample ${MAKEFILELOCAL}
 
 grf2html: grfbase.or tables.or $(PAS) grf2html.dpr
 	$(FPC) $(FPCFLAGS) grf2html.dpr
@@ -27,3 +37,5 @@ tables.res: $(TXT) tables.rc
 
 clean:
 	rm -f *.o *.ppu *.res *.or
+
+.SILENT:

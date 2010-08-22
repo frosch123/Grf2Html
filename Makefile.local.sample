@@ -1,0 +1,14 @@
+# This file is by default a copy of Makefile.local.sample.
+# Please edit Makefile.local to suit your needs.
+
+# Free Pascal compiler
+#FPC = fpc
+
+# Free Pascal resource compiler
+#FPRCP = fprcp
+
+# Windows resource compiler. Note: This always has to be the 32bit version, independent of target architecture.
+#WINDRES = i586-mingw32msvc-windres
+
+# Enable debug symbols
+#FPCFLAGS += -pg

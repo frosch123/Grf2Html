@@ -67,12 +67,12 @@ Contents:
      1) Free Pascal (fpc). Should be a package of your linux distribution.
      2) A resource compiler. Usally "windres", part of GNU binutils (though not always in the default build) or of mingw.
      3) A SubVersion (svn) client to get the source.
-     4) libpng.
+     4) libpng (currently only version 1.2.x is supported by the Free Pascal wrappers, 1.4.x does not work).
      5) Grf2Html source from
            svn://dumbledore.zernebok.com/projects/grf2html
    To build Grf2Html proceed in these steps:
-     1) Adjust "Makefile" so it finds "windres". (In mingw it is named different)
-     2) Run "make".
+     1) Run "make".
+     2) If compilation fails, adjust "Makefile.local" (created by first "make" run), and rerun "make".
      3) Optionally run "./grf2html --writeini" to create the default ini-file, that is bundled with the normal binary.
 
 
