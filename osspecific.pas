@@ -5,6 +5,9 @@ interface
 {$IFDEF FPC}
    uses classes, png, fpimage, fpimgcanv, fpwritepng;
 
+(* 'png' wrapper is only compatible with libpng 1.2.x, so force linking against that version. *)
+{$LINKLIB png12}
+
 (* Somehow there is no default unit which supplies fopen() and fclose(), which are needed to
  * interace libpng.
  * On 32bit systems there is a libc unit supplying them, but it is deprecated and not ported to x64.
