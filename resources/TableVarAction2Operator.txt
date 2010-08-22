@@ -18,3 +18,6 @@
 11=value := value ror<sub>[32bit]</sub> ($$$)
 12=value := compare<sub>[signed]</sub>(value, $$$)
 13=value := compare<sub>[unsigned]</sub>(value, $$$)
+14=value := value shl ($$$)
+15=value := value shr<sub>[unsigned]</sub> ($$$)
+16=value := value shr<sub>[signed]</sub> ($$$)

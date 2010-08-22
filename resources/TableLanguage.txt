@@ -8,10 +8,14 @@
 07=Russian
 08=Irish
 09=Maltese
+0A=Tamil
+0B=Chuvash
 0C=Chinese (Traditional)
 0D=Serbian
 0E=Norwegian (Nynorsk)
 0F=Welsh
+10=Belarusian
+11=Marathi
 14=Arabic (Egypt)
 15=Czech
 16=Slovak
@@ -19,6 +23,7 @@
 1B=Afrikaans
 1E=Greek
 1F=Dutch
+21=Basque
 22=Catalan
 23=Luxembourgish
 24=Hungarian
