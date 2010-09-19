@@ -14,12 +14,6 @@ TXT = resources/*.txt
 
 all: grf2html
 
-${MAKEFILELOCAL}:
-	echo ""
-	echo "!!! ${MAKEFILELOCAL} does not exists, creating from defaults. Please edit it if compilation fails."
-	echo ""
-	cp ${MAKEFILELOCAL}.sample ${MAKEFILELOCAL}
-
 grf2html: grfbase.or tables.or $(PAS) grf2html.dpr
 	$(FPC) $(FPCFLAGS) grf2html.dpr
 
