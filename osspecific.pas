@@ -187,6 +187,7 @@ begin
    setLength(bitmap, width * height);
    for y := 0 to height - 1 do
    for x := 0 to width - 1 do bitmap[y * width + x] := fImage.pixels[x,y];
+   fillChar(pal, sizeof(pal), 0);
    for i := 0 to fImage.palette.count - 1 do
    begin
       c := fImage.palette[i];
