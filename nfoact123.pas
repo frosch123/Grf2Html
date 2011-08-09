@@ -805,7 +805,7 @@ begin
             end else
             begin
                s := TableVariables[variable];
-               if s = 'unknown' then
+               if (s = 'unknown') and (fFeature >= low(TableAction0Features)) and (fFeature <= high(TableAction0Features)) then
                begin
                   if fRelated then s := TableVarAction2Related[fFeature][variable] else
                                    s := TableVarAction2Features[fFeature][variable];

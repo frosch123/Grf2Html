@@ -219,26 +219,29 @@ var
    s                                    : string;
    i, j, p                              : integer;
 begin
-   assert(column < fColumns);
-   s := intToHex(id, fIDLen) + '=';
-   for j := 0 to count - 1 do
-      if compareText(copy(strings[j], 1, length(s)), s) = 0 then
-      begin
-         result := strings[j];
-
-         i := fIDLen + 1;
-         while (i <= length(result)) and (column > 0) do
+   if count <> 0 then
+   begin
+      assert(column < fColumns);
+      s := intToHex(id, fIDLen) + '=';
+      for j := 0 to count - 1 do
+         if compareText(copy(strings[j], 1, length(s)), s) = 0 then
          begin
-            inc(i);
-            if result[i] = '@' then dec(column);
-         end;
-         assert(column = 0);
-         system.delete(result, 1, i);
+            result := strings[j];
 
-         p := pos('@', result);
-         if p <> 0 then system.delete(result, p, length(result));
-         exit;
-      end;
+            i := fIDLen + 1;
+            while (i <= length(result)) and (column > 0) do
+            begin
+               inc(i);
+               if result[i] = '@' then dec(column);
+            end;
+            assert(column = 0);
+            system.delete(result, 1, i);
+
+            p := pos('@', result);
+            if p <> 0 then system.delete(result, p, length(result));
+            exit;
+         end;
+   end;
    result := 'unknown';
 end;
 
@@ -292,9 +295,9 @@ procedure loadTable(list: TTableList);
 var
    rs                                   : TResourceStream;
 begin
-   if list.name = '' then list.table^ := nil else
+   list.table^ := list.typ.create;
+   if list.name <> '' then
    begin
-      list.table^ := list.typ.create;
       rs := TResourceStream.create(hInstance, list.name, 'txt');
       list.table^.loadFromStream(rs);
       rs.free;
