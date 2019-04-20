@@ -1,0 +1,10 @@
+Makefile.local
+grf2html
+grf2html.exe
+grf2html.ini
+grf2html.dof
+grf2html.cfg
+*.res
+*.ppu
+*.dcu
+*.or
